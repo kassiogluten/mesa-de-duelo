@@ -8,6 +8,7 @@ static var quality: int = 2
 
 static var _spark_mesh: QuadMesh
 static var _ring_shader: Shader
+static var _pillar_shader: Shader
 
 
 ## Cor de uma carta pelo custo de mana: a cor única, dourado nas multicoloridas, cinza-azulado nas incolores.
@@ -96,8 +97,8 @@ static func light(parent: Node3D, pos: Vector3, color: Color, energy: float = 4.
 static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, duration: float = 0.35, on_hit: Callable = Callable()) -> void:
 	var orb := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
-	sphere.radius = 0.09
-	sphere.height = 0.18
+	sphere.radius = 0.12
+	sphere.height = 0.24
 	orb.mesh = sphere
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -109,18 +110,18 @@ static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, durat
 	orb.position = from
 	parent.add_child(orb)
 	var trail := GPUParticles3D.new()
-	trail.amount = 40 if quality > 0 else 16
-	trail.lifetime = 0.35
+	trail.amount = 70 if quality > 0 else 24
+	trail.lifetime = 0.4
 	trail.local_coords = false
 	var process := ParticleProcessMaterial.new()
 	process.spread = 180.0
 	process.initial_velocity_min = 0.1
 	process.initial_velocity_max = 0.4
 	process.gravity = Vector3.ZERO
-	process.scale_min = 0.04
-	process.scale_max = 0.09
+	process.scale_min = 0.06
+	process.scale_max = 0.14
 	var ramp := Gradient.new()
-	ramp.set_color(0, Color(color, 0.9))
+	ramp.set_color(0, Color(color.lerp(Color.WHITE, 0.3), 0.9))
 	ramp.set_color(1, Color(color, 0.0))
 	var ramp_tex := GradientTexture1D.new()
 	ramp_tex.gradient = ramp
@@ -128,13 +129,22 @@ static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, durat
 	trail.process_material = process
 	trail.draw_pass_1 = _spark()
 	orb.add_child(trail)
+	if quality > 0:
+		var glow := OmniLight3D.new()
+		glow.light_color = color
+		glow.light_energy = 2.5
+		glow.omni_range = 2.2
+		orb.add_child(glow)
 	var lift: float = clampf(from.distance_to(to) * 0.25, 0.4, 1.8)
 	var tween := orb.create_tween()
 	tween.tween_method(func(t: float) -> void:
 		orb.position = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift, 0), 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		trail.emitting = false
-		orb.visible = false
+		for child: Node in orb.get_children():
+			if child is OmniLight3D:
+				(child as OmniLight3D).visible = false
+		orb.transparency = 1.0
 		if on_hit.is_valid():
 			on_hit.call())
 	tween.tween_interval(0.4)
@@ -164,33 +174,35 @@ static func float_text(parent: Node3D, pos: Vector3, text: String, color: Color,
 	tween.tween_callback(label.queue_free)
 
 
-## Coluna de luz que desce sobre `pos` (lendária entrando, mágica grande resolvendo).
+## Coluna de luz que desce sobre `pos` (lendária entrando, mágica grande resolvendo): núcleo claro e bordas que se
+## esfumam, mais forte embaixo, com um anel que corre para cima.
 static func pillar(parent: Node3D, pos: Vector3, color: Color, height: float = 6.0, duration: float = 0.9) -> void:
 	var beam := MeshInstance3D.new()
 	var cylinder := CylinderMesh.new()
-	cylinder.top_radius = 0.5
-	cylinder.bottom_radius = 0.5
+	cylinder.top_radius = 0.42
+	cylinder.bottom_radius = 0.42
 	cylinder.height = height
+	cylinder.radial_segments = 32
 	cylinder.cap_top = false
 	cylinder.cap_bottom = false
 	beam.mesh = cylinder
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	material.albedo_color = Color(color, 0.0)
+	var material := ShaderMaterial.new()
+	material.shader = _pillar()
+	material.set_shader_parameter("color", color)
+	material.set_shader_parameter("alpha", 0.0)
 	beam.material_override = material
 	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	beam.position = pos + Vector3(0, height / 2.0, 0)
 	beam.scale = Vector3(0.2, 1, 0.2)
 	parent.add_child(beam)
+	var set_alpha: Callable = func(a: float) -> void: material.set_shader_parameter("alpha", a)
 	var tween := beam.create_tween().set_parallel(true)
-	tween.tween_property(material, "albedo_color:a", 0.55, duration * 0.25)
+	tween.tween_method(set_alpha, 0.0, 1.0, duration * 0.2)
 	tween.tween_property(beam, "scale", Vector3(1, 1, 1), duration * 0.3).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_property(material, "albedo_color:a", 0.0, duration * 0.7).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(beam, "scale", Vector3(0.05, 1, 0.05), duration * 0.7).set_ease(Tween.EASE_IN)
+	tween.chain().tween_method(set_alpha, 1.0, 0.0, duration * 0.7).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(beam, "scale", Vector3(0.1, 1, 0.1), duration * 0.7).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(beam.queue_free)
+	ring(parent, Vector3(pos.x, 0.02, pos.z), color, 1.6, duration * 0.7, 0.1)
 
 
 ## A câmera se aproxima um pouco do lance (momento grande) e volta: `amount` é quanto do caminho até ele.
@@ -300,6 +312,27 @@ void fragment() {
 }
 """
 	return _ring_shader
+
+
+static func _pillar() -> Shader:
+	if _pillar_shader == null:
+		_pillar_shader = Shader.new()
+		_pillar_shader.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled;
+uniform vec4 color : source_color = vec4(1.0);
+uniform float alpha = 1.0;
+void fragment() {
+	// De frente para quem olha (o meio da coluna), forte; nas bordas, some: um feixe macio, não um tubo chapado.
+	float core = pow(abs(dot(NORMAL, VIEW)), 2.5);
+	// UV.y 0 no alto: some em cima, forte embaixo, com faixas que sobem.
+	float fall = pow(UV.y, 1.6);
+	float bands = 0.75 + 0.25 * sin(UV.y * 40.0 + TIME * 14.0);
+	ALBEDO = mix(color.rgb, vec3(1.0), core * 0.5) * 1.6;
+	ALPHA = core * fall * bands * alpha * 0.85;
+}
+"""
+	return _pillar_shader
 
 
 static func _free_after(node: Node, seconds: float) -> void:

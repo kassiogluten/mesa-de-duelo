@@ -27,7 +27,7 @@ static func ward(parent: Node3D, pos: Vector3, outcome: String, speed: float = 1
 	dome.material_override = material
 	dome.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	dome.position = Vector3(pos.x, 0.0, pos.z)
-	var full := Vector3(0.52, 0.5, 0.66)
+	var full := Vector3(0.55, 0.38, 0.7)
 	dome.scale = Vector3(full.x, 0.01, full.z)
 	parent.add_child(dome)
 	var set_param: Callable = func(v: float, key: String) -> void: material.set_shader_parameter(key, v)
@@ -65,7 +65,8 @@ static func attach(parent: Node3D, from: Vector3, to: Vector3, color: Color, spe
 		var t: float = (i + 1.0) / (links + 1.0)
 		var at: Vector3 = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift + 0.1, 0)
 		MomentPieces.after(parent, t * 0.28 / speed, func() -> void:
-			Fx.burst(parent, at, color.lerp(Color.WHITE, 0.3), 6, 0.35, 0.4, 0.09))
+			Fx.burst(parent, at, color.lerp(Color.WHITE, 0.4), 10, 0.4, 0.5, 0.14)
+			Fx.burst(parent, at, Color(1.0, 0.9, 0.6), 4, 0.15, 0.35, 0.2))
 	MomentPieces.after(parent, 0.3 / speed, func() -> void:
 		Fx.ring(parent, Vector3(to.x, 0.02, to.z), color, 0.85, 0.45 / speed, 0.22)
 		Fx.ring(parent, Vector3(to.x, 0.02, to.z), Color(1.0, 0.85, 0.45), 0.6, 0.35 / speed, 0.1)
@@ -193,7 +194,7 @@ void fragment() {
 		crack = step(1.0 - cracks * 0.8, hash(g)) * cells;
 	}
 	ALBEDO = mix(color.rgb, vec3(1.0), flash * 0.6 + crack) * (1.2 + flash * 2.5 + crack * 3.0);
-	ALPHA = clamp(rim * 0.9 + cells * 0.18 * shimmer + 0.04 + flash * 0.35 + crack, 0.0, 1.0) * alpha;
+	ALPHA = clamp(rim * 0.75 + cells * 0.12 * shimmer + flash * 0.3 + crack, 0.0, 1.0) * alpha;
 }
 """
 	return _dome_shader

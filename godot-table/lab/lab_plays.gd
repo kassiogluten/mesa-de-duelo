@@ -16,7 +16,7 @@ static func buttons(lab: EffectsLab) -> Array:
 		["Anexar aura", attach.bind(lab)], ["Mudar de controle", control.bind(lab)], ["Mana voando", mana.bind(lab)],
 		["Transformar", transform.bind(lab)], ["Golpe duplo", double_strike.bind(lab)],
 		["Esquilo", squirrel.bind(lab)], ["Rato", critter.bind(lab, "rat")], ["Aranha", critter.bind(lab, "spider")], ["Morcego", critter.bind(lab, "bat")],
-		["Mesa rangendo", creak.bind(lab)],
+		["Mesa rangendo", creak.bind(lab)], ["Pode jogar", playable.bind(lab)],
 	]
 
 
@@ -156,3 +156,8 @@ static func creak(lab: EffectsLab) -> void:
 	lab.field.append(601)
 	lab.controller[601] = 1
 	lab.rebuild([lab.make_event({"type": "entered", "card": lab.card_of(601), "to": "Battlefield"})])
+
+
+## As cartas da mão e o Llanowar Elves acesos como "pode jogar" (o halo e o brilho que corre a borda).
+static func playable(lab: EffectsLab) -> void:
+	lab.table.highlight([111, 112, 113, 102], [], [], false)

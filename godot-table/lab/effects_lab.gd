@@ -33,6 +33,8 @@ const CARDS := {
 	603: ["Food", "", "Token Artifact — Food", false, false, 0, 0, 0, true],
 	604: ["Blood", "", "Token Artifact — Blood", false, false, 0, 0, 0, true],
 }
+## Raridade de algumas (o foil das raras e míticas).
+const RARITY := {201: "mythic", 112: "rare", 306: "mythic", 101: "rare"}
 const BATTLEFIELD := [101, 102, 103, 104, 105, 106, 201, 202, 203, 204]
 const HAND := [111, 112, 113]
 
@@ -192,7 +194,7 @@ func card_of(id: int) -> Dictionary:
 	var c: Array = CARDS[face]
 	return {"id": id, "name": c[0], "manaCost": c[1], "typeLine": c[2], "creature": c[3], "land": c[4], "power": c[5], "toughness": c[6],
 		"basePower": c[5], "baseToughness": c[6], "tapped": tapped.has(id), "controller": int(controller.get(id, c[7])), "damage": 0,
-		"token": c.size() > 8 and bool(c[8])}
+		"token": c.size() > 8 and bool(c[8]), "rarity": Txt.of(RARITY.get(face, "common"))}
 
 
 func _state(events: Array = []) -> Dictionary:

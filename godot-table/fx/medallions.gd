@@ -6,8 +6,8 @@ extends RefCounted
 
 const GOLD := Color(1.0, 0.78, 0.34)
 const SILVER := Color(0.8, 0.86, 0.95)
-const MONARCH := Color(0.42, 0.14, 0.6)
-const INITIATIVE := Color(0.12, 0.3, 0.62)
+const MONARCH := Color(0.62, 0.24, 0.85)
+const INITIATIVE := Color(0.22, 0.48, 0.95)
 const DAY := Color(1.0, 0.78, 0.38)
 const NIGHT := Color(0.42, 0.52, 1.0)
 ## Onde a medalha aparece: acima do meio da mesa.
@@ -26,7 +26,7 @@ static func crown_holder(parent: Node3D, camera: Camera3D, at: Variant, title: S
 	parent.add_child(medal)
 	var spin: Node3D = medal.get_child(0)
 	var turn := spin.create_tween()
-	turn.tween_property(spin, "rotation:y", TAU * 3.0, 1.9 / speed).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	turn.tween_property(spin, "rotation:y", TAU * 2.0, 1.2 / speed).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 	var tween := medal.create_tween()
 	tween.tween_property(medal, "scale", Vector3.ONE, 0.35 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(func() -> void:
@@ -35,7 +35,7 @@ static func crown_holder(parent: Node3D, camera: Camera3D, at: Variant, title: S
 	MomentPieces.title(parent, HOME + Vector3(0, 1.0, 0.3), title, GOLD.lerp(Color.WHITE, 0.2), enamel.darkened(0.6), 84, 1.5 / speed, 0.2 / speed)
 	if subtitle != "":
 		MomentPieces.after(parent, 0.35 / speed, func() -> void:
-			Fx.float_text(parent, HOME + Vector3(0, -0.15, 0.6), subtitle, Color(1, 1, 1), 50, 1.3 / speed))
+			Fx.float_text(parent, HOME + Vector3(0, -1.05, 0.9), subtitle, Color(1, 1, 1), 50, 1.3 / speed))
 	tween.tween_interval(1.0 / speed)
 	if at is Vector3:
 		var goal: Vector3 = at
@@ -89,7 +89,7 @@ static func _medal(camera: Camera3D, enamel: Color, metal: Color, front: String,
 	cylinder.radial_segments = 64
 	disc.mesh = cylinder
 	disc.rotation_degrees = Vector3(90, 0, 0)
-	disc.material_override = _metal(enamel, 0.35, 0.35, 0.1)
+	disc.material_override = _metal(enamel, 0.3, 0.35, 0.35)
 	spin.add_child(disc)
 	var rim := MeshInstance3D.new()
 	var torus := TorusMesh.new()

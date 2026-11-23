@@ -12,6 +12,8 @@ const COOLDOWN := 20.0
 ## Sem criatura do tipo, na virada do turno: a chance de um bicho passar e o tempo mínimo desde o último.
 const IDLE_CHANCE := 0.06
 const IDLE_GAP := 180.0
+## Os bichos são de brinquedo, mas maiores que um bicho de verdade ao lado das cartas, para se verem da câmera.
+const SIZE := 1.9
 
 var _last: float = -1000.0
 
@@ -82,6 +84,7 @@ static func _squirrel(parent: Node3D, speed: float) -> void:
 	_ball(body, Vector3(0.24, 0.22, 0.05), Vector3(0.018, 0.018, 0.018), _mat(Color(0.05, 0.03, 0.02)))
 	_ball(body, Vector3(-0.2, 0.28, 0), Vector3(0.09, 0.2, 0.08), fur)
 	_ball(body, Vector3(-0.15, 0.44, 0), Vector3(0.1, 0.1, 0.08), _mat(Color(0.78, 0.48, 0.22)))
+	body.scale = Vector3.ONE * SIZE
 	parent.add_child(body)
 	var z: float = 3.05
 	var from := Vector3(-8.5, 0, z)
@@ -116,6 +119,7 @@ static func _rat(parent: Node3D, speed: float) -> void:
 	tail.position = Vector3(-0.3, 0.05, 0)
 	tail.rotation_degrees = Vector3(0, 0, 80)
 	body.add_child(tail)
+	body.scale = Vector3.ONE * SIZE
 	parent.add_child(body)
 	# Da direita para a esquerda: dispara, para no meio farejando, dispara de novo.
 	body.rotation.y = PI
@@ -163,9 +167,10 @@ static func _spider(parent: Node3D, speed: float) -> void:
 	thread.material_override = silk
 	thread.position = Vector3(0, 3.0, 0)
 	body.add_child(thread)
+	body.scale = Vector3.ONE * SIZE
 	parent.add_child(body)
 	var x: float = randf_range(3.5, 5.5) * (1.0 if randf() < 0.5 else -1.0)
-	var top := Vector3(x, 7.5, 1.8)
+	var top := Vector3(x, 9.5, 1.8)
 	var low := Vector3(x, 1.6, 1.8)
 	body.position = top
 	var tween := body.create_tween()
@@ -196,6 +201,7 @@ static func _bat(parent: Node3D, speed: float) -> void:
 		wing.position = Vector3(side * 0.18, 0, -0.02)
 		pivot.add_child(wing)
 		wings.append(pivot)
+	body.scale = Vector3.ONE * SIZE
 	parent.add_child(body)
 	var from := Vector3(-9.0, 2.2, -1.5)
 	var to := Vector3(9.0, 3.0, -2.2)
