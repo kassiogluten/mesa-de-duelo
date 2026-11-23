@@ -1,5 +1,5 @@
 # O HUD por cima da mesa 3D: retratos com vida, menu, relógios e histórico no alto, trilha de fases, caixa de ação com
-# os botões e a carta ampliada.
+# os botões, avisos, faixas de turno e a carta ampliada.
 class_name Hud
 extends Control
 
@@ -22,34 +22,44 @@ const PHASES := {
 	"COMBAT_FIRST_STRIKE_DAMAGE": "Dano de primeiro golpe", "COMBAT_DAMAGE": "Dano de combate", "COMBAT_END": "Fim do combate",
 	"MAIN2": "Principal 2", "END_OF_TURN": "Etapa final", "CLEANUP": "Limpeza",
 }
-const GOLD := Color("#f0b84a")
+const GOLD := HudStyle.GOLD
+## Largura da coluna da direita (caixa de ação e trilha de fases).
+const RIGHT_COLUMN := ActionPanel.WIDTH
+const TRACK_H := 48.0
+## Folga entre a mão e a coluna da direita (e os selos do seu assento).
+const HAND_GAP := 14.0
+## Centro do seu retrato (medido do canto de baixo à esquerda), o lado dele e onde começa a coluna dos selos.
+const MY_PORTRAIT := Vector2(99, -119)
+const MY_SIDE := 130.0
+const MY_COLUMN_LEFT := 99.0 + 65.0 + 14.0
 
 var catalog: CardCatalog
 ## Onde fica na tela o retrato de um oponente (a mesa 3D responde); (-1, -1) para usar o canto de sempre.
 var portrait_slot: Callable = func(_id: int) -> Vector2: return Vector2(-1, -1)
 ## Quantos jogadores há (retratos menores com mais de um oponente).
 var player_count: Callable = func() -> int: return 2
+## A faixa da tela ocupada pela sua mão (TableView.hand_rect); Rect2() se não se sabe. A coluna da direita sobe acima
+## dela quando a mão chega até ali, e os selos do seu assento quebram a linha antes dela.
+var hand_rect: Callable = func() -> Rect2: return Rect2()
 
 var _menu: MatchMenu
 var _history_button: Button
 var _clocks: TurnClocks
 var _track: PhaseTrack
 var _history: HistoryPanel
-var _action_panel: PanelContainer
-var _short: Label
-var _detail: Label
-var _progress: Label
-var _buttons_box: VBoxContainer
-var _primary: Dictionary = {}
+var _action: ActionPanel
 var _preview: TextureRect
-var _toast: Label
-var _toast_left: float = 0.0
+var _toasts: ToastStack
+## Faixas de turno esperando a da vez acabar ([texto, cor]) e a que está passando.
+var _banner_queue: Array = []
+var _banner_ref: WeakRef = null
+## Quanto a coluna da direita subiu para não cobrir a mão (suavizado).
+var _lift: float = 0.0
 var _portraits: Dictionary = {}
 var _seats: Dictionary = {}
 ## A tela do fim do jogo (ui/result_screen.gd).
 var _result: ResultScreen
 var _bar: MatchBar
-var _forecast: Label
 var _between: PanelContainer
 var _between_label: Label
 var _between_button: Button
@@ -63,7 +73,7 @@ func _ready() -> void:
 	# Alto à esquerda: menu, histórico e os relógios (duração, turno, tempo do turno, espera), como na mesa do navegador.
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	top.position = Vector2(24, 16)
+	top.position = Vector2(HudStyle.MARGIN, 16)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(top)
 	_menu = MatchMenu.new()
@@ -77,9 +87,9 @@ func _ready() -> void:
 	_history_button.icon = HudIcons.texture(HudIcons.HISTORY, 40)
 	_history_button.add_theme_constant_override("icon_max_width", 20)
 	_history_button.tooltip_text = "Histórico da partida"
-	_history_button.custom_minimum_size = Vector2(44, 40)
-	_history_button.focus_mode = Control.FOCUS_NONE
-	MatchMenu._style(_history_button)
+	HudStyle.style_chip_button(_history_button)
+	_history_button.custom_minimum_size = Vector2(44, HudStyle.CHIP_H)
+	_history_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	top.add_child(_history_button)
 	_clocks = TurnClocks.new()
 	top.add_child(_clocks)
@@ -87,57 +97,20 @@ func _ready() -> void:
 	_bar.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	_bar.offset_left = -640
-	_bar.offset_top = 14
-	_bar.offset_right = -24
+	_bar.offset_top = 16
+	_bar.offset_right = -HudStyle.MARGIN
 	_bar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_bar.action.connect(func(message: Dictionary) -> void: action.emit(message))
 	_bar.pass_level_changed.connect(func(level: String) -> void: pass_level_changed.emit(level))
 	add_child(_bar)
 
-	_action_panel = PanelContainer.new()
-	_action_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.05, 0.07, 0.12, 0.88), 14))
-	_action_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_action_panel.offset_left = -400
-	_action_panel.offset_top = -100
-	_action_panel.offset_right = -24
-	_action_panel.offset_bottom = -24
-	_action_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_action_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	add_child(_action_panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	_action_panel.add_child(column)
-	_short = _label(20, Color(1, 0.97, 0.9))
-	_short.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_short.custom_minimum_size = Vector2(340, 0)
-	column.add_child(_short)
-	_detail = _label(15, Color(1, 1, 1, 0.6))
-	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_detail.custom_minimum_size = Vector2(340, 0)
-	_detail.max_lines_visible = 4
-	column.add_child(_detail)
-	_progress = _label(16, GOLD)
-	_progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(_progress)
-	_forecast = _label(16, Color(1, 0.75, 0.6))
-	_forecast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_forecast.custom_minimum_size = Vector2(340, 0)
-	column.add_child(_forecast)
-	_buttons_box = VBoxContainer.new()
-	_buttons_box.add_theme_constant_override("separation", 8)
-	column.add_child(_buttons_box)
-
-	# Trilha de fases embaixo da caixa de ação, onde o olho já está para passar a vez.
-	_action_panel.offset_bottom = -82
-	_action_panel.offset_top = -158
+	# Coluna da direita: a caixa de ação e, embaixo dela, a trilha de fases (onde o olho já está para passar a vez).
+	# As duas se posicionam em _process (sobem acima da mão quando ela chega até ali).
+	_action = ActionPanel.new()
+	_action.catalog = catalog
+	_action.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	add_child(_action)
 	_track = PhaseTrack.new()
-	_track.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_track.offset_left = -400
-	_track.offset_top = -72
-	_track.offset_right = -24
-	_track.offset_bottom = -24
-	_track.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_track.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_track.visible = false
 	_track.action.connect(func(message: Dictionary) -> void: action.emit(message))
 	add_child(_track)
@@ -165,12 +138,8 @@ func _ready() -> void:
 	add_child(_history)
 	_history_button.pressed.connect(func() -> void: _history.toggle())
 
-	_toast = _label(20, Color(1, 0.85, 0.8))
-	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_toast.offset_top = 175
-	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	add_child(_toast)
+	_toasts = ToastStack.new()
+	add_child(_toasts)
 
 	_result = ResultScreen.new()
 	_result.catalog = catalog
@@ -180,7 +149,16 @@ func _ready() -> void:
 
 	# Entre os jogos de uma melhor de três: seguir com o mesmo deck (trocar cartas com o sideboard fica para depois).
 	_between = PanelContainer.new()
-	_between.add_theme_stylebox_override("panel", _panel_style(Color(0.04, 0.05, 0.09, 0.95), 18))
+	var between_style := HudStyle.panel(Color(0.035, 0.05, 0.085, 0.96), 18)
+	between_style.border_color = Color(HudStyle.GOLD, 0.35)
+	between_style.set_border_width_all(1)
+	between_style.shadow_color = Color(0, 0, 0, 0.5)
+	between_style.shadow_size = 24
+	between_style.content_margin_left = 32
+	between_style.content_margin_right = 32
+	between_style.content_margin_top = 26
+	between_style.content_margin_bottom = 26
+	_between.add_theme_stylebox_override("panel", between_style)
 	_between.set_anchors_preset(Control.PRESET_CENTER)
 	_between.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_between.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -197,9 +175,36 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _toast_left > 0.0:
-		_toast_left -= delta
-		_toast.modulate.a = clamp(_toast_left, 0.0, 1.0)
+	_layout_right_column(delta)
+	if not _banner_queue.is_empty() and (_banner_ref == null or _banner_ref.get_ref() == null):
+		var next: Array = _banner_queue.pop_front()
+		_banner_ref = weakref(TurnBanner.play(self, Txt.of(next[0]), next[1]))
+
+
+## A coluna da direita encostada no canto de baixo; se a mão chega até ela, sobe para ficar acima das cartas.
+func _layout_right_column(delta: float) -> void:
+	var view: Vector2 = get_viewport_rect().size
+	var right: float = view.x - HudStyle.MARGIN
+	var left: float = right - RIGHT_COLUMN
+	var hand: Rect2 = hand_rect.call()
+	var needed: float = 0.0
+	if hand.has_area() and hand.end.x + HAND_GAP > left:
+		needed = maxf(0.0, (view.y - HudStyle.MARGIN) - (hand.position.y - 10.0))
+	_lift = needed if absf(_lift - needed) < 0.5 else lerpf(_lift, needed, 1.0 - exp(-delta * 10.0))
+	var track_bottom: float = view.y - HudStyle.MARGIN - _lift
+	_track.position = Vector2(left, track_bottom - TRACK_H)
+	_track.size = Vector2(RIGHT_COLUMN, TRACK_H)
+	var action_bottom: float = (_track.position.y - 10.0) if _track.visible else track_bottom
+	_action.corner = Vector2(right, action_bottom)
+
+
+## A faixa da tela onde a mão cabe sem passar por baixo do HUD: entre o seu retrato e a coluna da direita. A mesa pode
+## apertar o leque para caber nela (gancho para TableView._hand_transform: hoje a coluna sobe quando a mão chega nela).
+func hand_area() -> Rect2:
+	var view: Vector2 = get_viewport_rect().size
+	var left: float = MY_COLUMN_LEFT + HAND_GAP
+	var right: float = view.x - HudStyle.MARGIN - RIGHT_COLUMN - HAND_GAP
+	return Rect2(left, view.y * 0.6, right - left, view.y * 0.4)
 
 
 ## `blocker_name`: a criatura escolhida para bloquear, enquanto falta o atacante.
@@ -226,10 +231,9 @@ func set_room(room: Dictionary) -> void:
 	_result.room = room
 
 
-func show_toast(text: String) -> void:
-	_toast.text = text
-	_toast_left = 4.0
-	_toast.modulate.a = 1.0
+## Um aviso curto no meio da tela (ui/toast_stack.gd); `kind`: "info", "error", "success" ou "warning".
+func show_toast(text: String, kind: String = "info") -> void:
+	_toasts.show_toast(text, kind)
 
 
 ## Mostra a carta ampliada (null esconde).
@@ -242,6 +246,11 @@ func show_preview(tex: Texture2D) -> void:
 func portrait_center(player_id: int) -> Vector2:
 	var portrait: Button = _portraits.get(player_id)
 	return portrait.get_global_rect().get_center() if portrait else Vector2(-1, -1)
+
+
+## Onde está a caixa de ação na tela (vazio quando escondida): para quem precisa desviar dela.
+func action_rect() -> Rect2:
+	return _action.box_rect()
 
 
 ## Entre os jogos da série: o placar e o botão de seguir (next-game) com o deck como está.
@@ -265,8 +274,14 @@ func _apply_between(state: Dictionary) -> void:
 
 
 ## Faixa que atravessa o meio da tela ("Seu turno", "Ataque!"), com o acabamento da mesa do navegador (ui/turn_banner.gd).
+## Uma de cada vez: a que chega com outra passando espera ela acabar (no máximo duas na fila, as mais novas).
 func banner(text: String, color: Color) -> void:
-	TurnBanner.play(self, text, color)
+	if _banner_ref != null and _banner_ref.get_ref() != null:
+		_banner_queue.append([text, color])
+		while _banner_queue.size() > 2:
+			_banner_queue.pop_front()
+		return
+	_banner_ref = weakref(TurnBanner.play(self, text, color))
 
 
 ## O retrato pulsa quando a vida muda: cresce e acende em verde (ganho) ou vermelho (perda).
@@ -286,48 +301,13 @@ func pulse_life(player_id: int, delta: int) -> void:
 
 ## A mensagem do botão principal ativo ({} se não há), para o Espaço.
 func primary_message() -> Dictionary:
-	return _primary
+	return _action.primary_message()
 
 
-## Texto e botões da caixa de ação, pelas mesmas regras da mesa do navegador (text/action_box.gd).
+## Texto e botões da caixa de ação, pelas mesmas regras da mesa do navegador (ui/action_panel.gd, text/action_box.gd).
 func _apply_action_box(state: Dictionary, blocker_name: String) -> void:
-	var translate: Callable = func(name: String) -> String: return catalog.label(name) if catalog else name
-	var info: Dictionary = ActionBox.text(state, blocker_name, translate)
-	var opening: Variant = (state.get("input", {}) as Dictionary).get("opening")
-	var headings: Dictionary = {"mulligan": "Manter esta mão?", "starting-player": "Quem começa a partida?", "play-draw": "Você ganhou o sorteio: jogar primeiro?"}
-	var heading: String = Txt.of(headings.get(opening, "")) if opening != null else ""
-	var short: String = Txt.of(info["short"]) if Txt.of(info["short"]) != "" else heading
-	var tap: Variant = (state.get("input", {}) as Dictionary).get("tapToPay")
-	if tap is Dictionary and short == "":
-		# Convocar e afins: o título em destaque e a explicação embaixo (o nome da carta já em português).
-		var lines: PackedStringArray = Txt.of(info["detail"]).split("\n", false, 1)
-		short = lines[0]
-		info["detail"] = lines[1] if lines.size() > 1 else ""
-	_short.text = short if short != "" else Txt.of(info["detail"])
-	_short.visible = _short.text != ""
-	_detail.text = Txt.of(info["detail"]) if short != "" and Txt.of(info["detail"]) != short else ""
-	_detail.visible = _detail.text != ""
-	_progress.text = ("%s · %s" % [info["progress"], info["instruction"]]) if Txt.of(info["progress"]) != "" else ""
-	_progress.visible = _progress.text != ""
-	_forecast.text = Txt.of(info.get("forecast"))
-	_forecast.visible = _forecast.text != ""
-	for child: Node in _buttons_box.get_children():
-		child.queue_free()
-	_primary = {}
-	var list: Array = ActionBox.buttons(state, translate)
-	for entry: Variant in list:
-		var spec: Dictionary = entry
-		var message: Dictionary = spec.get("message", {})
-		var button := _button(Txt.of(spec["label"]), bool(spec.get("primary", false)))
-		button.disabled = not bool(spec.get("enabled", false)) or message.is_empty()
-		if bool(spec.get("small", false)):
-			button.custom_minimum_size = Vector2(0, 36)
-			button.add_theme_font_size_override("font_size", 15)
-		button.pressed.connect(func() -> void: action.emit(message))
-		_buttons_box.add_child(button)
-		if bool(spec.get("primary", false)) and not button.disabled:
-			_primary = message
-	_action_panel.visible = _short.visible or not list.is_empty()
+	_action.catalog = catalog
+	_action.apply(state, blocker_name)
 
 
 ## O assento de cada jogador (ui/seat_panel.gd): retrato, selos, reserva e montes; o seu no canto de baixo.
@@ -347,48 +327,28 @@ func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: 
 		_portraits[id] = seat.portrait
 	var crowded: bool = int(player_count.call()) > 2
 	if mine:
-		seat.place(Vector2(99, -119), 130.0, 520.0)
+		# Os selos ao lado do seu retrato quebram a linha antes de chegar na mão.
+		var hand: Rect2 = hand_rect.call()
+		var width: float = clampf(hand.position.x - MY_COLUMN_LEFT - HAND_GAP, 200.0, 520.0) if hand.has_area() else 260.0
+		seat.place(MY_PORTRAIT, MY_SIDE, width)
 	else:
+		# O leque da mão do oponente fica à direita do retrato: os selos vão para a esquerda (duelo) ou para baixo do
+		# nome (Commander, onde a mão começa logo ao lado do retrato).
 		var slot: Vector2 = portrait_slot.call(id)
-		seat.place(slot if slot.x >= 0 else Vector2(get_viewport_rect().size.x / 2.0, 77), 100.0 if crowded else 130.0, 190.0 if crowded else 460.0)
+		var center: Vector2 = slot if slot.x >= 0 else Vector2(get_viewport_rect().size.x / 2.0, 77)
+		seat.place(center, 100.0 if crowded else 130.0, 300.0 if crowded else 460.0, "below" if crowded else "left")
 	var translate: Callable = func(name: String) -> String: return catalog.label(name) if catalog else name
 	seat.apply(player, state, selectable, active, translate)
 
 
+## Atalhos para o estilo comum (outras telas chamam por aqui): ui/hud_style.gd.
 static func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.set_corner_radius_all(radius)
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
-	return style
+	return HudStyle.panel(color, radius)
 
 
 static func _label(size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
-	label.add_theme_constant_override("outline_size", 6)
-	return label
+	return HudStyle.label(size, color)
 
 
 static func _button(text: String, primary: bool) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.custom_minimum_size = Vector2(0, 52)
-	button.add_theme_font_size_override("font_size", 20)
-	var fill: Color = GOLD if primary else Color(0.12, 0.15, 0.24)
-	var text_color: Color = Color(0.12, 0.08, 0.02) if primary else Color(1, 1, 1)
-	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := _panel_style(fill.lightened(0.12) if state_name == "hover" else (fill.darkened(0.45) if state_name == "disabled" else fill), 26)
-		style.border_color = Color(1, 1, 1, 0.12)
-		style.set_border_width_all(1)
-		button.add_theme_stylebox_override(state_name, style)
-	button.add_theme_color_override("font_color", text_color)
-	button.add_theme_color_override("font_hover_color", text_color)
-	button.add_theme_color_override("font_pressed_color", text_color)
-	button.add_theme_color_override("font_disabled_color", text_color.lerp(Color(0.5, 0.5, 0.5), 0.6))
-	return button
+	return HudStyle.button(text, primary)

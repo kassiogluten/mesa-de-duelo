@@ -17,9 +17,10 @@ const LEVELS := [
 ]
 
 var _undo: Button
-var _level: OptionButton
+var _level: PassLevelPicker
 var _passing: Button
 var _notice: VBoxContainer
+var _notice_panel: PanelContainer
 var _chips: HBoxContainer
 
 
@@ -35,25 +36,37 @@ func _ready() -> void:
 	_undo = _small("Desfazer")
 	_undo.pressed.connect(func() -> void: action.emit({"type": "undo-request"}))
 	row.add_child(_undo)
-	_level = OptionButton.new()
-	_level.custom_minimum_size = Vector2(190, 38)
-	_level.add_theme_font_size_override("font_size", 15)
-	for entry: Array in LEVELS:
-		_level.add_item("Passar: %s" % entry[1])
-		_level.set_item_tooltip(_level.item_count - 1, Txt.of(entry[2]))
-	_level.item_selected.connect(func(i: int) -> void:
-		var level: String = Txt.of((LEVELS[i] as Array)[0])
+	_level = PassLevelPicker.new()
+	_level.level_chosen.connect(func(level: String) -> void:
 		action.emit({"type": "preferences", "passLevel": level})
 		pass_level_changed.emit(level))
 	row.add_child(_level)
 	_passing = _small("Passando até o fim do turno · parar")
 	_passing.pressed.connect(func() -> void: action.emit({"type": "pass-turn-stop"}))
 	_passing.visible = false
+	# Ligado: a pílula em dourado, para lembrar que o jogo está passando sozinho.
+	for state_name: String in ["normal", "hover", "pressed"]:
+		var lit: StyleBoxFlat = (_passing.get_theme_stylebox(state_name) as StyleBoxFlat).duplicate()
+		lit.border_color = Color(HudStyle.GOLD, 0.75 if state_name == "hover" else 0.5)
+		lit.bg_color = Color(0.16, 0.11, 0.03, 0.9)
+		_passing.add_theme_stylebox_override(state_name, lit)
+	_passing.add_theme_color_override("font_color", HudStyle.GOLD_SOFT)
+	_passing.add_theme_color_override("font_hover_color", Color.WHITE)
 	row.add_child(_passing)
+	# Pedido de desfazer e votação para pular a vez: um cartão escuro embaixo da barra, para ler sobre a mesa.
+	_notice_panel = PanelContainer.new()
+	var style := HudStyle.panel(HudStyle.PANEL_BG, HudStyle.RADIUS_PANEL)
+	style.border_color = Color(HudStyle.GOLD, 0.35)
+	style.set_border_width_all(1)
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	_notice_panel.add_theme_stylebox_override("panel", style)
+	_notice_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_notice_panel.visible = false
+	add_child(_notice_panel)
 	_notice = VBoxContainer.new()
-	_notice.add_theme_constant_override("separation", 6)
-	_notice.size_flags_horizontal = Control.SIZE_SHRINK_END
-	add_child(_notice)
+	_notice.add_theme_constant_override("separation", 8)
+	_notice_panel.add_child(_notice)
 
 
 func apply_state(state: Dictionary) -> void:
@@ -61,21 +74,21 @@ func apply_state(state: Dictionary) -> void:
 	_apply_chips(state)
 	_undo.visible = playing
 	_level.visible = playing
-	_notice.visible = playing
+	_notice_panel.visible = false
 	if not playing:
 		_passing.visible = false
 		return
 	var prefs: Dictionary = state.get("preferences", {}) if state.get("preferences") is Dictionary else {}
 	var level: String = Txt.of(prefs.get("passLevel"))
-	for i: int in LEVELS.size():
-		if (LEVELS[i] as Array)[0] == level and _level.selected != i:
-			_level.select(i)
+	if level != "":
+		_level.set_level(level)
 	_passing.visible = bool(prefs.get("passingTurn", false))
 	var undo: Dictionary = state.get("undo", {}) if state.get("undo") is Dictionary else {}
 	var last: Variant = undo.get("last")
 	_undo.disabled = not last is Dictionary or bool(undo.get("pending", false))
 	_undo.tooltip_text = "Desfazer: %s" % Txt.of((last as Dictionary).get("text")) if last is Dictionary else "Nada para desfazer agora."
 	for child: Node in _notice.get_children():
+		_notice.remove_child(child)
 		child.queue_free()
 	if undo.get("request") is Dictionary:
 		_undo_request(undo["request"])
@@ -88,6 +101,7 @@ func apply_state(state: Dictionary) -> void:
 			var start := _small("Votar para pular a vez de %s" % name)
 			start.pressed.connect(func() -> void: action.emit({"type": "skip-vote", "target": int(id), "value": true}))
 			_notice.add_child(start)
+	_notice_panel.visible = _notice.get_child_count() > 0
 
 
 ## Os selos da partida (placar da série, desconectados, assistindo), como pílulas antes dos botões.
@@ -96,10 +110,9 @@ func _apply_chips(state: Dictionary) -> void:
 		child.queue_free()
 	for raw: Variant in MatchText.match_chips(state):
 		var chip: Dictionary = raw
-		var panel: PanelContainer = TurnClocks.chip()
-		panel.custom_minimum_size = Vector2(0, 38)
+		var panel: PanelContainer = HudStyle.chip()
 		panel.tooltip_text = Txt.of(chip["label"])
-		var label := Hud._label(15, Color(1, 0.6, 0.5) if chip["kind"] == "offline" else Color(1, 1, 1, 0.92))
+		var label := HudStyle.label(HudStyle.SIZE_BODY, Color(1, 0.6, 0.5) if chip["kind"] == "offline" else Color(1, 1, 1, 0.92))
 		label.add_theme_constant_override("outline_size", 0)
 		label.text = Txt.of(chip["text"])
 		(panel.get_child(0) as HBoxContainer).add_child(label)
@@ -152,16 +165,15 @@ static func _player_name(state: Dictionary, id: Variant) -> String:
 	return "Jogador"
 
 
+## Botão pequeno da barra (e das gavetas): a pílula do alto.
 static func _small(text: String) -> Button:
-	var button := Hud._button(text, false)
-	button.custom_minimum_size = Vector2(0, 38)
-	button.add_theme_font_size_override("font_size", 15)
-	return button
+	return HudStyle.small_button(text)
 
 
 static func _text(text: String) -> Label:
-	var label := Hud._label(16, Color(1, 1, 1, 0.85))
+	var label := HudStyle.label(HudStyle.SIZE_BODY, HudStyle.TEXT_SOFT)
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(420, 0)
+	label.add_theme_constant_override("outline_size", 0)
+	label.custom_minimum_size = Vector2(400, 0)
 	return label
