@@ -1,8 +1,0 @@
-{
-  "Baixar a mesa no PC": [
-    { "img": "pagina.webp", "legenda": "A página Mesa no PC no Windows: o botão Baixar para Windows com a versão e o tamanho do arquivo." },
-    { "img": "passos.webp", "legenda": "Os três passos (baixar, extrair numa pasta, abrir o Mesa de Duelo.exe) e o que fazer se o Windows avisar que o aplicativo não é reconhecido." },
-    { "img": "outros-aparelhos.webp", "legenda": "No celular, a página avisa que a mesa no PC é só para Windows por enquanto e oferece Jogar no navegador." },
-    { "img": "rodape.webp", "legenda": "No Windows, o link Mesa no PC no rodapé da tela inicial, ao lado de Sobre e da Política de privacidade." }
-  ]
-}

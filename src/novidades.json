@@ -1,4 +1,12 @@
 {
+  "0.239.0": {
+    "Baixar a mesa no PC": [
+      { "img": "0.239.0/pagina.webp", "legenda": "A página Mesa no PC no Windows: o botão Baixar para Windows com a versão e o tamanho do arquivo." },
+      { "img": "0.239.0/passos.webp", "legenda": "Os três passos (baixar, extrair numa pasta, abrir o Mesa de Duelo.exe) e o que fazer se o Windows avisar que o aplicativo não é reconhecido." },
+      { "img": "0.239.0/outros-aparelhos.webp", "legenda": "No celular, a página avisa que a mesa no PC é só para Windows por enquanto e oferece Jogar no navegador." },
+      { "img": "0.239.0/rodape.webp", "legenda": "No Windows, o link Mesa no PC no rodapé da tela inicial, ao lado de Sobre e da Política de privacidade." }
+    ]
+  },
   "0.238.0": {
     "Excluir deck pede confirmação": [
       { "img": "0.238.0/confirmar-exclusao.webp", "legenda": "A janela que aparece ao excluir um deck, com o nome e o total de cartas, e o Voltar já escolhido." }

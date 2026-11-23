@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.239.0] - 2026-11-23
+
+### Novo
+
+- **Baixar a mesa no PC.** A nova página Mesa no PC, no site, baixa a Mesa de Duelo para Windows: as mesmas partidas, a mesma conta e os mesmos decks, jogando com quem está no navegador, com efeitos feitos para o PC. O botão mostra a versão e o tamanho do arquivo; é só extrair o .zip numa pasta de sua escolha e abrir o Mesa de Duelo.exe, e a mesa se atualiza sozinha a cada abertura. A página explica o aviso do Windows de aplicativo não reconhecido, o que o PC precisa (Windows 10 ou 11 de 64 bits, placa de vídeo com Vulkan ou DirectX 12) e como desinstalar (apagar a pasta). No celular e nos outros aparelhos, ela avisa que por enquanto é só para Windows e oferece Jogar no navegador. No Windows, o rodapé da tela inicial ganha o link Mesa no PC.
+
 ## [0.238.0] - 2026-11-22
 
 ### Novo
