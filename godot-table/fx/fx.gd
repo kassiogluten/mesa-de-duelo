@@ -180,6 +180,7 @@ static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, durat
 static func float_text(parent: Node3D, pos: Vector3, text: String, color: Color, size: int = 72, duration: float = 1.1, rise: float = 0.9) -> void:
 	var label := Label3D.new()
 	label.text = text
+	label.font = MomentPieces._font()
 	label.font_size = size
 	label.pixel_size = 0.006
 	label.outline_size = 18
