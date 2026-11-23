@@ -24,7 +24,6 @@ func _init(title: String, colors: PackedStringArray = [], more: bool = false) ->
 	flat = true
 	focus_mode = Control.FOCUS_NONE
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	tooltip_text = title
 	for state_name: String in ["normal", "hover", "pressed", "focus", "disabled"]:
 		add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 	# A máscara de cantos redondos: o que fica dentro dela é recortado pelo desenho dela.
@@ -65,6 +64,9 @@ func _init(title: String, colors: PackedStringArray = [], more: bool = false) ->
 		name_label.offset_top = -32
 		name_label.offset_bottom = -7
 		_mask.add_child(name_label)
+		# O nome já está escrito no ladrilho: a dica só para o que não coube (cortado com reticências).
+		if name_label.get_theme_font("font").get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x > SIZE.x - 20:
+			tooltip_text = title
 	_outline = Panel.new()
 	_outline.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_outline)

@@ -94,12 +94,14 @@ func test_menu_switches_decks_with_the_arrows() -> void:
 	# Do primeiro, para a seta da esquerda ter para onde voltar.
 	menu.pick(0)
 	var start: int = strip.selected
+	# Comparado com o do começo da fileira, não com o lembrado (que depende das preferências da máquina).
+	var at_start: Dictionary = menu._your_deck()
 	var key := InputEventKey.new()
 	key.pressed = true
 	key.keycode = KEY_RIGHT
 	menu._unhandled_input(key)
 	check_eq(strip.selected, start + 1, "a seta para a direita escolhe o próximo")
-	check(menu._your_deck() != first, "e ele vira o seu deck")
+	check(menu._your_deck() != at_start, "e ele vira o seu deck")
 	key.keycode = KEY_LEFT
 	menu._unhandled_input(key)
 	check_eq(strip.selected, start, "a seta para a esquerda volta")
