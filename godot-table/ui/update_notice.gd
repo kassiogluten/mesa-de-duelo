@@ -1,4 +1,4 @@
-# Aviso discreto de versão nova na tela inicial: uma faixa embaixo, com "Reiniciar agora" (ou "Baixar no site" quando precisa instalar de novo).
+# Aviso discreto de versão nova na tela inicial: uma faixa embaixo, com "Reiniciar agora" (ou "Baixar no site" quando precisa baixar o zip de novo).
 class_name UpdateNotice
 extends PanelContainer
 
@@ -50,7 +50,7 @@ func set_update(version: String, reinstall: bool, download: String) -> void:
 	_version = version
 	_download_url = download if reinstall else ""
 	if reinstall:
-		_text.text = "Saiu uma versão nova da mesa que precisa ser instalada de novo."
+		_text.text = "A versão nova da mesa precisa ser baixada de novo no site."
 		_restart.text = "Baixar no site"
 		_restart.visible = download != ""
 	else:

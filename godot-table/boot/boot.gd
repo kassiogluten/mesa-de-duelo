@@ -48,6 +48,8 @@ func _start() -> void:
 		_enter_game()
 		return
 	var state: Dictionary = UpdateState.recover(UpdateState.load_state())
+	# O pacote que veio no zip: a primeira abertura já tem o jogo, mesmo sem internet.
+	state = UpdateState.adopt_bundled(state, UpdateState.bundled_pack(OS.get_executable_path().get_base_dir()))
 	_status.text = "Procurando atualização…"
 	var manifest: Dictionary = await _fetch_json(manifest_url())
 	if not manifest.is_empty():
@@ -55,10 +57,10 @@ func _start() -> void:
 		var engine: String = String(manifest.get("engine", ""))
 		if engine != "" and engine != _engine_version() or int(manifest.get("minBoot", 0)) > BOOT_VERSION:
 			if not _has_pack(state):
-				_site_url = String(manifest.get("download", manifest_url().get_base_dir() + "/"))
-				_fail("Saiu uma versão nova da mesa que precisa ser instalada de novo.", true)
+				_site_url = String(manifest.get("download", manifest_url().get_base_dir().get_base_dir() + "/baixar"))
+				_fail("Esta versão precisa ser baixada de novo no site.", true)
 				return
-			# Com um pacote que já funciona, entra com ele; a página de download fica para depois.
+			# Com um pacote que já funciona, entra com ele; baixar o zip novo no site fica para depois (a mesa avisa).
 		elif version != "" and version != state["current"] and not (state["bad"] as Array).has(version):
 			if await _download(manifest):
 				state = UpdateState.promote(state, version)

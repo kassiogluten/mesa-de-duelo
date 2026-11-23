@@ -37,6 +37,7 @@
     "godot:test": "node scripts/godot.mjs --headless --script res://tools/run_tests.gd --",
     "godot:golden": "node --import ./tests/register.mjs scripts/godot-golden.mjs",
     "godot:pck": "node scripts/godot-pck.mjs",
+    "godot:zip": "node scripts/godot-zip.mjs",
     "godot:test-atualizador": "node scripts/godot-updater-test.mjs"
   },
   "devDependencies": {

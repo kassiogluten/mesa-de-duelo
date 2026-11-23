@@ -1,5 +1,6 @@
 # Estado do atualizador no disco: qual pacote do jogo está em uso, o anterior para voltar e as versões que falharam.
 # Fica embutido no executável junto com o boot; o jogo chama confirm() quando abre bem, e só então a versão nova vale.
+# O pacote que vem no zip, ao lado do executável, entra como se tivesse sido baixado (adopt_bundled).
 extends RefCounted
 
 const DIR := "user://updates"
@@ -78,3 +79,54 @@ static func confirm() -> void:
 ## A versão do pacote do jogo em uso ("" rodando direto do projeto, sem atualizador).
 static func current_version() -> String:
 	return String(load_state()["current"]) if OS.has_feature("template") or OS.get_environment("MESA_PC_MANIFEST") != "" else ""
+
+
+## Pacote do jogo que veio no zip, ao lado do executável (`game-<versão>.pck`): {version, path}, ou {} se não houver.
+static func bundled_pack(exe_dir: String) -> Dictionary:
+	var found: Dictionary = {}
+	if not DirAccess.dir_exists_absolute(exe_dir):
+		return found
+	for name: String in DirAccess.get_files_at(exe_dir):
+		if not (name.begins_with("game-") and name.ends_with(".pck")):
+			continue
+		var version: String = name.trim_prefix("game-").trim_suffix(".pck")
+		if found.is_empty() or is_newer(version, String(found["version"])):
+			found = {"version": version, "path": exe_dir.path_join(name)}
+	return found
+
+
+## Copia o pacote do zip para as atualizações quando ainda não há nenhum que abra ou quando ele é mais novo que o atual
+## (zip baixado de novo no site): a primeira abertura funciona sem internet, e o resto segue como uma atualização.
+static func adopt_bundled(state: Dictionary, bundled: Dictionary) -> Dictionary:
+	if bundled.is_empty():
+		return state
+	var version: String = String(bundled["version"])
+	var current: String = String(state["current"])
+	if version == current or (state["bad"] as Array).has(version):
+		return state
+	var has_pack: bool = [current, String(state["previous"])].any(func(v: String) -> bool: return v != "" and FileAccess.file_exists(pck_path(v)))
+	if has_pack and not is_newer(version, current):
+		return state
+	DirAccess.make_dir_recursive_absolute(DIR)
+	var part: String = pck_path(version) + ".part"
+	if DirAccess.copy_absolute(String(bundled["path"]), part) != OK:
+		DirAccess.remove_absolute(part)
+		return state
+	DirAccess.remove_absolute(pck_path(version))
+	if DirAccess.rename_absolute(part, pck_path(version)) != OK:
+		return state
+	return promote(state, version)
+
+
+## `a` é uma versão (x.y.z) mais nova que `b`; qualquer versão é mais nova que "".
+static func is_newer(a: String, b: String) -> bool:
+	if b == "":
+		return a != ""
+	var pa: PackedStringArray = a.split(".")
+	var pb: PackedStringArray = b.split(".")
+	for i: int in maxi(pa.size(), pb.size()):
+		var x: int = pa[i].to_int() if i < pa.size() else 0
+		var y: int = pb[i].to_int() if i < pb.size() else 0
+		if x != y:
+			return x > y
+	return false

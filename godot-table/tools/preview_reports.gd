@@ -77,7 +77,7 @@ func _initialize() -> void:
 		"aviso", "reinstalar":
 			var notice := UpdateNotice.new()
 			overlay.add_child(notice)
-			notice.set_update("0.239.0", scene == "reinstalar", "https://mesao.online/mesa-pc/")
+			notice.set_update("0.239.0", scene == "reinstalar", "https://mesao.online/baixar")
 			notice.show_if_pending(true)
 		"atualizar":
 			var outdated := OutdatedScreen.new()
