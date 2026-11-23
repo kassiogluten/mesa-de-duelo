@@ -16,7 +16,8 @@ if ! command -v wget >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
 fi
 
 if [ ! -x /usr/local/bin/godot ]; then
-  { wget -q "$REL/Godot_v${V}-stable_linux.x86_64.zip" -O /tmp/godot.zip \
+  echo "Baixando o Godot ${V} de $REL"
+  { wget -nv "$REL/Godot_v${V}-stable_linux.x86_64.zip" -O /tmp/godot.zip \
     && unzip -q -o /tmp/godot.zip -d /tmp/godot \
     && mv /tmp/godot/Godot_v*_linux.x86_64 /usr/local/bin/godot; } \
     || echo "AVISO: o Godot ${V} não foi baixado; a mesa no PC fica sem pacote neste deploy."
@@ -25,7 +26,8 @@ fi
 
 if [ ! -f "$TEMPLATES/windows_release_x86_64.exe" ] || [ ! -f "$TEMPLATES/linux_release.x86_64" ]; then
   mkdir -p "$TEMPLATES"
-  if wget -q "$REL/Godot_v${V}-stable_export_templates.tpz" -O /tmp/templates.tpz; then
+  echo "Baixando os templates de exportação do Godot ${V}"
+  if wget -nv "$REL/Godot_v${V}-stable_export_templates.tpz" -O /tmp/templates.tpz; then
     unzip -j -o -q /tmp/templates.tpz templates/windows_release_x86_64.exe templates/version.txt -d "$TEMPLATES" \
       || { rm -f "$TEMPLATES/windows_release_x86_64.exe"; echo "AVISO: o template do Windows não foi extraído; o zip da mesa no PC fica de fora neste deploy."; }
     unzip -j -o -q /tmp/templates.tpz templates/linux_release.x86_64 -d "$TEMPLATES" \
@@ -35,4 +37,11 @@ if [ ! -f "$TEMPLATES/windows_release_x86_64.exe" ] || [ ! -f "$TEMPLATES/linux_
   fi
   rm -f /tmp/templates.tpz
 fi
+# O que ficou, para o log do build dizer na hora por que a mesa no PC não saiu.
+if [ -x /usr/local/bin/godot ]; then
+  /usr/local/bin/godot --headless --version 2>&1 | tail -3
+else
+  echo "AVISO: sem o Godot em /usr/local/bin/godot."
+fi
+ls -la "$TEMPLATES" 2>&1 | tail -4
 exit 0

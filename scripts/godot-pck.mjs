@@ -60,8 +60,10 @@ function sourceHash(engineVersion) {
 const out = resolve(arg('out', join(ROOT, 'dist', 'mesa-pc')));
 mkdirSync(out, { recursive: true });
 
-const engine = /(\d+\.\d+\.\d+)/.exec(godot('--version').out)?.[1];
-if (!engine) { console.error('Não consegui ler a versão do Godot.'); process.exit(1); }
+const versionRun = godot('--version');
+const engine = /(\d+\.\d+\.\d+)/.exec(versionRun.out)?.[1];
+if (!engine) { console.error(`Não consegui ler a versão do Godot (${process.env.GODOT ?? 'godot'}):
+${versionRun.out}`); process.exit(1); }
 
 // Projeto recém-clonado (sem .godot/): importa antes de exportar.
 const imported = godot('--headless', '--import');
