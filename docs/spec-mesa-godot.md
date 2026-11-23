@@ -150,7 +150,12 @@ Cada fase termina com algo que roda e é medido. Marque as caixas aqui e no item
 - [x] Mesa viva: poeira de luz flutuando sobre o tampo (fica de fora no "leve").
 - [x] Laboratório de efeitos (`lab/effects_lab.gd`, botão na tela inicial; `MESA_LAB=<botão>` abre e aperta): mesa montada sem servidor, um botão por efeito (inclusive limpa-campo, vitória e derrota), velocidade 1×, ¼× e 1/10×, "Remontar mesa".
 - [x] Qualidade: "Efeitos: automático/alto/médio/leve" e o volume do som na tela inicial (`game/prefs.gd`, `user://preferencias.json`); no automático, o regulador baixa um degrau quando os quadros ficam lentos por 1,5 s.
-- [ ] Ainda não: dados e moeda em 3D de verdade, golpe de comandante com placar, primeiro sangue e eliminação múltipla, ultimate de planeswalker, cascata, moer com as cartas voando, física leve das cartas, luz da mesa mudando com a cor das mágicas, e um som próprio por tipo de criatura (a mesa do navegador já tem).
+- [x] Feito com quatro subagentes em paralelo (cada um numa cópia isolada, só com arquivos novos, e a integração no diretor feita depois), 22/11/2026:
+  - Dados e moeda em 3D (`fx/dice3d.gd`, `fx/dice_shapes.gd`): d4 a d20 com o resultado em cima, moeda com cara e coroa em relevo, e o d6 de quem começa com os empates rolando de novo.
+  - Momentos grandes (`fx/moments.gd`, `fx/moment_pieces.gd`): primeiro sangue (uma vez por jogo), eliminação dupla/tripla, golpe de comandante com o placar "X/21" (mais intenso a partir de 15, vermelho a partir de 18) e ultimate de planeswalker; cada um toca junto do evento que o causou, com o título no meio da tela.
+  - Cartas voando (`fx/card_flights.gd`): cascata e descobrir (a encontrada para grande na frente da câmera), moer e vigilância (os eventos de uma carta cada viram um voo só), vidência e busca no grimório.
+  - Som de cada tipo de criatura ao entrar (`fx/creature_sounds.gd`, os de `public/audio/criaturas/`), clima da mesa pela cor das mágicas (`fx/table_mood.gd`) e o pouso da carta com um quique pequeno (`fx/card_motion.gd`).
+- [ ] Refinamentos: segurar a mudança da mesa até as cartas voando pousarem (hoje a carta de verdade já aparece no cemitério/exílio enquanto o voo acontece); inclinar a carta para o lado do mouse (`CardMotion.hover_tilt`, ainda não ligado); a voz do narrador nos momentos; e o "Cascata · N cartas" ficando atrás da carta encontrada.
 
 ### Fase 4: Fora da partida
 - [ ] Salas públicas, criar/entrar em sala por código, sala de espera.
