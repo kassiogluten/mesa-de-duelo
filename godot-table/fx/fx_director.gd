@@ -71,6 +71,7 @@ func before_state(state: Dictionary) -> void:
 		if int(event.get("seq", -1)) > _last_seq:
 			fresh.append(event)
 			_last_seq = int(event.get("seq", -1))
+	fresh = _group_mills(fresh)
 	# Os momentos olham o estado inteiro (vida, eliminados), mesmo sem eventos novos.
 	var moments: Array = _moments.observe(state)
 	if fresh.is_empty() and moments.is_empty():
@@ -87,7 +88,7 @@ func before_state(state: Dictionary) -> void:
 				leaving[id] = node
 	var total: float = 0.0
 	for event: Dictionary in fresh:
-		total += float(DURATION.get(Txt.of(event.get("type")), 0.0))
+		total += _duration(event)
 	var pace: float = minf(1.0, MAX_BATCH / maxf(total, 0.001)) / speed
 	var at: float = 0.05
 	## seq do evento → quando ele toca, para o momento dele tocar junto.
@@ -98,7 +99,7 @@ func before_state(state: Dictionary) -> void:
 		# Referência fraca: a carta pode já ter sumido quando o temporizador dispara.
 		var ref: WeakRef = weakref(leaving.get(_card_id(event)))
 		get_tree().create_timer(at).timeout.connect(func() -> void: _play(played, ref.get_ref() as CardNode))
-		at += float(DURATION.get(Txt.of(event.get("type")), 0.0)) * pace
+		at += _duration(event) * pace
 	# Cada momento junto do evento que o causou; a eliminação múltipla depois do último golpe.
 	for raw: Variant in moments:
 		var moment: Dictionary = raw
@@ -111,6 +112,43 @@ func before_state(state: Dictionary) -> void:
 			var node: CardNode = ref.get_ref() as CardNode
 			if node and not node.is_queued_for_deletion():
 				node.vanish())
+
+
+## Quanto o evento ocupa na sequência: as cartas voando têm a duração delas, o resto a da tabela.
+func _duration(event: Dictionary) -> float:
+	match Txt.of(event.get("type")):
+		"cascade":
+			return CardFlights.cascade_duration((event.get("revealed", []) as Array).size(), int(event.get("hit", -1)) >= 0) * 0.6
+		"mill":
+			return CardFlights.mill_duration((event.get("milled", []) as Array).size()) * 0.6
+		"scry":
+			return CardFlights.scry_duration(int(event.get("top", 0)), int(event.get("bottom", 0))) * 0.6
+		"draw":
+			return CardFlights.TUTOR_TIME * 0.6 if bool(event.get("searched", false)) else float(DURATION["draw"])
+	return float(DURATION.get(Txt.of(event.get("type")), 0.0))
+
+
+## Junta os `mill` seguidos do mesmo jogador, da mesma origem e do mesmo jeito (moer ou vigilância) num evento só, com
+## as cartas em `milled` (como a mesa do navegador, em presentationTimeline.ts).
+static func _group_mills(events: Array) -> Array:
+	var out: Array = []
+	for raw: Variant in events:
+		var event: Dictionary = raw
+		if event.get("type") != "mill":
+			out.append(event)
+			continue
+		var card: Variant = event.get("card")
+		var last: Dictionary = out[out.size() - 1] if not out.is_empty() else {}
+		var same: bool = last.get("type") == "mill" and last.get("actor") == event.get("actor") \
+			and Txt.of(last.get("sourceName")) == Txt.of(event.get("sourceName")) and bool(last.get("surveil", false)) == bool(event.get("surveil", false))
+		if same:
+			if card is Dictionary:
+				(last["milled"] as Array).append(card)
+			continue
+		var group: Dictionary = event.duplicate()
+		group["milled"] = [card] if card is Dictionary else []
+		out.append(group)
+	return out
 
 
 static func _card_id(event: Dictionary) -> int:
@@ -182,7 +220,22 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 			hud.banner(title, Hud.GOLD if mine else Color(0.75, 0.85, 1.0))
 		"draw":
 			var actor: int = int(event.get("actor", _you))
-			Fx.burst(self, table.library_position(actor) + Vector3(0, 0.3, 0), Color(0.8, 0.9, 1.0), 10, 0.8, 0.4, 0.09)
+			if bool(event.get("searched", false)):
+				# Busca no grimório (tutor): a carta sai brilhando do grimório e vai para a mão.
+				CardFlights.tutor(self, table.library_position(actor), table.zone_position(actor, "hand"), table.sleeve_of(actor))
+			else:
+				Fx.burst(self, table.library_position(actor) + Vector3(0, 0.3, 0), Color(0.8, 0.9, 1.0), 10, 0.8, 0.4, 0.09)
+		"cascade":
+			var digger: int = int(event.get("actor", _you))
+			CardFlights.cascade(self, table.catalog, table.library_position(digger), table.zone_position(digger, "exile"),
+				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger))
+		"mill":
+			var miller: int = int(event.get("actor", _you))
+			CardFlights.mill(self, table.catalog, table.library_position(miller), table.zone_position(miller, "graveyard"),
+				event.get("milled", []), bool(event.get("surveil", false)), table.sleeve_of(miller))
+		"scry":
+			var seer: int = int(event.get("actor", _you))
+			CardFlights.scry(self, table.library_position(seer), int(event.get("top", 0)), int(event.get("bottom", 0)), table.sleeve_of(seer))
 		"shuffle":
 			var pile: CardNode = table.card_node("library:%d" % int(event.get("actor", _you)))
 			if pile:

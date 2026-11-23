@@ -181,6 +181,22 @@ func anchor(key: Variant) -> Variant:
 	return _anchor(key)
 
 
+## Onde fica uma zona de um jogador ("library", "graveyard", "exile", "command"; "hand" é a mão: a sua, no leque).
+func zone_position(player_id: int, zone: String) -> Vector3:
+	var frame: Dictionary = _frames.get(player_id, SeatLayout.mine())
+	if zone == "hand" and int(frame["side"]) > 0:
+		return HAND_CENTER
+	return frame.get(zone, frame["library"])
+
+
+## A cor do verso das cartas de um jogador.
+func sleeve_of(player_id: int) -> Color:
+	for raw: Variant in _state.get("players", []):
+		if int((raw as Dictionary)["id"]) == player_id:
+			return SLEEVES[int((raw as Dictionary).get("sleeve", 0)) % SLEEVES.size()]
+	return SLEEVES[0]
+
+
 ## O meio da área de um jogador no tampo (onde cai o dado dele no "quem começa").
 func seat_center(player_id: int) -> Vector3:
 	var frame: Dictionary = _frames.get(player_id, SeatLayout.mine())

@@ -62,7 +62,8 @@ func _init() -> void:
 	_stats.outline_modulate = Color(0.05, 0.05, 0.08)
 	# Sempre de frente para a câmera: lê-se igual com a carta virada.
 	_stats.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_stats.no_depth_test = true
+	# Com profundidade: um efeito ou uma carta voando por cima esconde o número (sem ela, o 5/5 vazava por tudo).
+	_stats.no_depth_test = false
 	_stats.position = Vector3(SIZE.x * 0.3, 0.05, SIZE.y * 0.38)
 	_stats.visible = false
 	_visual.add_child(_stats)

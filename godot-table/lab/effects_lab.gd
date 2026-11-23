@@ -85,7 +85,9 @@ func _panel() -> Control:
 		["Sacrificada", _leave.bind(102, "Graveyard", "sacrificed")], ["Exilada", _leave.bind(201, "Exile", "")],
 		["Ataque", _attack], ["Bloqueio", _block], ["Marcadores +1/+1", _counters], ["Anulada", _countered],
 		["Indestrutível", _survived], ["Limpa-campo", _wrath],
-		["Primeiro sangue", _first_blood], ["Golpe de comandante", _commander_hit], ["Moeda", _simple.bind({"type": "coin", "heads": true})], ["Dado", _simple.bind({"type": "die", "sides": 20, "result": 17})],
+		["Primeiro sangue", _first_blood], ["Golpe de comandante", _commander_hit],
+		["Cascata", _cascade], ["Moer 4", _mill], ["Vidência 3", _simple.bind({"type": "scry", "actor": 0, "top": 1, "bottom": 2})],
+		["Busca no grimório", _simple.bind({"type": "draw", "actor": 0, "searched": true})], ["Moeda", _simple.bind({"type": "coin", "heads": true})], ["Dado", _simple.bind({"type": "die", "sides": 20, "result": 17})],
 		["Quem começa", _simple.bind({"type": "starting-roll", "actor": 0, "rolls": [[{"player": 0, "roll": 4}, {"player": 1, "roll": 4}], [{"player": 0, "roll": 6}, {"player": 1, "roll": 2}]]})],
 		["Seu turno", _simple.bind({"type": "turn", "actor": 0, "turn": 6})], ["Vitória", func() -> void: _fx.game_over(true)],
 		["Derrota", func() -> void: _fx.game_over(false)], ["Remontar mesa", _reset],
@@ -241,6 +243,24 @@ func _countered() -> void:
 	_stack = false
 	_fx.before_state(_state([event]))
 	_table.apply_state(_state())
+
+
+## Cascata do oponente: três cartas saem do topo até a que é conjurada de graça.
+func _cascade() -> void:
+	var revealed: Array = [_card(204), _card(203), _card(301)]
+	revealed[0]["id"] = 401
+	revealed[1]["id"] = 402
+	_rebuild([_event({"type": "cascade", "actor": 1, "dig": "cascade", "card": _card(201), "revealed": revealed, "hit": 301, "cast": true})])
+
+
+## Moer 4: quatro eventos de uma carta cada, que a mesa junta num voo só.
+func _mill() -> void:
+	var events: Array = []
+	for id: int in [101, 102, 103, 113]:
+		var card: Dictionary = _card(id)
+		card["id"] = 500 + id
+		events.append(_event({"type": "mill", "actor": 0, "card": card, "sourceName": "Teste"}))
+	_rebuild(events)
 
 
 ## O primeiro golpe de combate num jogador (o momento só vale uma vez por partida: "Remontar mesa" não o reinicia).
