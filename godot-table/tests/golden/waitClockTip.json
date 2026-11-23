@@ -1,0 +1,15 @@
+[
+ {
+  "args": [
+   {
+    "player": 1,
+    "name": "Ana",
+    "mine": false,
+    "ms": 90000,
+    "stage": 2,
+    "since": 910000
+   }
+  ],
+  "out": "A mesa espera Ana há 1:30"
+ }
+]

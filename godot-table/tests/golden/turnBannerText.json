@@ -1,0 +1,88 @@
+[
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": "Seu turno"
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "extraTurn": true,
+    "extraTurns": [
+     1,
+     1
+    ],
+    "extraCombats": 1,
+    "extraCombatAfter": [
+     "MAIN2"
+    ],
+    "stack": []
+   }
+  ],
+  "out": "Turno extra"
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "extraTurn": true,
+    "extraTurns": [
+     1,
+     1
+    ],
+    "extraCombats": 1,
+    "extraCombatAfter": [
+     "MAIN2"
+    ],
+    "stack": []
+   }
+  ],
+  "out": "Turno extra do oponente"
+ }
+]

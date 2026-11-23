@@ -1,0 +1,145 @@
+[
+ {
+  "args": [
+   {
+    "config": {
+     "format": "free",
+     "matchLength": "bo1"
+    },
+    "match": {
+     "gameNumber": 1,
+     "wins": [
+      0,
+      0
+     ]
+    }
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ],
+     "spectators": [
+      "Eva",
+      "Caio"
+     ]
+    }
+   }
+  ],
+  "out": "Jogo 2 · 1 × 0"
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ]
+    },
+    "spectating": true,
+    "watching": true
+   }
+  ],
+  "out": "Jogo 2 · 1 × 0"
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ]
+    }
+   }
+  ],
+  "out": "Jogo 2 · 1 × 0"
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "matchLength": "bo1"
+    },
+    "match": {
+     "gameNumber": 1,
+     "wins": [
+      0,
+      0
+     ]
+    }
+   }
+  ],
+  "out": ""
+ }
+]

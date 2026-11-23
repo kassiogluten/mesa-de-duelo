@@ -13,7 +13,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const GOLDEN_DIR = join(ROOT, 'godot-table', 'tests', 'golden');
 const FIXTURES = join(ROOT, 'godot-table', 'tests', 'fixtures');
-const TESTS = ['tests/forgeText.test.mjs', 'tests/short-instruction.test.mjs', 'tests/forge-request.test.mjs', 'tests/table-parts.test.mjs'];
+const TESTS = ['tests/forgeText.test.mjs', 'tests/short-instruction.test.mjs', 'tests/forge-request.test.mjs', 'tests/table-parts.test.mjs',
+  'tests/phase-hud.test.mjs', 'tests/opponent-stops.test.mjs', 'tests/choice-screens.test.mjs', 'tests/wait-alert.test.mjs', 'tests/event-text.test.mjs',
+  'tests/history-log.test.mjs', 'tests/board-sweep.test.mjs'];
 
 /** Grava as chamadas feitas pelos testes de TS. */
 function recordFromTests() {
@@ -46,6 +48,39 @@ async function recordFromMatches() {
   return calls;
 }
 
+/**
+ * Frases de evento além das dos testes de TS: cada evento dos testes do histórico e das partidas gravadas, com e sem
+ * os detalhes do histórico, pela mesma vista gravada ({ $view }) que o gancho usa.
+ */
+async function recordEventCorpus(calls) {
+  const { eventDescription } = await import('../src/ui/eventText.ts');
+  const { VIEWS } = await import('./godot-golden-record.mjs');
+  const keys = VIEWS.eventDescription[0];
+  const sets = calls.filter(c => c.fn === 'historyTurns')
+    .map(c => ({ events: c.args[0], state: { you: 1, players: [{ id: 1, name: 'Ana' }, { id: 2, name: 'Bruno' }] } }));
+  if (existsSync(FIXTURES)) for (const name of readdirSync(FIXTURES).filter(n => n.endsWith('.json'))) {
+    const states = JSON.parse(readFileSync(join(FIXTURES, name), 'utf8'));
+    const events = new Map();
+    for (const s of states) for (const e of s.events ?? []) events.set(e.seq, e);
+    const last = states.at(-1);
+    sets.push({ events: [...events.values()], state: { you: last.you, players: last.players.map(p => ({ id: p.id, name: p.name })) }, all: last });
+  }
+  const out = [];
+  for (const { events, state, all } of sets) {
+    const cards = new Map();
+    for (const e of events) for (const p of e.frame?.players ?? []) for (const c of p.battlefield ?? []) cards.set(c.id, c);
+    for (const p of all?.players ?? []) for (const zone of ['battlefield', 'hand', 'graveyard', 'exile']) for (const c of p[zone] ?? []) cards.set(c.id, c);
+    for (const event of events) for (const detailed of [false, true]) {
+      const saved = {};
+      const rec = (fn, f) => (...a) => { const r = f(...a); (saved[fn] ??= {})[keys[fn](...a)] = r; return r; };
+      const view = { state: rec('state', () => state), label: rec('label', c => c.name), findCard: rec('findCard', id => cards.get(id)), ptName: rec('ptName', () => undefined) };
+      const text = eventDescription(view, event, detailed);
+      out.push(JSON.parse(JSON.stringify({ fn: 'eventDescription', args: [{ $view: { $calls: saved } }, event, detailed], out: text })));
+    }
+  }
+  return out;
+}
+
 /** Junta por função, sem repetir a mesma entrada, numa ordem estável. */
 export function group(calls) {
   const out = {};
@@ -59,7 +94,8 @@ export function group(calls) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const grouped = group([...recordFromTests(), ...await recordFromMatches()]);
+  const fromTests = recordFromTests();
+  const grouped = group([...fromTests, ...await recordFromMatches(), ...await recordEventCorpus(fromTests)]);
   mkdirSync(GOLDEN_DIR, { recursive: true });
   for (const [fn, cases] of Object.entries(grouped)) writeFileSync(join(GOLDEN_DIR, `${fn}.json`), JSON.stringify(cases, null, 1) + '\n');
   console.log(Object.entries(grouped).map(([fn, cases]) => `${fn}: ${cases.length}`).join(', '));

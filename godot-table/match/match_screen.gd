@@ -73,6 +73,11 @@ func _ready() -> void:
 	_hud.pass_level_changed.connect(_save_pass_level)
 	_hud.player_clicked.connect(_on_player_clicked)
 	_hud.leave_pressed.connect(_leave)
+	# Opções do menu da partida: valem na hora, sem sair da mesa.
+	_hud.effects_changed.connect(func(level: String) -> void:
+		_fx.automatic = level == "auto"
+		Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2))
+	_hud.volume_changed.connect(func(volume: float) -> void: _fx.sounds.volume = volume)
 	_question.answered.connect(func(message: Dictionary) -> void: _client.send(message))
 
 	_client.client_version = UpdateState.current_version()
