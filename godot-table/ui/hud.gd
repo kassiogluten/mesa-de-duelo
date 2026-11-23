@@ -7,6 +7,8 @@ extends Control
 signal action(message: Dictionary)
 signal player_clicked(player_id: int)
 signal leave_pressed
+## "Relatar um problema", do menu da partida ou da tela do resultado.
+signal report_pressed
 ## Tocou num monte do assento ou no dano de comandante: abrir a janela de zona ("graveyard", "exile", "command", "damage", "hand").
 signal zone_requested(player_id: int, zone: String)
 ## O jogador trocou o nível de passar (para guardar).
@@ -82,6 +84,7 @@ func _ready() -> void:
 	_menu = MatchMenu.new()
 	_menu.action.connect(func(message: Dictionary) -> void: action.emit(message))
 	_menu.leave_pressed.connect(func() -> void: leave_pressed.emit())
+	_menu.report_pressed.connect(func() -> void: report_pressed.emit())
 	_menu.pass_level_changed.connect(func(level: String) -> void: pass_level_changed.emit(level))
 	_menu.effects_changed.connect(func(level: String) -> void: effects_changed.emit(level))
 	_menu.volume_changed.connect(func(volume: float) -> void: volume_changed.emit(volume))
@@ -148,6 +151,7 @@ func _ready() -> void:
 	_result.catalog = catalog
 	_result.action.connect(func(message: Dictionary) -> void: action.emit(message))
 	_result.leave_pressed.connect(func() -> void: leave_pressed.emit())
+	_result.report_pressed.connect(func() -> void: report_pressed.emit())
 	add_child(_result)
 
 	# Entre os jogos de uma melhor de três: seguir com o mesmo deck (trocar cartas com o sideboard fica para depois).

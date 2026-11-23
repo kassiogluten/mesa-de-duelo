@@ -82,6 +82,7 @@ export function reportDetailHTML(code: string, item: Item, stored: Stored, notic
     <h3>Detalhes</h3>
     ${rows([['recebido', when(stored.receivedAt ?? r.createdAt)], ['enviado por', item.author ? `${authorName(item)} (${item.author.account ? 'conta conectada' : 'nome informado, sem verificação'})` : 'anônimo'],
       ['conta', item.author?.account && `${item.author.account.slice(0, 12)}…`], ['onde', r.from === 'partida' ? 'durante a partida' : 'tela inicial'], ['versão da mesa', r.app?.version],
+      ['mesa', r.client?.type === 'godot' ? `no PC (Godot ${r.client.engine ?? '?'}, protocolo ${r.client.protocol ?? '?'})` : null],
       ['regras / motor', r.match?.rulesVersion && `${r.match.rulesVersion} / ${r.match.engineVersion ?? '?'}`], ['formato', r.match?.format && `${FORMATS[r.match.format] ?? r.match.format}${r.match.net ? ' em rede' : ''}, ${r.match.playerCount ?? '?'} jogadores`],
       ['jogadores', meta?.players?.map((p: Stored) => `${p.name}${p.ai ? ' (IA)' : ''}`).join(', ')],
       ['aparelho', d && `${d.viewport} (tela ${d.screen}, ${d.pixelRatio}×), ${d.touch ? 'toque' : 'sem toque'}, ${d.installed ? 'instalado' : 'no navegador'}`],
@@ -90,7 +91,8 @@ export function reportDetailHTML(code: string, item: Item, stored: Stored, notic
       ['diário da ponte', bridge ? `${bridge.snapshots?.length ?? 0} retratos, ${bridge.actions?.length ?? 0} ações` : rec ? 'não veio (partida já encerrada na ponte)' : null],
       ['tamanho', size(item.bytes)]])}
     ${errors.length ? `<h3>Erros registrados (${errors.length})</h3><ul class="adm-errors">${errors.slice(-40).map((n: Stored) => `<li><time>${new Date(n.at).toLocaleTimeString('pt-BR')}</time> <strong>${esc(n.kind)}</strong> ${esc(n.text)}${n.detail ? `<code>${esc(n.detail)}</code>` : ''}</li>`).join('')}</ul>` : ''}
-    ${r.diagnostics ? `<details><summary>Relatório do painel de erros</summary><pre>${esc(r.diagnostics)}</pre></details>` : ''}
+    ${typeof r.screenshot === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(r.screenshot) ? `<details open><summary>Print da mesa</summary><img class="adm-shot" src="${esc(r.screenshot)}" alt="Print da mesa enviado com o relato"></details>` : ''}
+    ${r.diagnostics ? `<details><summary>${r.client?.type === 'godot' ? 'Registro da mesa no PC' : 'Relatório do painel de erros'}</summary><pre>${esc(r.diagnostics)}</pre></details>` : ''}
     ${bridge?.snapshots?.length ? `<details><summary>Retratos do Forge (${bridge.snapshots.length})</summary>${bridge.snapshots.map((s: Stored, i: number) => `<p class="adm-muted">Retrato ${i}: jogo ${s.gameNumber}, turno ${s.turn}, ${esc(s.phase)} (${s.reason === 'relato' ? 'no relato' : 'começo do turno'})</p>`).join('')}
       <p class="adm-muted">Para restaurar no Forge: <code>./scripts/rodar.sh --mode=replay --relato=${esc(code)}.json.gz --retrato=N</code> com o arquivo baixado.</p></details>` : ''}`;;
 }

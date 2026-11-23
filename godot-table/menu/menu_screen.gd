@@ -8,6 +8,9 @@ signal play(start_message: Dictionary)
 signal lab
 ## Abrir a tela Jogar online (salas públicas, código, criar sala).
 signal online
+## Relatar um problema e Meus relatos (as janelas ficam em main.gd).
+signal report
+signal my_reports
 
 const StarterDecks := preload("res://cards/starter_decks.gd")
 ## Os jeitos de jogar contra o computador: rótulo, formato e quantos jogadores.
@@ -139,6 +142,15 @@ func _ready() -> void:
 	var lab_button := Hud._button("Laboratório de efeitos", false)
 	lab_button.pressed.connect(func() -> void: lab.emit())
 	column.add_child(lab_button)
+	var reports := HBoxContainer.new()
+	reports.add_theme_constant_override("separation", 10)
+	for entry: Array in [["Relatar um problema", report], ["Meus relatos", my_reports]]:
+		var button := Hud._button(Txt.of(entry[0]), false)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var target: Signal = entry[1]
+		button.pressed.connect(func() -> void: target.emit())
+		reports.add_child(button)
+	column.add_child(reports)
 	_fill_decks()
 
 	var version := Hud._label(16, Color(1, 1, 1, 0.4))

@@ -7,9 +7,19 @@ const CONFIRM_AFTER_S := 2.0
 
 var _screen: Node
 var _perf: PerfMeter
+## Por cima de todas as telas: relato, Meus relatos, aviso de versão e a tela de atualização necessária.
+var _overlay: CanvasLayer
+var _reports: ReportClient
+var _report: ReportDialog
+var _my_reports: MyReportsPanel
+var _toasts: ToastStack
+var _updates: UpdateCheck
+var _update_notice: UpdateNotice
+var _outdated: OutdatedScreen
 
 
 func _ready() -> void:
+	ClientLog.install()
 	var version: String = UpdateState.current_version()
 	get_tree().create_timer(CONFIRM_AFTER_S).timeout.connect(UpdateState.confirm)
 	print("Mesa aberta (%s)." % ("Versão %s" % version if version != "" else "Versão de desenvolvimento"))
@@ -18,6 +28,7 @@ func _ready() -> void:
 	add_child(layer)
 	_perf = PerfMeter.new()
 	layer.add_child(_perf)
+	_build_overlay()
 	_show_menu()
 	# MESA_PARTIDA_DIRETO=1 pula a tela inicial (para testar a mesa direto).
 	if OS.get_environment("MESA_PARTIDA_DIRETO") == "1":
@@ -49,6 +60,39 @@ func _ready() -> void:
 			get_tree().quit())
 
 
+func _build_overlay() -> void:
+	_overlay = CanvasLayer.new()
+	_overlay.layer = 60
+	add_child(_overlay)
+	_reports = ReportClient.new()
+	_overlay.add_child(_reports)
+	_toasts = ToastStack.new()
+	_overlay.add_child(_toasts)
+	_update_notice = UpdateNotice.new()
+	_overlay.add_child(_update_notice)
+	_update_notice.restart_pressed.connect(func() -> void: UpdateCheck.relaunch(get_tree()))
+	_update_notice.download_pressed.connect(func(url: String) -> void: OS.shell_open(url))
+	_my_reports = MyReportsPanel.new()
+	_my_reports.client = _reports
+	_overlay.add_child(_my_reports)
+	_report = ReportDialog.new()
+	_report.client = _reports
+	_overlay.add_child(_report)
+	_report.sent.connect(func(code: String) -> void: _toasts.show_toast("Relato %s enviado. Obrigado!" % code, "success"))
+	_report.my_reports_requested.connect(_my_reports.open)
+	_outdated = OutdatedScreen.new()
+	_overlay.add_child(_outdated)
+	_outdated.update_pressed.connect(func() -> void: UpdateCheck.relaunch(get_tree()))
+	_outdated.back_pressed.connect(func() -> void:
+		_outdated.visible = false
+		_show_menu())
+	_updates = UpdateCheck.new()
+	add_child(_updates)
+	_updates.available.connect(func(version: String, reinstall: bool, download: String) -> void:
+		_update_notice.set_update(version, reinstall, download)
+		_update_notice.show_if_pending(_screen is MenuScreen))
+
+
 func _show_menu() -> void:
 	var menu := MenuScreen.new()
 	var version: String = UpdateState.current_version()
@@ -56,7 +100,11 @@ func _show_menu() -> void:
 	menu.play.connect(_start_match)
 	menu.lab.connect(_open_lab)
 	menu.online.connect(_open_online)
+	# Da tela inicial, o relato leva a última partida desta abertura da mesa, se houve uma.
+	menu.report.connect(func() -> void: _report.open({"from": "inicio", "recorder": MatchRecorder.last, "session": MatchRecorder.last.session if MatchRecorder.last else {}}))
+	menu.my_reports.connect(_my_reports.open)
 	_swap(menu)
+	_updates.check_now()
 
 
 func _open_online() -> void:
@@ -76,6 +124,8 @@ func _start_match(start_message: Dictionary) -> void:
 	var match_screen := MatchScreen.new()
 	match_screen.start_message = start_message
 	match_screen.finished.connect(_show_menu)
+	match_screen.report_requested.connect(_report.open)
+	match_screen.outdated.connect(_outdated.open)
 	_swap(match_screen)
 
 
@@ -84,3 +134,6 @@ func _swap(screen: Node) -> void:
 		_screen.queue_free()
 	_screen = screen
 	add_child(screen)
+	# As janelas por cima recebem as teclas antes da tela (a ordem da árvore decide quem vê primeiro).
+	move_child(_overlay, -1)
+	_update_notice.show_if_pending(screen is MenuScreen)

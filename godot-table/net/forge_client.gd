@@ -16,8 +16,12 @@ signal reconnected
 signal gave_up(reason: String)
 ## Toda mensagem do servidor que não é resposta de uma consulta (`hello`, `state`, `room`, `toast`, `error`…).
 signal message(msg: Dictionary)
+## Uma mensagem que saiu para o servidor (a gravação do relato guarda as jogadas).
+signal sent(msg: Dictionary)
 
 const DEFAULT_URL := "ws://127.0.0.1:7171/ws"
+## A versão do protocolo que esta mesa entende (Rooms.PROTOCOL_VERSION do servidor); vai no hello.
+const SUPPORTED_PROTOCOL := 1
 ## O estado inteiro de uma mesa cheia passa bem de 64 KB (o padrão do Godot).
 const INBOUND_BUFFER := 8 * 1024 * 1024
 ## Intervalos crescentes (~40 s no total) para voltar sozinho à partida (RECONNECT_DELAYS de src/app/retry.ts).
@@ -110,7 +114,20 @@ func send(msg: Dictionary) -> bool:
 		print("ENVIO ", JSON.stringify(msg))
 	if not _open:
 		return false
-	return _ws.send_text(JSON.stringify(msg)) == OK
+	var ok: bool = _ws.send_text(JSON.stringify(msg)) == OK
+	if ok:
+		sent.emit(msg)
+	return ok
+
+
+## O servidor fala um protocolo que esta mesa não entende: o `minProtocolVersion` dele (quando manda) passa do nosso
+## ou, sem ele, o `protocolVersion` é mais novo. Servidor antigo, sem os dois, segue valendo.
+static func needs_update(hello: Dictionary) -> bool:
+	var minimum: Variant = hello.get("minProtocolVersion")
+	if minimum is int or minimum is float:
+		return int(minimum) > SUPPORTED_PROTOCOL
+	var version: Variant = hello.get("protocolVersion")
+	return (version is int or version is float) and int(version) > SUPPORTED_PROTOCOL
 
 
 ## Manda uma consulta com requestId novo; a resposta chega em `done`.
@@ -136,7 +153,7 @@ func _open_socket() -> Error:
 
 func _on_open() -> void:
 	_open = true
-	send({"type": "hello", "client": "godot", "clientVersion": client_version})
+	send({"type": "hello", "client": "godot", "clientVersion": client_version, "protocolVersion": SUPPORTED_PROTOCOL})
 	if _attempt > 0:
 		_attempt = 0
 		send({"type": "rejoin", "code": session.get("code", ""), "token": session.get("token", "")})
