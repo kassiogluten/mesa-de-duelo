@@ -19,7 +19,7 @@ func _ready() -> void:
 	holder.position = Vector3(0, 0, -1.5)
 	var shaders: Array[Material] = []
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), PermanentFx._dome(), CardDressing._halo(),
-			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material()]:
+			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash()]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
@@ -28,6 +28,7 @@ func _ready() -> void:
 	shaders.append(ArrivalFx._material(Color(1, 1, 1, 0.5), 0.0, 0.1, 0.2))
 	shaders.append(ArrivalFx._material(Color.WHITE, 0.85, 0.28, 0.0))
 	shaders.append(Critters._mat(Color.WHITE))
+	shaders.append(Fx._glow_material(Color.WHITE))
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 0.001
 	for material: Material in shaders:
@@ -40,12 +41,29 @@ func _ready() -> void:
 	var spot: Vector3 = camera.global_transform * Vector3(0, 0, -1.5)
 	Fx.burst(self, spot, Color(0, 0, 0, 0), 4, 0.01, 0.2, 0.001)
 	BoardSweep._front_sparks(self, spot, Color(0, 0, 0, 0), 0.2)
-	var label := Label3D.new()
-	label.text = "Aquecendo 0123456789"
-	label.font = MomentPieces._font()
-	label.font_size = 96
-	label.pixel_size = 0.00001
-	holder.add_child(label)
+	CombatFx.sparks(self, spot, Vector3.FORWARD, Color(0, 0, 0, 0), 4, 0.01)
+	TouchFx.dust(self, spot, Color(0, 0, 0, 0), 1.0)
+	# Os números do dano e os textos (com contorno, na fonte dos títulos e na comum), já com os algarismos.
+	for font: Font in [MomentPieces._font(), null]:
+		var label := Label3D.new()
+		label.text = "Aquecendo -0123456789+ veneno"
+		if font:
+			label.font = font
+		label.font_size = 120
+		label.outline_size = 26
+		label.no_depth_test = true
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.pixel_size = 0.00001
+		holder.add_child(label)
+	# As luzes de verdade (clarão, holofote do Game Changer): a primeira de cada tipo recompila os materiais da mesa.
+	var omni := OmniLight3D.new()
+	omni.light_energy = 0.001
+	omni.omni_range = 0.01
+	holder.add_child(omni)
+	var spot_light := SpotLight3D.new()
+	spot_light.light_energy = 0.001
+	spot_light.spot_range = 0.01
+	holder.add_child(spot_light)
 	_free_later(holder)
 
 
