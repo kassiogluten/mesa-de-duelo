@@ -1,4 +1,4 @@
-# O HUD por cima da mesa 3D: retratos com vida, fase do turno, caixa de ação com os botões e a carta ampliada.
+# O HUD por cima da mesa 3D: retratos com vida, fase do turno e a caixa de ação com os botões (a carta ampliada fica no CardInspector).
 class_name Hud
 extends Control
 
@@ -31,7 +31,6 @@ var _detail: Label
 var _progress: Label
 var _buttons_box: VBoxContainer
 var _primary: Dictionary = {}
-var _preview: TextureRect
 var _toast: Label
 var _toast_left: float = 0.0
 var _portraits: Dictionary = {}
@@ -95,18 +94,6 @@ func _ready() -> void:
 	_buttons_box = VBoxContainer.new()
 	_buttons_box.add_theme_constant_override("separation", 8)
 	column.add_child(_buttons_box)
-
-	_preview = TextureRect.new()
-	_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_preview.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	_preview.offset_left = 24
-	_preview.offset_top = -260
-	_preview.offset_right = 24 + 372
-	_preview.offset_bottom = 260
-	_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_preview.visible = false
-	add_child(_preview)
 
 	_toast = _label(20, Color(1, 0.85, 0.8))
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -192,12 +179,6 @@ func show_toast(text: String) -> void:
 	_toast.text = text
 	_toast_left = 4.0
 	_toast.modulate.a = 1.0
-
-
-## Mostra a carta ampliada (null esconde).
-func show_preview(tex: Texture2D) -> void:
-	_preview.texture = tex
-	_preview.visible = tex != null
 
 
 ## O centro do retrato de um jogador na tela (para as setas que miram jogadores); (-1, -1) se não há.
