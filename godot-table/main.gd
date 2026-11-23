@@ -137,3 +137,5 @@ func _swap(screen: Node) -> void:
 	# As janelas por cima recebem as teclas antes da tela (a ordem da árvore decide quem vê primeiro).
 	move_child(_overlay, -1)
 	_update_notice.show_if_pending(screen is MenuScreen)
+	# Na partida e no laboratório, o contador fica no alto (abaixo da barra); nas telas do menu, no pé, longe dos títulos.
+	_perf.dock_top(screen is MatchScreen or screen is EffectsLab)

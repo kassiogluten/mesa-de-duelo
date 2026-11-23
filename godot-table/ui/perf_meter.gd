@@ -17,13 +17,26 @@ func _ready() -> void:
 	add_theme_color_override("font_color", Color(0.6, 1.0, 0.6, 0.85))
 	add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	add_theme_constant_override("outline_size", 4)
-	# Logo abaixo da barra do alto à esquerda (Menu, histórico e relógios), sem cobrir nada da mesa.
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	offset_left = 26
-	offset_right = 520
-	offset_top = 58
+	dock_top(true)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	detailed = OS.get_environment("MESA_FPS") == "1"
+
+
+## Na partida, logo abaixo da barra do alto à esquerda (Menu, histórico e relógios), sem cobrir nada da mesa; nas telas
+## do menu, no canto de baixo à esquerda, onde não há título nem botão.
+func dock_top(top: bool) -> void:
+	if top:
+		set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		offset_left = 26
+		offset_right = 520
+		offset_top = 58
+		offset_bottom = 78
+	else:
+		set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+		offset_left = 16
+		offset_right = 520
+		offset_top = -34
+		offset_bottom = -12
 
 
 func _process(delta: float) -> void:
