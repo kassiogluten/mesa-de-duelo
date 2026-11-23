@@ -35,6 +35,9 @@ func _ready() -> void:
 	shaders.append(ArrivalFx._material(Color.WHITE, 0.85, 0.28, 0.15))
 	shaders.append(Critters._mat(Color.WHITE))
 	shaders.append(Fx._glow_material(Color.WHITE))
+	# Os efeitos contínuos das permanentes (o material compartilhado) e o ponto de luz das partículas deles.
+	shaders.append(AmbientFx.shared_material())
+	shaders.append(AmbientMotes.draw_mesh().material)
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 0.001
 	for material: Material in shaders:
@@ -83,6 +86,10 @@ func _ready() -> void:
 			objects.add_child(object)
 	_coin_task = WorkerThreadPool.add_task(_draw_coin)
 	ManaPoolFx.warm(self)
+	for mode: int in AmbientTraits.PARTICLE_MODES:
+		var motes: GPUParticles3D = AmbientMotes.emitter(mode)
+		motes.scale = Vector3.ONE * 0.001
+		holder.add_child(motes)
 	_free_later(holder)
 
 

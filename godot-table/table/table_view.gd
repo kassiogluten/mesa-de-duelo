@@ -79,6 +79,8 @@ func apply_state(state: Dictionary) -> void:
 	for i: int in opponents.size():
 		_frames[int((opponents[i] as Dictionary)["id"])] = SeatLayout.opponent(i, opponents.size())
 	_field.place_all(players, _frames, seen, names)
+	# Os efeitos contínuos das permanentes (voar, vínculo com a vida, indestrutível…): fx/ambient_fx.gd.
+	AmbientFx.sync(self)
 	for raw: Variant in players:
 		var player: Dictionary = raw
 		var frame: Dictionary = _frames[int(player["id"])]
