@@ -14,6 +14,7 @@ var _labels: Array[Label3D] = []
 func _rebuild() -> void:
 	while _labels.size() < marks.size():
 		var label := Label3D.new()
+		label.font = CardBadges.font()
 		label.pixel_size = 0.0035
 		label.font_size = 64
 		label.outline_size = 18

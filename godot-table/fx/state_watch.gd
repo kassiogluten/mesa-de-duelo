@@ -15,8 +15,11 @@ var _seen: bool = false
 var _monarch: int = -1
 var _initiative: int = -1
 var _day: String = ""
-## jogador → [{id, color, time}]: os terrenos virados há pouco que ainda não pagaram uma mágica.
+## jogador → [{id, color, time, pooled}]: os terrenos virados há pouco que ainda não pagaram uma mágica (pooled: a mana
+## foi para a reserva, e a reserva da HUD já mostra a gota indo do terreno para ela e dela para a mágica).
 var _mana: Dictionary = {}
+## jogador → quanta mana havia na reserva no estado anterior.
+var _pool_total: Dictionary = {}
 ## Ids conjurados da zona de comando que ainda não entraram no campo.
 var _command_casts: Dictionary = {}
 var _last_creak: float = -1000.0
@@ -42,6 +45,10 @@ func observe(state: Dictionary, events: Array, previous: Callable, now: float) -
 			monarch = pid
 		if bool(player.get("initiative", false)):
 			initiative = pid
+		# A reserva cresceu neste estado: os terrenos virados agora encheram a reserva (não pagaram direto).
+		var pooled: int = pool_total(player)
+		var filled: bool = pooled > int(_pool_total.get(pid, 0))
+		_pool_total[pid] = pooled
 		for card_raw: Variant in player.get("battlefield", []):
 			var card: Dictionary = card_raw
 			var old: Dictionary = previous.call(int(card.get("id", -1)))
@@ -53,7 +60,7 @@ func observe(state: Dictionary, events: Array, previous: Callable, now: float) -
 			# Terreno que virou agora: guardado como mana do jogador até ele conjurar.
 			if bool(card.get("land", false)) and bool(card.get("tapped", false)) and not bool(old.get("tapped", false)):
 				var pool: Array = _mana.get(pid, [])
-				pool.append({"id": int(card["id"]), "color": land_color(card), "time": now})
+				pool.append({"id": int(card["id"]), "color": land_color(card), "time": now, "pooled": filled})
 				_mana[pid] = pool
 	var day: String = Txt.of(state.get("dayTime"))
 	if _seen:
@@ -77,7 +84,10 @@ func observe(state: Dictionary, events: Array, previous: Callable, now: float) -
 				var actor: int = int(event.get("actor", -1))
 				var paid: Array = _mana.get(actor, [])
 				if not paid.is_empty() and not bool(event.get("copy", false)):
-					mana[int(event.get("seq", -1))] = paid.map(func(e: Dictionary) -> Dictionary: return {"id": e["id"], "color": e["color"]})
+					# A mana que passou pela reserva já voa na HUD (do terreno para a reserva e dela para a mágica).
+					var direct: Array = paid.filter(func(e: Dictionary) -> bool: return not bool(e.get("pooled", false)))
+					if not direct.is_empty():
+						mana[int(event.get("seq", -1))] = direct.map(func(e: Dictionary) -> Dictionary: return {"id": e["id"], "color": e["color"]})
 					_mana[actor] = []
 				if Txt.of(event.get("from")) == "Command":
 					_command_casts[id] = true
@@ -113,6 +123,15 @@ static func transform_of(old: Dictionary, card: Dictionary) -> Dictionary:
 	if before != "" and before != after:
 		return {"id": int(card.get("id", -1)), "from": before, "to": after, "face_up": false}
 	return {}
+
+
+## Quanta mana o jogador tem na reserva (o "pool" do estado).
+static func pool_total(player: Dictionary) -> int:
+	var total: int = 0
+	if player.get("pool") is Dictionary:
+		for value: Variant in (player["pool"] as Dictionary).values():
+			total += int(value)
+	return total
 
 
 ## A cor da mana de um terreno pelo tipo (Planície branca, Ilha azul…); dourado nos que não têm tipo básico.

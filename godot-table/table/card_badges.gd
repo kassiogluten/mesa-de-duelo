@@ -39,6 +39,9 @@ var _selected: bool = false
 var _regions: Array = []
 ## O giro da carta da última vez que os cantos foram postos (virada de 0 a 1, de lado de 0 a 1).
 var _pose := Vector2(-1, -1)
+## A chave do selo sendo desenhado ("tag", "pt", "counter:<nome>", "keyword:<ícone>", "corner:<ícone>", "top_right:<ícone>"):
+## cada peça leva a dela em "badge", para os efeitos dos estados (fx/state_badges.gd) acharem o selo certo.
+var _drawing: String = ""
 
 
 ## Mostra os selos de `spec` numa carta de `size` (virada: deitada de lado). Só refaz quando algo muda.
@@ -73,26 +76,30 @@ func _build() -> void:
 	var bottom_right: Node3D = _region(Vector2(1, 1), Vector2(MARGIN, MARGIN))
 	# Colunas dos cantos de cima: comandante, cópia, mutada, ficha e preparada à esquerda; o Anel, a gema, cópias, anexos e
 	# exiladas à direita.
-	_stack_column(top_left, spec.get("corner", []), 1.0)
-	_stack_column(top_right, spec.get("top_right", []), -1.0)
+	_stack_column(top_left, spec.get("corner", []), 1.0, "corner")
+	_stack_column(top_right, spec.get("top_right", []), -1.0, "top_right")
 	var tag: Dictionary = spec.get("tag", {})
 	if _selected and not (spec.get("pending", {}) as Dictionary).is_empty():
 		tag = spec["pending"]
 	if not tag.is_empty():
+		_drawing = "tag"
 		if bool(tag.get("bare", false)):
 			_icon_sprite(top_mid, Txt.of(tag["icon"]), tag["fg"], 104, Vector2(0, -46))
 		else:
 			var tag_h: int = KEYWORD_H if bool(tag.get("small", false)) else CHIP_H
 			_chip(top_mid, tag, tag_h, Vector2(0, -tag_h / 2.0), 0.0)
 	# P/T (ou lealdade, ou nível) embaixo à direita; as palavras-chave em fileiras acima dele; os marcadores embaixo à esquerda.
+	_drawing = "pt"
 	var pt_h: float = _pt(bottom_right, spec.get("pt", {}))
-	_row(bottom_left, spec.get("counters", []), CHIP_H, 1.0, 0.0, size.x / PX / _boost * (0.62 if not tapped else 0.9))
-	_row(bottom_right, spec.get("keywords", []), KEYWORD_H, -1.0, pt_h + (GAP if pt_h > 0 else 0), size.x / PX / _boost * 0.55)
+	_row(bottom_left, spec.get("counters", []), CHIP_H, 1.0, 0.0, size.x / PX / _boost * (0.62 if not tapped else 0.9), "counter")
+	_row(bottom_right, spec.get("keywords", []), KEYWORD_H, -1.0, pt_h + (GAP if pt_h > 0 else 0), size.x / PX / _boost * 0.55, "keyword")
 	# O dano somado do monte de atacantes, no meio da borda de baixo, por fora.
 	var bottom: Array = spec.get("bottom_mid", [])
 	if not bottom.is_empty():
 		var bottom_mid: Node3D = _region(Vector2(0, 1), Vector2(0, -BOTTOM_OUT))
+		_drawing = "bottom_mid"
 		_chip(bottom_mid, bottom[0], CHIP_H, Vector2(0, 0), 0.0)
+	_drawing = ""
 	var aim: String = Txt.of(spec.get("aim", ""))
 	if aim != "":
 		_aim(BadgeSpec.MINE if aim == "mine" else BadgeSpec.THEIRS, size)
@@ -193,20 +200,22 @@ func _watch_selection() -> void:
 
 
 ## Selos empilhados numa coluna, descendo a partir da âncora; `side` 1 alinha à esquerda, −1 à direita.
-func _stack_column(region: Node3D, chips: Array, side: float) -> void:
+func _stack_column(region: Node3D, chips: Array, side: float, group: String) -> void:
 	var y: float = 0.0
 	for raw: Variant in chips:
 		var chip: Dictionary = raw
+		_drawing = badge_key(group, chip)
 		var h: int = (ROUND_H if bool(chip.get("round", false)) else CHIP_H) if chip.has("icon") else 46
 		_chip(region, chip, h, Vector2(0, -y - h / 2.0), side)
 		y += h + GAP
 
 
 ## Fileira de selos a partir da âncora (para a direita com `side` 1, para a esquerda com −1), subindo uma linha quando passa de `max_w`.
-func _row(region: Node3D, chips: Array, h: int, side: float, base_y: float, max_w: float) -> void:
+func _row(region: Node3D, chips: Array, h: int, side: float, base_y: float, max_w: float, group: String) -> void:
 	var x: float = 0.0
 	var y: float = base_y
 	for raw: Variant in chips:
+		_drawing = badge_key(group, raw)
 		var w: float = _chip_width(raw, h)
 		if x > 0.0 and x + w > max_w:
 			x = 0.0
@@ -306,6 +315,34 @@ func _aim(color: Color, size: Vector2) -> void:
 	_aim_tween.tween_property(sprite, "scale", Vector3.ONE * 0.94, 0.6).set_trans(Tween.TRANS_SINE)
 
 
+## A chave de um selo de um grupo: o marcador pelo nome, os outros pelo ícone (ou "text", o ×N e afins).
+static func badge_key(group: String, chip: Dictionary) -> String:
+	if group == "counter":
+		return "counter:" + Txt.of(chip.get("name", chip.get("icon", "")))
+	return group + ":" + Txt.of(chip.get("icon", "text"))
+
+
+## As peças à mostra (fundo, ícone, texto) do selo de chave `key` (badge_key, "tag" ou "pt"), o fundo primeiro; [] sem ele.
+func parts_of(key: String) -> Array[GeometryInstance3D]:
+	var out: Array[GeometryInstance3D] = []
+	for region: Variant in _regions:
+		for child: Node in ((region as Dictionary)["node"] as Node3D).get_children():
+			if child is GeometryInstance3D and Txt.of(child.get_meta("badge", "")) == key and not child.is_queued_for_deletion():
+				out.append(child as GeometryInstance3D)
+	return out
+
+
+## As chaves dos selos à mostra agora.
+func keys() -> PackedStringArray:
+	var out: PackedStringArray = []
+	for region: Variant in _regions:
+		for child: Node in ((region as Dictionary)["node"] as Node3D).get_children():
+			var key: String = Txt.of(child.get_meta("badge", ""))
+			if key != "" and not out.has(key):
+				out.append(key)
+	return out
+
+
 func _icon_sprite(region: Node3D, key: String, color: Color, px: int, at: Vector2) -> void:
 	_sprite(region, CardIcons.icon(key, color, px * 2), at, PRIORITY_TEXT, 0.5)
 
@@ -322,6 +359,8 @@ func _sprite(region: Node3D, tex: Texture2D, at: Vector2, priority: int, scale: 
 	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	sprite.transparency = _dim * 0.7
+	if _drawing != "":
+		sprite.set_meta("badge", _drawing)
 	region.add_child(sprite)
 
 
@@ -340,6 +379,8 @@ func _label(region: Node3D, text: String, color: Color, size: int, at: Vector2) 
 	label.outline_render_priority = PRIORITY_TEXT - 1
 	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	label.transparency = _dim * 0.7
+	if _drawing != "":
+		label.set_meta("badge", _drawing)
 	region.add_child(label)
 
 
@@ -357,6 +398,9 @@ static func font() -> SystemFont:
 		_font = SystemFont.new()
 		_font.font_names = PackedStringArray(["Segoe UI", "Arial", "Helvetica", "sans-serif"])
 		_font.font_weight = 700
+		# Campo de distância (MSDF): o texto 3D fica nítido em qualquer tamanho, sem serrilhar nem tremer de longe.
+		_font.multichannel_signed_distance_field = true
+		_font.generate_mipmaps = true
 	return _font
 
 
