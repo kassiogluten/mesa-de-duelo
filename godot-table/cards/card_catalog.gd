@@ -12,12 +12,20 @@ const BATCH := 200
 const MAX_DOWNLOADS := 6
 const CACHE_DIR := "user://cards"
 ## O nome muda quando o formato dos dados guardados muda (v2: sem a imagem traduzida que é só um aviso; v3: com a
-## raridade e as faces; v4: com as cores, para Meus decks).
-const INFO_FILE := "user://cards/info-v4.json"
+## raridade e as faces; v4: com as cores, para Meus decks; v5: com a arte recortada, o valor de mana e o tipo, para a
+## capa do deck na tela inicial).
+const INFO_FILE := "user://cards/info-v5.json"
 ## Imagem de uma carta pelo nome, quando o servidor não a conhece (o Scryfall redireciona para a imagem).
 const NAMED_IMAGE := "https://api.scryfall.com/cards/named?format=image&version=normal&exact="
+## A arte recortada pelo nome, quando os dados da carta não chegaram (a capa de um comandante sem o servidor).
+const NAMED_ART := "https://api.scryfall.com/cards/named?format=image&version=art_crop&exact="
+## O tipo principal pela linha de tipo em inglês (TYPES de src/cards.ts): o primeiro que aparece nesta ordem.
+const KINDS := [
+	["Land", "land"], ["Creature", "creature"], ["Planeswalker", "planeswalker"], ["Instant", "instant"],
+	["Sorcery", "sorcery"], ["Battle", "battle"], ["Artifact", "artifact"], ["Enchantment", "enchantment"],
+]
 
-## nome em inglês → {label, type_line, text, image, small, rarity, layout, colors, faces}; faces: [{name, label, cost, type_line,
+## nome em inglês → {label, type_line, text, image, small, art, cmc, kind, rarity, layout, colors, faces}; faces: [{name, label, cost, type_line,
 ## text, power, toughness, image, small}] nas cartas de mais de uma face (vazio nas outras).
 var _info: Dictionary = {}
 ## Nome em inglês de uma face (a de trás de uma carta transformada) → a chave da carta inteira em _info.
@@ -118,6 +126,19 @@ func image_url_for(card: Dictionary) -> String:
 	return ""
 
 
+## O endereço da arte recortada de uma carta pelo nome: a dos dados; sem eles, depois que o servidor respondeu sem
+## conhecê-la (ou caiu), a do Scryfall pelo nome; "" enquanto a resposta não chega.
+func art_url_for(name: String) -> String:
+	if name == "":
+		return ""
+	var art: String = Txt.of(info(name).get("art", ""))
+	if art != "":
+		return art
+	if _asked.has(name) and not _pending_names.has(name):
+		return NAMED_ART + name.uri_encode()
+	return ""
+
+
 ## A textura de um endereço, ou null enquanto baixa (texture_ready avisa quando chega).
 func texture(url: String) -> Texture2D:
 	if url == "":
@@ -200,11 +221,24 @@ static func _entry(card: Dictionary) -> Dictionary:
 		"text": Txt.of(pt.get("printed_text", card.get("oracle_text", ""))),
 		"image": GameConfig.image_url(Txt.of(images.get("normal", ""))),
 		"small": GameConfig.image_url(Txt.of(images.get("small", ""))),
+		# A arte sem a moldura (art_crop), da frente nas cartas de duas faces: a capa do deck na tela inicial.
+		"art": GameConfig.image_url(Txt.of(images.get("art_crop", ""))),
+		"cmc": float(card["cmc"]) if card.get("cmc") is float or card.get("cmc") is int else 0.0,
+		"kind": kind_of(Txt.of(card.get("type_line"))),
 		"rarity": Txt.of(card.get("rarity")),
 		"layout": Txt.of(card.get("layout")),
 		"colors": _colors(card),
 		"faces": _faces(card, pt, no_scan),
 	}
+
+
+## O tipo principal da carta ("creature", "land"…; "other" sem nenhum), pela linha de tipo em inglês.
+static func kind_of(type_line: String) -> String:
+	var words: PackedStringArray = type_line.replace("—", " ").replace("/", " ").split(" ", false)
+	for pair: Array in KINDS:
+		if words.has(Txt.of(pair[0])):
+			return Txt.of(pair[1])
+	return "other"
 
 
 ## As cores da carta (WUBRG); nas de duas faces sem as cores da carta inteira, as dos custos das faces.
