@@ -65,9 +65,11 @@ func _ready() -> void:
 		if not _state.is_empty():
 			_table.apply_state(_state))
 	_table.stack_slot = _stack.layer_rect
+	_stack.table = _table
 	_hud = Hud.new()
 	_hud.catalog = _catalog
 	layer.add_child(_hud)
+	_stack.avoid_rect = _hud.action_rect
 	_fx.hud = _hud
 	_zones = ZoneViewer.new()
 	_zones.catalog = _catalog
@@ -125,6 +127,9 @@ func _ready() -> void:
 	_table.hand_area = _hud.hand_area
 	_table.card_clicked.connect(func(node: CardNode) -> void:
 		_inspector.hide_preview(true)
+		# A carta da pilha que não é uma escolha agora abre a pilha em tela cheia.
+		if _stack.handle_card_click(node):
+			return
 		_interaction.card_pressed(node))
 	_table.card_hovered.connect(_on_card_hovered)
 	_hud.action.connect(func(message: Dictionary) -> void: _client.send(message))
