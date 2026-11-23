@@ -103,6 +103,41 @@ static func paint_kind_badge(badge: PanelContainer, item: Dictionary) -> void:
 	badge.visible = text != ""
 
 
+## A faixa no pé da carta: a habilidade de lealdade (custo e texto) ou os modos escolhidos, um por linha.
+static func fill_strip(box: VBoxContainer, top: Dictionary, pt: String) -> void:
+	for child: Node in box.get_children():
+		child.queue_free()
+		box.remove_child(child)
+	var loyalty: Dictionary = StackText.loyalty_strip(top, pt)
+	if not loyalty.is_empty():
+		box.add_child(_chip_row(Txt.of(loyalty["cost"]), StackPanel.TONE_COLORS.get(loyalty["tone"], Color.GRAY), Txt.of(loyalty["text"])))
+		return
+	for row: Dictionary in StackText.mode_rows(top, pt):
+		box.add_child(_chip_row(str(int(row["index"])), Color("#6f7d99"), Txt.of(row["text"])))
+
+
+static func _chip_row(chip: String, color: Color, text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var chip_bg := PanelContainer.new()
+	chip_bg.add_theme_stylebox_override("panel", StackPanel._style(color, 6, 6, 1))
+	chip_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip_bg.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var chip_label := Hud._label(16, Color.WHITE)
+	chip_label.text = chip
+	chip_bg.add_child(chip_label)
+	row.add_child(chip_bg)
+	var label := StackPanel._wrapping(14, Color(1, 1, 1, 0.95))
+	label.text = text
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.custom_minimum_size = Vector2(150, 0)
+	label.max_lines_visible = 4
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(label)
+	return row
+
+
 ## Faíscas na cor do item saindo das bordas do retângulo `rect` (a carta que chegou) ou subindo dele (`rising`, a que
 ## resolveu). Somem sozinhas; no nível de efeitos leve, menos faíscas.
 static func sparks(parent: Control, rect: Rect2, color: Color, rising: bool = false) -> void:

@@ -293,7 +293,7 @@ func _refresh() -> void:
 
 	_effect_face.visible = source.is_empty() and not collapsed
 	_effect_face_label.text = "Efeito na pilha\n\n" + StackText.effect_text(top, "")
-	_fill_strip(top, pt)
+	StackStyle.fill_strip(_strip_box, top, pt)
 	_layer_chips.fill(stack, MAX_PEEK)
 	_layer_chips.visible = not collapsed
 	_strip.visible = _strip_box.get_child_count() > 0 and not collapsed
@@ -466,41 +466,6 @@ func _process(delta: float) -> void:
 	# A lista anima a altura: o painel do texto acompanha.
 	elif not collapsed and absf(_info.get_combined_minimum_size().y - _info.size.y) > 0.5:
 		_place()
-
-
-## A faixa no pé da carta: a habilidade de lealdade (custo e texto) ou os modos escolhidos, um por linha.
-func _fill_strip(top: Dictionary, pt: String) -> void:
-	for child: Node in _strip_box.get_children():
-		child.queue_free()
-		_strip_box.remove_child(child)
-	var loyalty: Dictionary = StackText.loyalty_strip(top, pt)
-	if not loyalty.is_empty():
-		_strip_box.add_child(_chip_row(Txt.of(loyalty["cost"]), TONE_COLORS.get(loyalty["tone"], Color.GRAY), Txt.of(loyalty["text"])))
-		return
-	for row: Dictionary in StackText.mode_rows(top, pt):
-		_strip_box.add_child(_chip_row(str(int(row["index"])), Color("#6f7d99"), Txt.of(row["text"])))
-
-
-func _chip_row(chip: String, color: Color, text: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var chip_bg := PanelContainer.new()
-	chip_bg.add_theme_stylebox_override("panel", _style(color, 6, 6, 1))
-	chip_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip_bg.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var chip_label := Hud._label(16, Color.WHITE)
-	chip_label.text = chip
-	chip_bg.add_child(chip_label)
-	row.add_child(chip_bg)
-	var label := _wrapping(14, Color(1, 1, 1, 0.95))
-	label.text = text
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.custom_minimum_size = Vector2(150, 0)
-	label.max_lines_visible = 4
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	row.add_child(label)
-	return row
 
 
 ## O aro em volta do vão: na chegada abre e some; ao resolver, acende forte e se fecha sobre a carta.
