@@ -58,7 +58,8 @@ export function faceHTML(f: FaceInfo) {
 /**
  * Layout próprio: nome e custo no topo, arte recortada, tipo, texto de regras e P/R ou lealdade. O tamanho do texto
  * acompanha a largura da carta; cartas pequenas (no campo) mostram só nome, custo, arte e P/R, e o texto inteiro
- * fica no inspetor. Terrenos básicos ficam só com a arte.
+ * fica no inspetor. Terrenos básicos ficam só com a arte. Com P/R ou lealdade, o texto contorna o canto do selo
+ * (`.af-gap`), em vez de passar por baixo dele.
  */
 function artFaceHTML(f: FaceInfo) {
   const basic = /\b(basic|básico)\b/i.test(f.typeLine) && /\b(land|terreno)\b/i.test(f.typeLine);
@@ -67,7 +68,7 @@ function artFaceHTML(f: FaceInfo) {
   return `<div class="face art-face col-${f.color}${basic ? ' basic' : ''}"${fullAttr(f)}>
     <div class="af-head"><span class="af-name">${esc(f.name)}</span><span class="af-cost">${manaHTML(f.manaCost)}</span></div>
     <div class="af-art">${f.back ? BACK_LAYER : ''}${f.art ? `<img src="${f.art}" alt="" draggable="false" loading="lazy" onerror="this.remove()">` : ''}</div>
-    ${basic ? '' : `<div class="af-type">${esc(f.typeLine)}</div>${f.text ? `<div class="af-text">${richText(f.text).replace(/\n/g, '<br>')}</div>` : ''}`}
+    ${basic ? '' : `<div class="af-type">${esc(f.typeLine)}</div>${f.text ? `<div class="af-text">${stat ? '<span class="af-gap" aria-hidden="true"></span>' : ''}${richText(f.text).replace(/\n/g, '<br>')}</div>` : ''}`}
     ${stat}
   </div>`;
 }

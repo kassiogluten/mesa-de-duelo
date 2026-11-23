@@ -17,6 +17,13 @@ test('art and text layout shows the cropped art, type, rules text with mana symb
   assert.match(faceHTML({ ...base, style: 'art', loyalty: 4, typeLine: 'Planeswalker — Chandra' }), /af-stat af-loyalty">4/);
 });
 
+test('art and text rules leave the stat corner free only when there is a stat', () => {
+  const gap = /<div class="af-text"><span class="af-gap" aria-hidden="true"><\/span>/;
+  assert.match(faceHTML({ ...base, style: 'art', creature: true, power: 2, toughness: 2, text: 'Voar' }), gap);
+  assert.match(faceHTML({ ...base, style: 'art', loyalty: 3, text: '+1: compre.' }), gap);
+  assert.doesNotMatch(faceHTML({ ...base, style: 'art', text: 'Raio causa 3 pontos de dano.' }), /af-gap/);
+});
+
 test('basic lands show only the art, and names and text are escaped', () => {
   for (const typeLine of ['Basic Land — Island', 'Terreno Básico — Ilha', 'Terreno da Neve Básico — Ilha']) {
     const html = faceHTML({ ...base, style: 'art', typeLine, text: 'ignored' });

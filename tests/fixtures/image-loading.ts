@@ -1,6 +1,7 @@
 // Página de teste do carregando nas imagens das cartas: cartas, arte recortada, permanente e carta grande com a imagem atrasada de propósito.
 import '../../src/style.css';
 import '../../src/ui/cardStyle.css';
+import '../../src/ui/cardTextFit';
 import '../../src/ui/imageLoading';
 import { faceHTML } from '../../src/ui/face';
 

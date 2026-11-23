@@ -53,6 +53,7 @@ import { tablePlayers } from './commanderTable';
 import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
+import './cardTextFit';
 // Os temas (e o temas.css deles) continuam entrando aqui, na mesma posição da cascata de antes.
 import './temas';
 import './matchBar.css';

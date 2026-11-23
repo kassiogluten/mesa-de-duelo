@@ -1,0 +1,9 @@
+{
+  "Texto inteiro nas cartas de Arte e texto": [
+    { "img": "encaixe-antes.webp", "legenda": "Antes: com letra fixa, nomes longos terminavam em reticências e o fim das regras sumia esmaecido, atrás do poder e resistência." },
+    { "img": "encaixe-depois.webp", "legenda": "Agora: a letra diminui até o texto caber inteiro, e ele contorna o selo de poder e resistência no canto." }
+  ],
+  "Barras no tom da carta": [
+    { "img": "tom-por-cor.webp", "legenda": "Barras do nome e do tipo e caixa de texto num tom claro da cor de cada carta: azul, incolor, multicolorida, preta e branca." }
+  ]
+}
