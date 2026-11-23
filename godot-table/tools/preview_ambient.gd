@@ -126,7 +126,7 @@ func _gallery(folder: String) -> void:
 
 func _shots(folder: String, name: String, count: int, gap: float) -> void:
 	for i: int in count:
-		await process_frame
+		await RenderingServer.frame_post_draw
 		var path: String = folder.path_join("%s-%d.png" % [name, i])
 		root.get_texture().get_image().save_png(path)
 		print(path)
