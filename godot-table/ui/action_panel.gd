@@ -126,7 +126,13 @@ func apply(state: Dictionary, blocker_name: String) -> void:
 		short = lines[0] if not lines.is_empty() else ""
 		detail = lines[1] if lines.size() > 1 else ""
 	var title: String = short if short != "" else detail
-	var below: String = detail if short != "" and detail != short else ""
+	# Com a frase curta em português, o texto do jogo (às vezes em inglês, "Select target creature") fica escondido,
+	# como na mesa do navegador: aparece só ao passar o mouse no pedido.
+	var below: String = ""
+	if Txt.of(info["short"]) == "" and short != "" and detail != short:
+		below = detail
+	_short.tooltip_text = detail if Txt.of(info["short"]) != "" and detail != short else ""
+	_short.mouse_filter = Control.MOUSE_FILTER_STOP if _short.tooltip_text != "" else Control.MOUSE_FILTER_IGNORE
 	var progress: String = ("%s · %s" % [info["progress"], info["instruction"]]) if Txt.of(info["progress"]) != "" else ""
 	var forecast: String = Txt.of(info.get("forecast"))
 	_set_text(_short, title)
