@@ -21,6 +21,10 @@ var _question: QuestionDialog
 var _zones: ZoneViewer
 var _room: RoomPanel
 var _fx: FxDirector
+var _inspector: CardInspector
+var _drag: HandDrag
+## A carta sob o mouse (a que o clique direito e o "I" abrem no inspetor).
+var _hovered: CardNode
 var _finale_done: bool = false
 var _state: Dictionary = {}
 var _selected_blocker: int = -1
@@ -54,7 +58,7 @@ func _ready() -> void:
 	_stack.catalog = _catalog
 	layer.add_child(_stack)
 	_stack.action.connect(func(message: Dictionary) -> void: _client.send(message))
-	_stack.preview.connect(func(tex: Texture2D) -> void: _hud.show_preview(tex))
+	_stack.preview.connect(func(tex: Texture2D) -> void: _inspector.show_texture(tex))
 	_stack.layout_changed.connect(func() -> void:
 		if not _state.is_empty():
 			_table.apply_state(_state))
@@ -75,6 +79,20 @@ func _ready() -> void:
 	layer.add_child(_room)
 	_room.action.connect(func(message: Dictionary) -> void: _client.send(message))
 	_room.leave_pressed.connect(_leave)
+	_inspector = CardInspector.new()
+	_inspector.catalog = _catalog
+	layer.add_child(_inspector)
+	_catalog.texture_ready.connect(_inspector.on_texture_ready)
+	_drag = HandDrag.new()
+	_drag.table = _table
+	_drag.state = current_state
+	add_child(_drag)
+	_drag.tapped.connect(_click_card)
+	_drag.started.connect(func() -> void: _inspector.hide_preview(true))
+	_drag.play.connect(func(message: Dictionary) -> void:
+		if int(message["gen"]) != _clicked_gen:
+			_clicked_gen = int(message["gen"])
+			_client.send(message))
 
 	_catalog.info_ready.connect(func(_names: PackedStringArray) -> void:
 		_table.refresh_textures()
@@ -177,6 +195,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		var message: Dictionary = _hud.primary_message()
 		if not message.is_empty():
 			_client.send(message)
+	# Clique direito ou "I" na carta sob o mouse: abre a carta de perto (Esc ou "I" fecham, no inspetor).
+	var right_click: bool = event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT
+	var key_i: bool = event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo and (event as InputEventKey).keycode == KEY_I
+	if (right_click or key_i) and is_instance_valid(_hovered) and not _drag.active():
+		_inspector.open(_hovered.data, _inspect_context(), _hovered.image_url)
+		get_viewport().set_input_as_handled()
 
 
 func _on_message(msg: Dictionary) -> void:
@@ -191,6 +215,7 @@ func _on_message(msg: Dictionary) -> void:
 			_state = msg
 			_selected_blocker = -1 if not (msg.get("input", {}) as Dictionary).has("blocking") else _selected_blocker
 			_fx.before_state(msg)
+			_drag.before_state(msg)
 			_table.apply_state(msg)
 			_stack.apply_state(msg)
 			_play_finale(msg)
@@ -266,7 +291,7 @@ func _probe_click() -> void:
 	if _probe_done or OS.get_environment("MESA_TESTE_CLIQUE") != "1":
 		return
 	var input: Dictionary = _input_data()
-	if input.get("opening") == "mulligan" and _hud.primary_message().size() > 0:
+	if input.get("opening") in ["mulligan", "play-draw", "starting-player"] and _hud.primary_message().size() > 0:
 		_client.send(_hud.primary_message())
 		return
 	var hand: Array = []
@@ -280,6 +305,8 @@ func _probe_click() -> void:
 	if target < 0 or not bool(input.get("priority", false)):
 		return
 	_probe_done = true
+	# A carta acabada de comprar ainda está voando do grimório: espera ela chegar na mão.
+	await get_tree().create_timer(HandMotion.ARRIVE_TIME + 0.4).timeout
 	# A mesa desenha em 1920x1080 e a janela pode ter outro tamanho: o evento vai em coordenadas da janela.
 	var screen: Vector2 = get_viewport().get_final_transform() * _table.camera.unproject_position(_table.card_node(target).global_position)
 	print("TESTE: clicando na carta %d da mão em %s" % [target, screen])
@@ -299,6 +326,15 @@ func _probe_click() -> void:
 
 
 func _on_card_clicked(node: CardNode) -> void:
+	_inspector.hide_preview(true)
+	# Carta da sua mão: o clique vale ao soltar sem arrastar (arrastar até o campo joga, HandDrag).
+	if node.card_id >= 0 and _table.zone_of(node.card_id) == "hand":
+		_drag.press(node)
+		return
+	_click_card(node)
+
+
+func _click_card(node: CardNode) -> void:
 	if OS.get_environment("MESA_LOG_ENVIO") == "1":
 		print("CLIQUE na carta %d (zona %s)" % [node.card_id, _table.zone_of(node.card_id)])
 	var input: Dictionary = _input_data()
@@ -364,9 +400,34 @@ func _on_player_clicked(player_id: int) -> void:
 		_client.send({"type": "player", "id": player_id, "gen": int(input.get("gen", 0))})
 
 
+## A carta sob o mouse: a prévia grande ao lado dele (fora do arrasto). A da sua mão não tem prévia: ela mesma sobe e
+## cresce até o tamanho da prévia, e outra carta ao lado só cobriria as vizinhas.
 func _on_card_hovered(node: CardNode, on: bool) -> void:
-	var visible_face: bool = not node.data.is_empty() and not bool(node.data.get("faceDown", false))
-	_hud.show_preview(_catalog.texture(node.image_url) if on and visible_face and node.image_url != "" else null)
+	if on:
+		_hovered = node
+	elif _hovered == node:
+		_hovered = null
+	var in_hand: bool = node.card_id >= 0 and _table.zone_of(node.card_id) == "hand"
+	if on and not _drag.active() and not node.data.is_empty() and not in_hand:
+		_inspector.show_preview(node.data, _inspect_context(), node.image_url)
+	elif not on:
+		_inspector.hide_preview()
+
+
+## Para o inspetor montar os textos: nomes em português, dos jogadores e das outras cartas da mesa.
+func _inspect_context() -> Dictionary:
+	var names: Dictionary = {}
+	for raw: Variant in _state.get("players", []):
+		names[int((raw as Dictionary)["id"])] = Txt.of((raw as Dictionary).get("name"))
+	var you: int = int(_state.get("you", -1))
+	return {
+		"lookup": _catalog.info,
+		"you": you,
+		"player_name": func(id: int) -> String: return "você" if id == you else Txt.of(names.get(id, "Jogador %d" % id)),
+		"card_name": func(id: int) -> String:
+			var card: Dictionary = _table.card_data(id)
+			return _catalog.label(Txt.of(card.get("name"))) if Txt.of(card.get("name")) != "" else "",
+	}
 
 
 func _refresh_highlights() -> void:
@@ -388,6 +449,7 @@ func _refresh_highlights() -> void:
 					selectable = (raw as Dictionary).get("attackers", []).duplicate()
 	var choosing: bool = not bool(input.get("priority", false)) and not selectable.is_empty()
 	_table.highlight(actionable, selectable, selected, choosing, input.get("selectableStacks", []))
+	_table.apply_hand_layout(actionable, bool(input.get("priority", false)))
 	_table.set_arrows(_arrows())
 
 

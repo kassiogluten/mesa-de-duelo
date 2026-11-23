@@ -13,6 +13,9 @@ const CAMERA_LOOK := Vector3(0, 0, 0.6)
 const TAP_ANGLE := -PI / 2.0
 ## Centro do leque da sua mão: perto da câmera, na base da tela.
 const HAND_CENTER := Vector3(0, 3.2, 4.45)
+## Na mão: quanto a carta jogável fica mais alta (para cima na tela) e quanto as outras apagam quando há o que jogar.
+const HAND_PLAYABLE_RISE := 0.07
+const HAND_UNPLAYABLE_DIM := 0.22
 ## Altura das permanentes sobre o tampo: a carta tem espessura, e a face de baixo não pode encostar no tampo.
 const FIELD_Y := CardNode.THICKNESS + 0.004
 
@@ -32,6 +35,9 @@ var _separators: Dictionary = {}
 ## id do jogador → as zonas dele (SeatLayout)
 var _frames: Dictionary = {}
 var _arrows: Arrows
+## A ordem da sua mão (a do servidor, com as mudanças que o jogador fez arrastando) e as cartas jogáveis nela.
+var _hand_order: Array[int] = []
+var _hand_playable: Array = []
 ## Setas pedidas: [{from, to, color}], com from/to sendo o id de uma carta ou "player:<id>".
 var _arrow_specs: Array = []
 ## Onde fica na tela o retrato de cada jogador (o HUD responde), para a seta que mira um jogador.
@@ -323,28 +329,59 @@ func _place_separator(key: String, items: Array, frame: Dictionary, z: float) ->
 
 
 func _place_hand(player: Dictionary, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
+	var library: Vector3 = (frame["library"] as Vector3) + Vector3(0, 0.3, 0)
+	var scale: float = frame["scale"]
+	# A carta que chega na mão (comprada) voa do grimório; com várias, uma depois da outra. Na busca no grimório quem
+	# voa é o efeito da busca (CardFlights.tutor), então a carta só aparece; e na mesa sendo montada (o primeiro estado,
+	# antes de o grimório existir) a mão já começa no lugar, como na mesa do navegador.
+	var arrivals: int = 0
+	var searched: bool = _searched_draw(int(player["id"])) or not _cards.has("library:%d" % int(player["id"]))
 	if int(frame["side"]) > 0:
-		var hand: Array = player.get("hand", [])
-		for i: int in hand.size():
-			var card: Dictionary = hand[i]
-			_put(int(card["id"]), card, "hand", _hand_transform(i, hand.size(), int(card["id"])), sleeve, seen, names)
+		var cards: Dictionary = {}
+		for raw: Variant in player.get("hand", []):
+			cards[int((raw as Dictionary)["id"])] = raw
+		_hand_order = HandDrag.arrange(_hand_order, cards.keys())
+		for i: int in _hand_order.size():
+			var id: int = _hand_order[i]
+			var fresh: bool = not _cards.has(id)
+			var t: Transform3D = _hand_transform(i, _hand_order.size(), id)
+			_put(id, cards[id], "hand", t, sleeve, seen, names)
+			_hand_info(_cards[id] as CardNode, cards[id])
+			if fresh and not searched:
+				HandMotion.fly_in(_cards[id] as CardNode, Transform3D(Basis.from_scale(Vector3.ONE * scale), library), t, true, arrivals * HandMotion.ARRIVE_STAGGER)
+				arrivals += 1
 		return
 	# Mão do oponente: os versos em leque no alto da mesa.
 	var count: int = int(player.get("handCount", 0))
-	var scale: float = frame["scale"]
 	var center: Vector3 = frame["hand"]
 	for i: int in count:
 		var offset: float = i - (count - 1) / 2.0
 		var basis: Basis = (Basis(Vector3.FORWARD, PI) * Basis(Vector3.UP, offset * 0.06)).scaled(Vector3(scale, scale, scale))
 		var t := Transform3D(basis, center + Vector3(offset * float(frame["hand_spread"]), 0.01 + 0.002 * i, abs(offset) * 0.03))
-		_put("hand:%d:%d" % [int(player["id"]), i], {}, "hand", t, sleeve, seen, names)
+		var key: String = "hand:%d:%d" % [int(player["id"]), i]
+		var fresh: bool = not _cards.has(key)
+		_put(key, {}, "hand", t, sleeve, seen, names)
+		if fresh and not searched:
+			HandMotion.fly_in(_cards[key] as CardNode, Transform3D(Basis(Vector3.FORWARD, PI).scaled(Vector3.ONE * scale), library), t, false, arrivals * HandMotion.ARRIVE_STAGGER)
+			arrivals += 1
 
 
-## Leque da sua mão, de frente para a câmera, na base da tela; a carta sob o mouse sobe e cresce.
+## O estado traz uma busca no grimório (tutor) desse jogador: o voo da carta é o do efeito.
+func _searched_draw(player_id: int) -> bool:
+	for raw: Variant in _state.get("events", []):
+		var event: Dictionary = raw
+		if Txt.of(event.get("type")) == "draw" and bool(event.get("searched", false)) and int(event.get("actor", -1)) == player_id:
+			return true
+	return false
+
+
+## Leque da sua mão, de frente para a câmera, na base da tela; a carta jogável fica um pouco mais alta que as outras.
 func _hand_transform(index: int, count: int, id: int) -> Transform3D:
 	var offset: float = index - (count - 1) / 2.0
 	var spread: float = min(0.6, 6.4 / max(count, 1))
 	var pos := HAND_CENTER + Vector3(offset * spread, index * 0.006 - abs(offset) * abs(offset) * 0.01, abs(offset) * abs(offset) * 0.006)
+	if _hand_playable.has(id):
+		pos += camera.global_basis.y * HAND_PLAYABLE_RISE
 	return Transform3D(_facing_camera(pos) * Basis(Vector3.UP, -offset * 0.05), pos)
 
 
@@ -354,6 +391,75 @@ func _facing_camera(pos: Vector3) -> Basis:
 	var up: Vector3 = camera.global_basis.y
 	var z: Vector3 = -(up - y * up.dot(y)).normalized()
 	return Basis(y.cross(z), y, z)
+
+
+## A rotação de uma carta de pé de frente para a câmera em `pos` (a carta arrastada perto da mão).
+func hand_basis(pos: Vector3) -> Basis:
+	return _facing_camera(pos)
+
+
+## As cartas jogáveis da mão (input.actionable com a prioridade) ficam mais altas, e as outras um pouco apagadas.
+## Chame depois de highlight(), que acende as cartas pelo prompt.
+func apply_hand_layout(actionable: Array, priority: bool) -> void:
+	var playable: Array = _hand_order.filter(func(id: int) -> bool: return priority and actionable.has(id))
+	var changed: bool = playable != _hand_playable
+	_hand_playable = playable
+	for i: int in _hand_order.size():
+		var node: CardNode = _cards.get(_hand_order[i])
+		if node == null:
+			continue
+		if changed and not dragging(node):
+			node.move_to(_hand_transform(i, _hand_order.size(), _hand_order[i]))
+		node.set_dim(HAND_UNPLAYABLE_DIM if not playable.is_empty() and not playable.has(_hand_order[i]) else 0.0)
+		_hand_info(node, node.data)
+
+
+## Muda a ordem da sua mão (a que o jogador arrumou arrastando; o servidor não sabe dela) e leva as cartas para o lugar.
+func set_hand_order(order: Array) -> void:
+	_hand_order = HandDrag.arrange(order, _hand_order)
+	for i: int in _hand_order.size():
+		var node: CardNode = _cards.get(_hand_order[i])
+		if node and not dragging(node):
+			node.move_to(_hand_transform(i, _hand_order.size(), _hand_order[i]))
+
+
+## A sua mão na ordem do leque: [{id, transform}], com o lugar de cada carta.
+func hand_slots() -> Array:
+	var out: Array = []
+	for i: int in _hand_order.size():
+		out.append({"id": _hand_order[i], "transform": _hand_transform(i, _hand_order.size(), _hand_order[i])})
+	return out
+
+
+## A faixa da tela ocupada pela sua mão (soltar a carta arrastada ali a devolve ou muda a ordem); vazia sem cartas.
+func hand_rect() -> Rect2:
+	var points: PackedVector2Array = []
+	for slot: Dictionary in hand_slots():
+		var t: Transform3D = slot["transform"]
+		for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+			points.append(camera.unproject_position(t * Vector3(corner.x * CardNode.SIZE.x / 2.0, 0, corner.y * CardNode.SIZE.y / 2.0)))
+	if points.is_empty():
+		return Rect2()
+	var rect := Rect2(points[0], Vector2.ZERO)
+	for point: Vector2 in points:
+		rect = rect.expand(point)
+	return rect
+
+
+## A carta da mão que está sendo arrastada (escondida: quem aparece é a cópia que segue o mouse); a mesa não a move.
+func dragging(node: CardNode) -> bool:
+	return node != null and not node.visible
+
+
+## Custo e se é jogável, para o selo do custo da carta da mão (CardNode.set_hand_info, quando existir).
+func _hand_info(node: CardNode, card: Dictionary) -> void:
+	if node == null or not node.has_method("set_hand_info"):
+		return
+	# Com redução ou aumento (castCost), o custo de agora e quanto mudou: o selo fica verde mais barato, vermelho mais caro.
+	var cast: Variant = card.get("castCost")
+	var cost: String = Txt.of((cast as Dictionary).get("cost")) if cast is Dictionary else Txt.of(card.get("manaCost"))
+	var delta: int = int((cast as Dictionary).get("delta", 0)) if cast is Dictionary else 0
+	node.call("set_hand_info", cost, _hand_playable.has(node.card_id), delta)
 
 
 ## Cemitério, exílio e zona de comando: as cartas empilhadas, a de cima à mostra, e quantas são.
