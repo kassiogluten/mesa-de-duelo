@@ -1,6 +1,6 @@
 # Como as permanentes de um jogador se arrumam no campo (como src/ui/permanentView.ts): criaturas na frente, planeswalkers e
-# batalhas num grupo ao lado; atrás, artefatos/encantamentos e depois terrenos; cópias iguais num monte "×N" e auras e
-# equipamentos presos atrás da carta a que estão presos.
+# batalhas num grupo ao lado; atrás, artefatos/encantamentos e depois terrenos; cópias iguais (e atacantes iguais) num monte
+# "×N", auras e equipamentos presos atrás da carta a que estão presos e as cartas exiladas por ela saindo por baixo.
 class_name FieldLayout
 extends RefCounted
 
@@ -15,9 +15,16 @@ const STACK_STEP_TAPPED := 0.14
 const ATTACH_STEP := 0.22
 const ATTACH_RISE := 0.12
 const ATTACH_SCALE := 0.86
+## Cartas exiladas por uma permanente (Oblivion Ring): até 3 saem por baixo dela, cada uma um pouco mais para baixo e
+## para a esquerda (como .exu no navegador); a descida encolhe com mais cartas.
+const EXILED_SHOWN := 3
+const EXILED_DROP := 0.2
+const EXILED_SHIFT := 0.06
+const EXILED_SCALE := 0.94
 
 
-## O que vale para o estado inteiro: quem pode ser usado, a declaração em curso, combate, anexos e quem exila algo.
+## O que vale para o estado inteiro: quem pode ser usado, a declaração em curso, combate, anexos e as cartas exiladas
+## por baixo de cada permanente.
 static func context(state: Dictionary) -> Dictionary:
 	var input: Dictionary = state.get("input", {}) if state.get("input") is Dictionary else {}
 	var usable: Dictionary = {}
@@ -34,18 +41,18 @@ static func context(state: Dictionary) -> Dictionary:
 		for id: Variant in (input["blocking"] as Dictionary)["blockers"]:
 			blockers[int(id)] = true
 	var on_field: Dictionary = {}
-	var exiled_ids: Dictionary = {}
+	var exiled: Dictionary = {}
 	for raw: Variant in state.get("players", []):
 		var player: Dictionary = raw
 		for c: Variant in player.get("battlefield", []):
 			on_field[int((c as Dictionary)["id"])] = c
 		if player.get("exile") is Array:
 			for c: Variant in player["exile"]:
-				exiled_ids[int((c as Dictionary)["id"])] = true
+				exiled[int((c as Dictionary)["id"])] = c
 	return {"you": int(state.get("you", 0)), "usable": usable, "untappable": untappable, "blockers": blockers,
 		"attacking": input.get("attacking") is Dictionary, "selection": input.get("selection") != null and input.has("selection"),
 		"blocking": input.get("blocking") is Dictionary, "combat": state.get("combat", []) if state.get("combat") is Array else [],
-		"attachments": attachments(on_field), "exiling": _exiling(on_field, exiled_ids)}
+		"attachments": attachments(on_field), "exiled_under": exiled_under(on_field, exiled)}
 
 
 ## Auras e equipamentos por carta a que estão presos (só quando ela está no campo): id → [cartas].
@@ -61,19 +68,53 @@ static func attachments(on_field: Dictionary) -> Dictionary:
 	return out
 
 
-## Quem exila alguma carta que está no exílio (ela ou o que está preso a ela): id → true.
-static func _exiling(on_field: Dictionary, exiled_ids: Dictionary) -> Dictionary:
-	var out: Dictionary = {}
+## As cartas exiladas que saem por baixo de cada permanente (como slotExiled de src/ui/exiledUnder.ts): as que ela exilou
+## e as que as auras e os equipamentos presos a ela exilaram. id → [{card, by}], as dela primeiro.
+static func exiled_under(on_field: Dictionary, exiled: Dictionary) -> Dictionary:
+	var own: Dictionary = {}
+	var from_attached: Dictionary = {}
 	for id: Variant in on_field:
 		var card: Dictionary = on_field[id]
-		if card.get("exiling") is Array:
-			for x: Variant in card["exiling"]:
-				if exiled_ids.has(int(x)):
-					var host: Variant = card.get("attachedTo")
-					out[int(id)] = true
-					if host != null:
-						out[int(host)] = true
-	return out
+		if not card.get("exiling") is Array:
+			continue
+		var host: Variant = card.get("attachedTo")
+		var by_host: bool = host != null and on_field.has(int(host))
+		var slot: int = int(host) if by_host else int(id)
+		var into: Dictionary = from_attached if by_host else own
+		for x: Variant in card["exiling"]:
+			if exiled.has(int(x)):
+				if not into.has(slot):
+					into[slot] = []
+				(into[slot] as Array).append({"card": exiled[int(x)], "by": int(id)})
+	for slot: Variant in from_attached:
+		if not own.has(slot):
+			own[slot] = []
+		(own[slot] as Array).append_array(from_attached[slot])
+	return own
+
+
+## Onde fica a exilada `j` (0 é a primeira) de `n` por baixo da carta: deslocamento no espaço da carta de pé (x para a
+## direita, y para baixo na tela), em unidades da mesa antes da escala do assento.
+static func exiled_offset(j: int, n: int) -> Vector2:
+	var shown: int = mini(n, EXILED_SHOWN)
+	var drop: float = CARD.y * EXILED_DROP * minf(1.0, 1.5 / maxf(shown, 1))
+	return Vector2(-CARD.x * EXILED_SHIFT * (j + 1), drop * (j + 1))
+
+
+## Dano que um atacante do monte causa se não for bloqueado: o poder, dobrado com golpe duplo (groupAttackDamage).
+static func attack_damage(card: Dictionary) -> int:
+	var keywords: Variant = card.get("keywords", [])
+	return maxi(0, int(card.get("power", 0))) * (2 if keywords is Array and (keywords as Array).has("DOUBLE_STRIKE") else 1)
+
+
+## A entrada do combate de um atacante que pode ir num monte (sem bloqueio e sem estar bloqueando); senão {}.
+static func grouped_attack(card: Dictionary, ctx: Dictionary) -> Dictionary:
+	var id: int = int(card["id"])
+	for raw: Variant in ctx.get("combat", []):
+		var entry: Dictionary = raw
+		if int(entry.get("attacker", -1)) == id:
+			return entry if (entry.get("blockers", []) as Array).is_empty() and not bool(card.get("blocking", false)) else {}
+	return {}
 
 
 ## As duas fileiras de um jogador: {front: [monte], back: [monte]}, cada monte {cards, group, x, width, tapped}, com `x` o
@@ -121,20 +162,22 @@ static func stacks(cards: Array, ctx: Dictionary) -> Array:
 
 
 ## A chave do monte: cartas com a mesma chave são cópias iguais (nome, estado, marcadores, P/T, dano, palavras-chave,
-## enjoo). Ficam sozinhas as que têm algo preso, exilam algo, estão no combate, viradas para baixo, mutadas, ou numa escolha.
+## enjoo). Ficam sozinhas as que têm algo preso, exilam algo, estão no combate, viradas para baixo, mutadas, ou numa escolha;
+## a exceção são os atacantes iguais sem bloqueio que atacam o mesmo jogador ou planeswalker (o alvo entra na chave).
 static func stack_key(card: Dictionary, ctx: Dictionary) -> String:
 	var id: int = int(card["id"])
 	var creature: bool = bool(card.get("creature", false))
 	var land: bool = bool(card.get("land", false))
-	var in_combat: bool = bool(card.get("attacking", false)) or bool(card.get("blocking", false))
+	var attack: Dictionary = grouped_attack(card, ctx)
+	var in_combat: bool = (bool(card.get("attacking", false)) and attack.is_empty()) or bool(card.get("blocking", false))
 	for raw: Variant in ctx.get("combat", []):
 		var entry: Dictionary = raw
-		if int(entry.get("attacker", -1)) == id or (entry.get("blockers", []) as Array).has(id) or (int(entry.get("defender", -1)) == id and Txt.of(entry.get("defenderKind", "player")) == "card"):
+		if (int(entry.get("attacker", -1)) == id and attack.is_empty()) or (entry.get("blockers", []) as Array).has(id) or (int(entry.get("defender", -1)) == id and Txt.of(entry.get("defenderKind", "player")) == "card"):
 			in_combat = true
 	var merged: Variant = card.get("merged")
 	var alone: bool = (bool(ctx.get("attacking", false)) and not land) or bool(ctx.get("selection", false)) \
 		or (bool(ctx.get("blocking", false)) and creature and int(card.get("controller", -1)) == int(ctx.get("you", 0))) \
-		or (ctx["attachments"] as Dictionary).has(id) or (ctx["exiling"] as Dictionary).has(id) \
+		or (ctx["attachments"] as Dictionary).has(id) or (ctx["exiled_under"] as Dictionary).has(id) \
 		or (merged is Array and not (merged as Array).is_empty()) or bool(card.get("faceDown", false)) or in_combat
 	if alone:
 		return "#%d" % id
@@ -147,9 +190,12 @@ static func stack_key(card: Dictionary, ctx: Dictionary) -> String:
 	var keywords: PackedStringArray = CardLabels.field_keywords(card)
 	keywords.sort()
 	var body: String = "|%d/%d|%d|%s" % [int(card.get("power", 0)), int(card.get("toughness", 0)), int(card.get("damage", 0)), str(bool(card.get("sick", false)))] if creature else ""
-	return "%s|%s|%s|%s|%s|%s|%s|%s%s|%s" % [Txt.of(card.get("name", "")), str(bool(card.get("tapped", false))), str((ctx["usable"] as Dictionary).has(id)),
+	var target: String = ""
+	if not attack.is_empty():
+		target = "|atk:%s:%d" % [Txt.of(attack.get("defenderKind", "player")), int(attack["defender"]) if attack.get("defender") != null else -1]
+	return "%s|%s|%s|%s|%s|%s|%s|%s%s|%s%s" % [Txt.of(card.get("name", "")), str(bool(card.get("tapped", false))), str((ctx["usable"] as Dictionary).has(id)),
 		str((ctx["untappable"] as Dictionary).has(id)), str(bool(card.get("token", false))), str(bool(card.get("prepared", false))), Txt.of(card.get("copyOf", "")),
-		",".join(counters), body, ",".join(keywords)]
+		",".join(counters), body, ",".join(keywords), target]
 
 
 ## Quanto a fileira ocupa de um monte: a carta (deitada de lado se virada), as faixas das cópias e o leque dos anexos.

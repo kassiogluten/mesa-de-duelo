@@ -93,9 +93,10 @@ static func game_changer(parent: Node3D, table: TableView, pos: Vector3, label: 
 	var at: Vector3 = MomentPieces.beside(table, pos, 0.0)
 	MomentPieces.title(parent, at, "Game Changer", GEM.lerp(Color.WHITE, 0.15), Color(0.0, 0.14, 0.12), 96, 1.6 / speed, 0.15 / speed)
 	if label != "":
-		var below: Vector3 = at - MomentPieces.screen_up(parent) * 0.45
+		# O nome logo abaixo da faixa, parado (subindo, ele entrava por baixo do título).
+		var below: Vector3 = at - MomentPieces.screen_up(parent) * 0.62
 		MomentPieces.after(parent, 0.3 / speed, func() -> void:
-			Fx.float_text(parent, below - Vector3(0, 0.5, 0), label, Color(0.92, 1.0, 0.97), 46, 1.4 / speed))
+			Fx.float_text(parent, below - Vector3(0, 0.5, 0), label, Color(0.92, 1.0, 0.97), 46, 1.4 / speed, 0.05))
 
 
 ## A ficha vira objeto: ele salta da carta girando, paira um instante com luz e mergulha nela.

@@ -161,7 +161,7 @@ static func mana(parent: Node3D, sources: Array, to: Vector3, speed: float = 1.0
 		MomentPieces.after(parent, delay, func() -> void:
 			Fx.burst(parent, from + Vector3(0, 0.1, 0), color, 10, 0.6, 0.35, 0.07)
 			Fx.bolt(parent, from + Vector3(0, 0.1, 0), to, color, 0.42 / speed, func() -> void:
-				Fx.burst(parent, to, color.lerp(Color.WHITE, 0.3), 14, 0.9, 0.35, 0.07)))
+				Fx.burst(parent, to, color.lerp(Color.WHITE, 0.3), 14, 0.9, 0.35, 0.07), 0.5))
 		i += 1
 	return (i * gap + 0.42) / speed
 
