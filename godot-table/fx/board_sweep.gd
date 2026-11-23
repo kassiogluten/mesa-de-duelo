@@ -240,7 +240,7 @@ void fragment() {
 	float body = pow(1.0 - h, 2.2) * (0.55 + 0.9 * flames);
 	float base = smoothstep(0.12, 0.0, h);
 	ALBEDO = mix(color.rgb, vec3(1.0), base * 0.6) * (1.4 + base * 2.0);
-	ALPHA = clamp(body + base, 0.0, 1.0) * alpha * 0.8;
+	ALPHA = clamp(body + base, 0.0, 1.0) * alpha * 0.6;
 }
 """
 	return _front_shader

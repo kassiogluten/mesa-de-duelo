@@ -260,6 +260,7 @@ func reset() -> void:
 	initiative = -1
 	day_time = ""
 	format = ""
+	table.highlight([], [], [], false)
 	rebuild()
 
 
