@@ -6,7 +6,7 @@
 // gravado por último: enquanto ele não muda, ninguém baixa um pacote pela metade.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -70,7 +70,12 @@ if (!imported.ok) { console.error(imported.out); process.exit(1); }
 // Exporta com um nome provisório e renomeia depois de saber o hash (o nome do arquivo leva a versão).
 const draft = join(out, 'game-exportando.pck');
 const exported = godot('--headless', '--export-pack', 'Jogo', draft);
-if (!exported.ok || /ERROR:/.test(exported.out)) { console.error(exported.out); process.exit(1); }
+// Falha de verdade: o Godot saiu com erro ou o pacote não saiu (ou saiu vazio). Linhas "ERROR:" com o pacote pronto (no
+// Linux do Docker o Godot reclama de recursos não liberados ao fechar, de áudio, de dbus) só vão para o log, como aviso.
+const draftOk = existsSync(draft) && statSync(draft).size > 64 * 1024;
+if (!exported.ok || !draftOk) { console.error(`O pacote da mesa no PC não foi exportado.\n${exported.out}`); process.exit(1); }
+const complaints = exported.out.split('\n').filter(line => /ERROR:/.test(line));
+if (complaints.length) console.warn(`AVISO: o Godot reclamou ao exportar o pacote (que saiu):\n${complaints.slice(0, 20).join('\n')}`);
 
 const bytes = readFileSync(draft);
 const sha256 = createHash('sha256').update(bytes).digest('hex');
