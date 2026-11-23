@@ -258,8 +258,13 @@ static func _scale_parts(list: Array, bases: Array, k: float) -> void:
 		(node as GeometryInstance3D).set("offset", (middle + (at - middle) * k) / size)
 
 
+## Devolve cada peça exatamente ao que era (sem a conta de volta, que deixaria resíduo de arredondamento).
 static func _restore(list: Array, bases: Array) -> void:
-	_scale_parts(list, bases, 1.0)
-	for part: Variant in list:
-		if is_instance_valid(part):
-			(part as Node).remove_meta("pop_base")
+	for i: int in list.size():
+		var part: Variant = list[i]
+		if not is_instance_valid(part):
+			continue
+		var base: Array = bases[i]
+		(part as GeometryInstance3D).set("pixel_size", float(base[1]))
+		(part as GeometryInstance3D).set("offset", base[0])
+		(part as Node).remove_meta("pop_base")
