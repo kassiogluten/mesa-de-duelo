@@ -33,7 +33,7 @@ const CARDS := {
 	603: ["Food", "", "Token Artifact — Food", false, false, 0, 0, 0, true],
 	604: ["Blood", "", "Token Artifact — Blood", false, false, 0, 0, 0, true],
 }
-## Raridade de algumas (o foil das raras e míticas).
+## Raridade de algumas (o foil das raras e míticas aparece só no inspetor, não na mesa).
 const RARITY := {201: "mythic", 112: "rare", 306: "mythic", 101: "rare"}
 const BATTLEFIELD := [101, 102, 103, 104, 105, 106, 201, 202, 203, 204]
 const HAND := [111, 112, 113]

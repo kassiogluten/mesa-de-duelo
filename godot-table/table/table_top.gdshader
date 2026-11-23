@@ -1,4 +1,4 @@
-// Tampo da mesa: feltro com fibras e relevo, centro mais claro que as bordas, um selo arcano bem fraco no meio e a moldura dourada da sua metade.
+// Tampo da mesa: feltro com fibras e relevo, centro mais claro que as bordas e a moldura dourada da sua metade.
 shader_type spatial;
 
 uniform vec3 center_color : source_color = vec3(0.13, 0.17, 0.29);
@@ -7,8 +7,6 @@ uniform vec3 frame_color : source_color = vec3(0.94, 0.72, 0.29);
 uniform vec2 size = vec2(30.0, 18.0);
 // Sua metade: z de onde começa a onde termina e meia largura (unidades da mesa).
 uniform vec3 my_half = vec3(0.2, 2.75, 6.6);
-// Quanto o selo do meio aparece (0 some).
-uniform float seal = 1.0;
 
 float box(vec2 p, vec2 b, float r) {
 	vec2 q = abs(p) - b + r;
@@ -43,22 +41,6 @@ float felt(vec2 p) {
 	return fibers * 0.6 + fbm(p * 0.7) * 0.4;
 }
 
-// O selo do meio: dois anéis finos e runas em volta, quase sumindo no feltro.
-float arcane(vec2 p) {
-	float r = length(p);
-	float rings = smoothstep(0.025, 0.0, abs(r - 1.55)) + smoothstep(0.018, 0.0, abs(r - 1.32)) * 0.8;
-	float a = atan(p.y, p.x);
-	float ticks = step(0.5, fract(a * 24.0 / 6.2831)) * smoothstep(0.06, 0.0, abs(r - 1.44)) * 0.5;
-	float star = 0.0;
-	for (int i = 0; i < 3; i++) {
-		float ang = float(i) * 2.0944;
-		vec2 n = vec2(cos(ang), sin(ang));
-		star += smoothstep(0.016, 0.0, abs(dot(p, n) - 0.66)) * step(r, 1.32);
-		star += smoothstep(0.016, 0.0, abs(dot(p, -n) - 0.66)) * step(r, 1.32);
-	}
-	return clamp(rings + ticks + star * 0.6, 0.0, 1.0);
-}
-
 void fragment() {
 	vec2 p = (UV - 0.5) * size;
 	float r = length(p * vec2(0.085, 0.13));
@@ -71,9 +53,6 @@ void fragment() {
 	float fz = felt(p + vec2(0.0, e)) - f;
 	NORMAL_MAP = normalize(vec3(-fx * 3.0, -fz * 3.0, 1.0)) * 0.5 + 0.5;
 	NORMAL_MAP_DEPTH = 0.5;
-	// Selo arcano no meio da mesa, entre os dois campos.
-	float mark = arcane((p - vec2(0.0, 0.0)) * 1.0) * seal;
-	color = mix(color, color * 1.35 + vec3(0.012, 0.016, 0.03), mark * 0.55);
 	// Moldura da sua metade: fundo um pouco mais claro e borda dourada dupla, com um brilho fraco.
 	vec2 center = vec2(0.0, (my_half.x + my_half.y) * 0.5);
 	float d = box(p - center, vec2(my_half.z, (my_half.y - my_half.x) * 0.5), 0.35);

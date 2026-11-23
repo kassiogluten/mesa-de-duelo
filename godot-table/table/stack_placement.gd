@@ -20,6 +20,7 @@ func _init(table: TableView) -> void:
 func place(stack: Array, you: int, seen: Dictionary, names: PackedStringArray) -> void:
 	var floating: bool = view.stack_slot.call(0).size.y > 0.0
 	var now: Dictionary = {}
+	var entries: Array = []
 	for i: int in stack.size():
 		var item: Dictionary = stack[i]
 		var source: Dictionary = item.get("source", {}) if item.get("source") is Dictionary else {}
@@ -33,6 +34,7 @@ func place(stack: Array, you: int, seen: Dictionary, names: PackedStringArray) -
 		var from: Variant = _origin(source, controller, spell) if fresh else null
 		view.put_card(key, card, "stack", from if from is Transform3D else t, view.sleeve_of(controller), seen, names)
 		var node: CardNode = view.card_node(key)
+		entries.append({"key": key, "item": item})
 		if from is Transform3D:
 			node.move_to(t, true)
 		if floating:
@@ -42,6 +44,8 @@ func place(stack: Array, you: int, seen: Dictionary, names: PackedStringArray) -
 		if not now.has(key) and view.card_node(key) != null:
 			cast_shadow(view.card_node(key), true)
 	_floating_keys = now
+	if view.stack_presence:
+		view.stack_presence.sync(entries, view.current_state())
 
 
 static func cast_shadow(node: Node3D, on: bool) -> void:
