@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { basename } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { readNewsFeed } from './scripts/news-feed.mjs';
@@ -43,6 +44,21 @@ const lento = (req: { url?: string }, res: { statusCode: number; end: () => void
   setTimeout(() => { if (q.get('falha')) { res.statusCode = 404; res.end(); } else next(); }, Math.min(ms, 30000));
 };
 
+// A mesa no PC no dev (/mesa-pc/<arquivo>): o que o npm run godot:pck e o godot:zip gravaram em dist/mesa-pc/, ou 404.
+const MESA_PC_TYPES: Record<string, string> = { json: 'application/json; charset=utf-8', zip: 'application/zip', pck: 'application/octet-stream' };
+const mesaPc = (req: { url?: string }, res: { statusCode: number; setHeader: (k: string, v: string | number) => void; end: () => void } & NodeJS.WritableStream, next: () => void) => {
+  const path = req.url?.split('?')[0] ?? '';
+  if (!path.startsWith('/mesa-pc/')) return next();
+  const name = basename(decodeURIComponent(path));
+  const file = `dist/mesa-pc/${name}`;
+  if (!/^[\w.-]+$/.test(name) || !existsSync(file)) { res.statusCode = 404; res.end(); return; }
+  res.setHeader('Content-Type', MESA_PC_TYPES[name.split('.').pop() ?? ''] ?? 'application/octet-stream');
+  res.setHeader('Content-Length', statSync(file).size);
+  res.setHeader('Cache-Control', 'no-cache');
+  if (name.endsWith('.zip')) res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  createReadStream(file).pipe(res);
+};
+
 export default defineConfig({
   server: { proxy: scryfallMirror },
   preview: { proxy: scryfallMirror },
@@ -71,6 +87,9 @@ export default defineConfig({
         });
       },
     },
+    // /mesa-pc/ no dev: o zip e o manifesto gerados aqui (npm run godot:pck e godot:zip, em dist/mesa-pc/), ou 404. Nunca a
+    // página do site, que o navegador gravaria como um zip quebrado.
+    { name: 'mesa-pc', configureServer: s => { s.middlewares.use(mesaPc); }, configurePreviewServer: s => { s.middlewares.use(mesaPc); } },
     { name: 'imagem-lenta', configureServer: s => { s.middlewares.use(lento); } },
     VitePWA({
       // A página decide quando atualizar: o jogador vê "Nova versão" e escolhe a hora (src/ui/pwa.ts).

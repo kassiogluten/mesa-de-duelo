@@ -7,6 +7,7 @@
   margin: 4px 0 8px; padding: 24px; border-radius: 18px; border: 1px solid var(--line);
   background: radial-gradient(120% 140% at 100% 0%, #f2b54c14, transparent 60%), var(--surface);
 }
+.bx-baixar[disabled], .bx-mesmo-assim[disabled] { opacity: 0.55; cursor: not-allowed; }
 .bx-baixar { display: inline-flex; align-items: center; justify-content: center; gap: 12px; text-decoration: none; }
 .bx-baixar svg, .bx-aviso svg { flex: none; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .bx-detalhes { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }

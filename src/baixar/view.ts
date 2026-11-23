@@ -6,15 +6,18 @@ const MESA_PC_DIR = '/mesa-pc/';
 export const DEFAULT_ZIP = `${MESA_PC_DIR}mesa-de-duelo-pc.zip`;
 export const MANIFEST_URL = `${MESA_PC_DIR}versao.json`;
 
-/** O que a página usa do manifesto: os campos do zip são mais novos que os do atualizador e podem faltar. */
-interface Download { version?: string; href: string; size?: number }
+/**
+ * O que a página usa do manifesto. Sem `href`, o zip ainda não foi publicado (manifesto de antes do zip, ou o build não
+ * gerou): o botão não aponta para lugar nenhum, porque o endereço sem arquivo devolveria a página do site no lugar do zip.
+ */
+interface Download { version?: string; href?: string; size?: number }
 
 /** O manifesto como veio (qualquer JSON) → versão, endereço e tamanho do zip; o que não for válido fica de fora. */
 export function downloadFromManifest(raw: unknown): Download {
   const m = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
   const version = typeof m.version === 'string' && /^\d+\.\d+\.\d+$/.test(m.version) ? m.version : undefined;
   const size = typeof m.zipSize === 'number' && Number.isFinite(m.zipSize) && m.zipSize > 0 ? m.zipSize : undefined;
-  return { version, href: zipHref(m.zip), size };
+  return { version, href: typeof m.zip === 'string' && m.zip ? zipHref(m.zip) : undefined, size };
 }
 
 /** O campo `zip`: um nome de arquivo (dentro de /mesa-pc/), um caminho do site ou um https://; o resto cai no padrão. */
@@ -34,14 +37,15 @@ export function formatSize(bytes: number): string {
   return `${mb >= 100 ? Math.round(mb) : mb.toFixed(1).replace('.', ',')} MB`;
 }
 
-/** Momento do botão: conferindo o manifesto, com o que ele trouxe, ou sem ele (o botão aponta para o zip padrão). */
+/** Momento do botão: conferindo o manifesto, com o que ele trouxe, ou sem ele (aí não há o que baixar). */
 export type ManifestState = { kind: 'carregando' } | { kind: 'pronto'; download: Download } | { kind: 'falhou' };
 
 /** "Versão 0.239.0 · 85,3 MB", só com o que se sabe. */
 export function downloadDetails(state: ManifestState): string {
   if (state.kind === 'carregando') return 'Conferindo a versão…';
-  if (state.kind === 'falhou') return 'Não deu para conferir a versão agora.';
-  const { version, size } = state.download;
+  if (state.kind === 'falhou') return 'Não deu para conferir o download agora. Tente de novo daqui a pouco.';
+  const { version, size, href } = state.download;
+  if (!href) return 'O download fica disponível em instantes. Tente de novo daqui a pouco.';
   return [version && `Versão ${version}`, size && formatSize(size)].filter(Boolean).join(' · ') || 'Windows 10 e 11';
 }
 
@@ -50,17 +54,21 @@ const ICON_WINDOWS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 
 
 /** O cartão do botão de baixar: no Windows, o botão grande; fora dele, o aviso e o Jogar no navegador. */
 export function downloadCardHTML(state: ManifestState, windows: boolean): string {
-  const href = state.kind === 'pronto' ? state.download.href : DEFAULT_ZIP;
+  const href = state.kind === 'pronto' ? state.download.href : undefined;
   const details = `<p class="bx-detalhes" data-detalhes>${esc(downloadDetails(state))}</p>`;
+  // Só vira link com o zip confirmado no manifesto; antes disso, o mesmo botão desligado.
+  const button = (cls: string, content: string) => href
+    ? `<a class="${cls}" href="${esc(href)}" download data-baixar>${content}</a>`
+    : `<button type="button" class="${cls}" disabled data-baixar>${content}</button>`;
   if (windows) {
-    return `<a class="arena-btn primary big bx-baixar" href="${esc(href)}" download data-baixar>${ICON_DOWNLOAD}<span>Baixar para Windows</span></a>
+    return `${button('arena-btn primary big bx-baixar', `${ICON_DOWNLOAD}<span>Baixar para Windows</span>`)}
       ${details}
       <p class="bx-nota">Um arquivo .zip. Não precisa instalar nem ser administrador do PC.</p>`;
   }
   return `<p class="bx-aviso">${ICON_WINDOWS}<span>A mesa no PC é só para <strong>Windows</strong>, por enquanto. Neste aparelho, jogue no navegador: é a mesma conta, com os mesmos decks.</span></p>
     <div class="bx-botoes">
       <a class="arena-btn primary big" href="/">Jogar no navegador</a>
-      <a class="arena-btn secondary bx-mesmo-assim" href="${esc(href)}" download data-baixar>Baixar para um PC com Windows</a>
+      ${button('arena-btn secondary bx-mesmo-assim', 'Baixar para um PC com Windows')}
     </div>
     ${details}`;
 }

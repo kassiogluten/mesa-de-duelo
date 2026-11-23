@@ -14,18 +14,19 @@ test('size of the zip as Windows shows it', () => {
   assert.equal(formatSize(1.5 * 1024 ** 3), '1,5 GB');
 });
 
-test('the manifest without the zip fields still gives a download', () => {
+test('without the zip in the manifest there is nothing to download', () => {
   // Manifesto de antes do zip: só o do atualizador (pck, size do pck…).
   const old = downloadFromManifest({ version: '0.239.0', pck: 'game-0.239.0.pck', size: 4_000_000, sha256: 'x' });
-  assert.deepEqual(old, { version: '0.239.0', href: DEFAULT_ZIP, size: undefined }, 'o size do pck não vira o tamanho do zip');
-  assert.equal(downloadDetails({ kind: 'pronto', download: old }), 'Versão 0.239.0');
+  assert.deepEqual(old, { version: '0.239.0', href: undefined, size: undefined }, 'sem zip publicado, sem endereço; o size do pck não vira o do zip');
+  assert.match(downloadDetails({ kind: 'pronto', download: old }), /disponível em instantes/);
   const full = downloadFromManifest({ version: '0.239.0', zip: 'mesa-de-duelo-pc.zip', zipSize: 89_478_485, zipSha256: 'y' });
   assert.deepEqual(full, { version: '0.239.0', href: '/mesa-pc/mesa-de-duelo-pc.zip', size: 89_478_485 });
   assert.equal(downloadDetails({ kind: 'pronto', download: full }), 'Versão 0.239.0 · 85,3 MB');
-  assert.deepEqual(downloadFromManifest(null), { version: undefined, href: DEFAULT_ZIP, size: undefined });
-  assert.deepEqual(downloadFromManifest({ version: '<b>', zipSize: -1 }), { version: undefined, href: DEFAULT_ZIP, size: undefined });
+  assert.deepEqual(downloadFromManifest(null), { version: undefined, href: undefined, size: undefined });
+  assert.deepEqual(downloadFromManifest({ version: '<b>', zipSize: -1 }), { version: undefined, href: undefined, size: undefined });
+  assert.equal(downloadFromManifest({ zip: 'javascript:x' }).href, DEFAULT_ZIP, 'zip estranho cai no padrão');
   assert.equal(downloadDetails({ kind: 'pronto', download: { href: DEFAULT_ZIP } }), 'Windows 10 e 11');
-  assert.equal(downloadDetails({ kind: 'falhou' }), 'Não deu para conferir a versão agora.');
+  assert.match(downloadDetails({ kind: 'falhou' }), /Não deu para conferir o download agora/);
 });
 
 test('the zip address only from a file name, a site path or https', () => {
@@ -62,7 +63,15 @@ test('the download card on Windows and elsewhere', () => {
   assert.match(other, /só para <strong>Windows<\/strong>, por enquanto/);
   assert.match(other, /href="\/">Jogar no navegador/);
   assert.match(other, /Baixar para um PC com Windows/);
-  assert.match(downloadCardHTML({ kind: 'carregando' }, true), new RegExp(`href="${DEFAULT_ZIP}"`), 'antes do manifesto, o endereço padrão');
+  // Sem o zip confirmado (conferindo, sem manifesto, manifesto sem zip), o botão fica desligado e não aponta para nada:
+  // o endereço sem arquivo devolveria a página do site, que o navegador gravaria como um zip quebrado.
+  for (const state of [{ kind: 'carregando' }, { kind: 'falhou' }, { kind: 'pronto', download: { version: '0.239.0' } }]) {
+    for (const windows of [true, false]) {
+      const html = downloadCardHTML(state, windows);
+      assert.doesNotMatch(html, /href="[^"]*\.zip"/, `${state.kind} sem link`);
+      assert.match(html, /<button type="button" class="[^"]*" disabled data-baixar>/, `${state.kind} desligado`);
+    }
+  }
 });
 
 test('the guide has the steps, the Windows warning, the requirements and how to uninstall', () => {
