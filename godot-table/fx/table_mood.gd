@@ -32,6 +32,23 @@ var _level: float = 0.0
 ## A cor do clima: mistura das últimas mágicas, pesada por quanto cada uma subiu.
 var _tint: Color = Color.WHITE
 
+# — Clima de combate (fx/combat_stage.gd liga e desliga) —
+## A mesa escurece um pouco, a contraluz esquenta em vermelho e a vinheta aperta, tingida de vinho.
+const COMBAT_DARKEN := 0.2
+const COMBAT_AMBIENT := 0.28
+const COMBAT_RIM := Color(1.0, 0.36, 0.2)
+const COMBAT_RIM_BOOST := 2.2
+const COMBAT_VIGNETTE := 0.22
+const COMBAT_VIGNETTE_TINT := Color(0.09, 0.0, 0.01)
+var _rim: DirectionalLight3D
+var _base_rim: Color
+var _base_rim_energy: float
+var _vignette: ShaderMaterial
+var _base_vignette: float = 0.55
+var _base_vignette_tint: Color = Color(0.0, 0.01, 0.04)
+var _combat_goal: float = 0.0
+var _combat: float = 0.0
+
 
 ## Acha as luzes e o ambiente que a mesa montou e guarda os valores normais deles.
 func attach(table: TableView) -> void:
@@ -40,6 +57,10 @@ func attach(table: TableView) -> void:
 	for child: Node in table.get_children():
 		if child is DirectionalLight3D and _sun == null:
 			_sun = child
+		elif child is DirectionalLight3D and _rim == null:
+			_rim = child
+		elif child is CanvasLayer and child.name == "Vinheta" and _vignette == null and child.get_child_count() > 0:
+			_vignette = (child.get_child(0) as CanvasItem).material as ShaderMaterial
 		elif child is OmniLight3D and _lamp == null:
 			_lamp = child
 		elif child is WorldEnvironment and _env == null:
@@ -53,6 +74,29 @@ func attach(table: TableView) -> void:
 		_base_ambient = _env.ambient_light_color
 		_base_ambient_energy = _env.ambient_light_energy
 		_base_background = _env.background_color
+	if _rim:
+		_base_rim = _rim.light_color
+		_base_rim_energy = _rim.light_energy
+	if _vignette:
+		# Os valores que o shader ainda não recebeu voltam null (fica o padrão do shader, o mesmo daqui).
+		var strength: Variant = _vignette.get_shader_parameter("strength")
+		if strength is float:
+			_base_vignette = strength
+		var tint: Variant = _vignette.get_shader_parameter("tint")
+		if tint is Color:
+			_base_vignette_tint = tint
+		elif tint is Vector3:
+			_base_vignette_tint = Color((tint as Vector3).x, (tint as Vector3).y, (tint as Vector3).z)
+
+
+## O combate começou (true) ou acabou: a luz vai para o clima de combate em ~0,4 s e volta devagar.
+func set_combat(on: bool) -> void:
+	_combat_goal = 1.0 if on else 0.0
+
+
+## Quanto o clima de combate está aceso agora (0 a 1).
+func combat_level() -> float:
+	return _combat
 
 
 ## Puxa o clima para `color` (a cor da mágica, Fx.card_color); `strength` 1 é uma mágica comum.
@@ -77,8 +121,10 @@ func _process(delta: float) -> void:
 
 ## Anda o clima `delta` segundos (o _process chama; os testes chamam direto).
 func advance(delta: float) -> void:
-	if _target <= 0.0 and _level <= 0.0:
+	if _target <= 0.0 and _level <= 0.0 and _combat == _combat_goal:
 		return
+	# O combate entra rápido e sai devagar (o fim do combate é uma respiração, não um corte).
+	_combat = move_toward(_combat, _combat_goal, delta * (2.6 if _combat_goal > _combat else 1.1))
 	# No "leve" (ou se o regulador baixou até ele), o clima apaga logo.
 	var half_life: float = HALF_LIFE if Fx.quality > 0 else 0.08
 	_target *= pow(0.5, delta / half_life)
@@ -101,6 +147,21 @@ func _apply() -> void:
 		_env.ambient_light_color = _base_ambient.lerp(_tint * 0.7, k * AMBIENT_MIX)
 		_env.ambient_light_energy = _base_ambient_energy * (1.0 + k * 0.15)
 		_env.background_color = _base_background.lerp(_tint * 0.09, k * BACKGROUND_MIX)
+	_apply_combat()
+
+
+func _apply_combat() -> void:
+	var c: float = smoothstep(0.0, 1.0, _combat)
+	if _lamp:
+		_lamp.light_energy *= 1.0 - COMBAT_DARKEN * c
+	if _env:
+		_env.ambient_light_energy *= 1.0 - COMBAT_AMBIENT * c
+	if _rim:
+		_rim.light_color = _base_rim.lerp(COMBAT_RIM, c)
+		_rim.light_energy = _base_rim_energy * (1.0 + COMBAT_RIM_BOOST * c)
+	if _vignette:
+		_vignette.set_shader_parameter("strength", _base_vignette + COMBAT_VIGNETTE * c)
+		_vignette.set_shader_parameter("tint", _base_vignette_tint.lerp(COMBAT_VIGNETTE_TINT, c))
 
 
 ## A cor como luz: mesmo matiz, com o canal mais forte em 1 (a lâmpada colorida não escurece a mesa).

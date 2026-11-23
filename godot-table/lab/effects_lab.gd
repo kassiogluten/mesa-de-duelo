@@ -126,6 +126,7 @@ func _panel() -> Control:
 		["Derrota", func() -> void: fx.game_over(false)],
 	]
 	buttons.append_array(LabPlays.buttons(self))
+	buttons.append_array(LabCombat.buttons(self))
 	buttons.append(["Remontar mesa", reset])
 	for entry: Array in buttons:
 		var button := Hud._button(Txt.of(entry[0]), false)
@@ -181,7 +182,7 @@ func _series(folder: String, names: PackedStringArray) -> void:
 			elapsed += delta
 			worst = maxf(worst, delta * 1000.0)
 		await RenderingServer.frame_post_draw
-		get_viewport().get_texture().get_image().save_png("%s/%02d_%s.png" % [folder, i, parts[0].replace(" ", "_").replace("/", "-")])
+		get_viewport().get_texture().get_image().save_png("%s/%02d_%s.png" % [folder, i, parts[0].replace(": ", "-").replace(":", "").replace(" ", "_").replace("/", "-").replace("í", "i")])
 		var frames: int = Engine.get_process_frames() - start_frames
 		print("SERIE %s: %.0f FPS, pior quadro %.1f ms" % [parts[0], frames * 1000.0 / maxf(Time.get_ticks_msec() - start_ms, 1), worst])
 		await get_tree().create_timer(2.0).timeout
