@@ -149,6 +149,25 @@ Avaliado em 28/10/2026: **é possível e vale usar**, como complemento ao botão
 - **Onde mostrar (sugestão)**: só na tela inicial e em Meus decks, e nunca durante uma partida, na sala de espera ou no modo livre, para não cobrir a mesa. Ficaria em `use_fedcm_for_prompt: true`, `auto_select: true` e `cancel_on_tap_outside: true`.
 - **Decidido**: entra na fase 1, junto com o botão, só na tela inicial e em Meus decks, com o login automático ligado.
 
+### Mesa no PC: entrar pelo site (`AccountLinks.java`)
+
+A mesa no PC (Godot) não consegue um ID token do Google para o client ID do site, então entra como um app de TV: pega emprestado o login do site.
+
+```
+POST vincular/iniciar                      (mesa no PC) → {codigo, poll, url: "/vincular?codigo=…", expiresIn: 600}
+POST vincular/confirmar {codigo}  + sessão (página /vincular) → {}
+POST vincular/recusar {codigo}    + sessão ("Não fui eu")     → {}
+POST vincular/estado {poll}                (mesa no PC, a cada 2 s) → {estado: "esperando", expiresIn}
+                                             ou, uma vez só, {estado: "ligado", token, expiresAt, conta}
+POST vincular/cancelar {poll}              (mesa no PC) → {}
+```
+
+- O código tem 8 letras e números sem I, O, 0 e 1, aparece nas duas telas como `ABCD-EFGH`, vence em 10 minutos e serve uma vez. Recusado, cancelado ou vencido, a mesa recebe 410.
+- O `poll` é o segredo da mesa: vai no corpo (nunca no endereço, que cai em logs) e a ponte guarda só o hash dele. Os vínculos em andamento ficam só na memória.
+- A sessão da mesa no PC nasce na primeira consulta depois da confirmação, como as outras (180 dias, só o hash em `sessoes.json`, "sair" invalida, conta no limite de 20 aparelhos).
+- Limites por IP: 10 códigos em 10 minutos, 75 consultas por minuto, 20 confirmações em 15 minutos; no máximo 2000 vínculos abertos.
+- A página `/vincular` avisa para só confirmar um pedido feito agora na própria mesa (o golpe conhecido do login por código é mandar o endereço para outra pessoa) e oferece **Não fui eu**, que mata o código.
+
 ### Configuração do Google
 
 - No Google Cloud Console, criar um projeto e um **OAuth Client ID do tipo "Web application"**. As origens JavaScript autorizadas são `https://mtg.kassio.site`, `https://mesao.online` e `http://localhost:5173`.
