@@ -169,11 +169,8 @@ func test_panel_mana_pip_sends_the_message() -> void:
 	var me: Dictionary = {"id": 0, "name": "Kassio", "life": 20, "pool": {"G": 2}, "graveyard": [], "commanderDamage": [{"commanderId": 9, "damage": 3}]}
 	panel.apply(me, _state([me], {"input": {"gen": 3, "paying": true}}), false, true, _same)
 	var buttons: Array = panel.find_children("*", "Button", true, false)
-	var pip: Button = null
-	for b: Variant in buttons:
-		if (b as Button).icon != null and (b as Button).text == "×2":
-			pip = b
-	check(pip != null, "o pip da reserva vira botão no pagamento")
+	var pip: ManaPoolPip = panel.mana_pool().pip_of("G")
+	check(pip != null and not pip.disabled and pip.count == 2, "o pip da reserva vira botão no pagamento")
 	if pip:
 		pip.pressed.emit()
 	check_eq(sent, [{"type": "mana", "color": "G", "gen": 3}], "o pip manda a mana com o gen")

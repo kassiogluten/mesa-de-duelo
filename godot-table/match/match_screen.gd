@@ -37,6 +37,8 @@ var _autoplay: bool = OS.get_environment("MESA_AUTOJOGAR") == "1"
 var _autoplay_wait: float = 0.0
 var _autoplay_gen: int = -1
 var _autoplay_tries: int = 0
+## MESA_TESTE_PAINEL=1: passa pelo painel "Atacar quem?" na primeira declaração de ataque (match/attack_probe.gd).
+var _panel_probe: AttackProbe
 
 
 func _ready() -> void:
@@ -65,9 +67,11 @@ func _ready() -> void:
 		if not _state.is_empty():
 			_table.apply_state(_state))
 	_table.stack_slot = _stack.layer_rect
+	_stack.table = _table
 	_hud = Hud.new()
 	_hud.catalog = _catalog
 	layer.add_child(_hud)
+	_stack.avoid_rect = _hud.action_rect
 	_fx.hud = _hud
 	_zones = ZoneViewer.new()
 	_zones.catalog = _catalog
@@ -101,6 +105,16 @@ func _ready() -> void:
 	_interaction.state = current_state
 	_interaction.label = func(name: String) -> String: return _catalog.label(name)
 	add_child(_interaction)
+	# "Atacar quem?" logo acima da caixa de ação, embaixo das janelas de pergunta e do inspetor.
+	var attack_panel := AttackPanel.new()
+	attack_panel.anchor = _hud.action_rect
+	layer.add_child(attack_panel)
+	layer.move_child(attack_panel, _hud.get_index() + 1)
+	_interaction.use_attack_panel(attack_panel)
+	if OS.get_environment("MESA_TESTE_PAINEL") == "1":
+		_panel_probe = AttackProbe.new()
+		_panel_probe.screen = self
+		add_child(_panel_probe)
 	_interaction.send.connect(func(message: Dictionary) -> void:
 		_inspector.hide_preview(true)
 		_client.send(message))
@@ -122,9 +136,13 @@ func _ready() -> void:
 	_hud.portrait_slot = _table.portrait_slot
 	_hud.player_count = _table.player_count
 	_hud.hand_rect = _table.hand_rect
+	_hud.table_point = func(key: Variant) -> Vector2: return ManaPoolFx.project(_table, key)
 	_table.hand_area = _hud.hand_area
 	_table.card_clicked.connect(func(node: CardNode) -> void:
 		_inspector.hide_preview(true)
+		# A carta da pilha que não é uma escolha agora abre a pilha em tela cheia.
+		if _stack.handle_card_click(node):
+			return
 		_interaction.card_pressed(node))
 	_table.card_hovered.connect(_on_card_hovered)
 	_hud.action.connect(func(message: Dictionary) -> void: _client.send(message))
@@ -172,6 +190,8 @@ func _process(delta: float) -> void:
 
 func _autoplay_step() -> void:
 	if _state.is_empty() or bool(_state.get("gameOver", false)):
+		return
+	if _panel_probe != null and _panel_probe.claim(_state):
 		return
 	var input: Dictionary = _input_data()
 	# MESA_TESTE_ATAQUE=1: no primeiro ataque, a criatura é clicada de verdade (o mouse do motor), para conferir que o
@@ -277,8 +297,34 @@ func _on_message(msg: Dictionary) -> void:
 				get_tree().create_timer(3.0).timeout.connect(_leave)
 		"toast":
 			_hud.show_toast(Txt.of(msg.get("text", "")))
+		"point":
+			_show_point(int(msg.get("player", -1)), int(msg.get("card", -1)))
 		"gone":
 			_hud.show_toast(Txt.of(msg.get("text", "A partida acabou.")))
+
+
+## Alguém apontou uma carta (o "Apontar" do inspetor): o contorno dela pulsa três vezes na cor do verso de quem apontou,
+## com "Fulano apontou" em cima; se a carta não está à vista na mesa, um aviso diz qual é.
+func _show_point(player: int, card_id: int) -> void:
+	if player < 0 or card_id < 0 or _state.is_empty():
+		return
+	var who: String = "Você"
+	for raw: Variant in _state.get("players", []):
+		if int((raw as Dictionary)["id"]) == player and player != int(_state.get("you", -1)):
+			who = Txt.of((raw as Dictionary).get("name", "Jogador"))
+	var node: CardNode = _table.card_node(card_id)
+	if node == null or not is_instance_valid(node) or node.card_id < 0:
+		var name: String = _catalog.label(Txt.of(_table.card_data(card_id).get("name", ""))) if not _table.card_data(card_id).is_empty() else "uma carta"
+		_hud.show_toast("%s apontou %s." % [who, name])
+		return
+	var color: Color = _table.sleeve_of(player).lightened(0.35)
+	Fx.float_text(_fx, node.global_position + Vector3(0, 0.35, 0), "%s apontou" % who, color, 44, 2.0, 0.3)
+	var ref: WeakRef = weakref(node)
+	for i: int in 3:
+		get_tree().create_timer(i * 0.7).timeout.connect(func() -> void:
+			var target: CardNode = ref.get_ref() as CardNode
+			if target:
+				CardGlow.pulse(target, color, 0.06))
 
 
 ## No fim da partida, a cena final (uma vez por jogo): fogos na vitória, brasas na derrota.
@@ -404,6 +450,9 @@ func _inspect_context() -> Dictionary:
 		"card_name": func(id: int) -> String:
 			var card: Dictionary = _table.card_data(id)
 			return _catalog.label(Txt.of(card.get("name"))) if Txt.of(card.get("name")) != "" else "",
+		# As cartas ligadas e o Apontar do inspetor.
+		"state": _state,
+		"point": func(id: int) -> void: _client.send({"type": "point", "card": id}),
 	}
 
 

@@ -1,4 +1,5 @@
-# O que o inspetor mostra de uma carta, em português: nome, custo, tipo, texto, força, palavras-chave, marcadores e notas.
+# O que o inspetor mostra de uma carta, em português: nome, custo, tipo (e o que um efeito mudou nele), texto, força,
+# palavras-chave, marcadores e notas.
 # Só monta os textos (sem desenhar), para o inspetor e a prévia usarem e os testes conferirem.
 class_name CardDetails
 extends RefCounted
@@ -29,7 +30,7 @@ static func build(card: Dictionary, ctx: Dictionary) -> Dictionary:
 		shown = (card["hiddenFace"] as Dictionary).duplicate()
 		notes.append("Virada para baixo: só você pode ver qual carta é.")
 	var hidden: bool = not secret and (bool(card.get("faceDown", false)) or Txt.of(card.get("name")) == "")
-	var out: Dictionary = {"hidden": hidden, "name": "", "cost": "", "type": "", "text": "", "power": "", "toughness": "", "base": "",
+	var out: Dictionary = {"hidden": hidden, "name": "", "cost": "", "type": "", "type_change": "", "text": "", "power": "", "toughness": "", "base": "",
 		"damage": int(card.get("damage", 0)), "keywords": PackedStringArray(), "counters": PackedStringArray(), "notes": notes}
 	if hidden:
 		var kind: String = Txt.of(FACE_DOWN.get(Txt.of(card.get("faceDownKind")), ""))
@@ -43,6 +44,7 @@ static func build(card: Dictionary, ctx: Dictionary) -> Dictionary:
 		out["type"] = _first([info.get("type_line"), card.get("printedType"), shown.get("typeLine")])
 		var text: String = _first([info.get("text"), shown.get("text")])
 		out["text"] = without_card_ids(text) if text != "" else ("Carregando informações da carta…" if info.is_empty() else "")
+		out["type_change"] = TypeChange.permanent_text(card)
 	if card.has("power") and card.has("toughness") and (bool(card.get("creature", false)) or hidden or secret):
 		out["power"] = str(int(card["power"]))
 		out["toughness"] = str(int(card["toughness"]))
@@ -59,6 +61,16 @@ static func build(card: Dictionary, ctx: Dictionary) -> Dictionary:
 				out["counters"].append("%s × %d" % [counter_name(Txt.of(key)), int(counters[key])])
 	_notes(card, ctx, notes)
 	return out
+
+
+## Os textos de uma face da carta vista pelo botão de virar (a outra face de uma dupla face ou de uma flip): nome, custo,
+## tipo, texto e a força impressa. `face_info` é uma das faces do catálogo (CardCatalog, campo faces).
+static func face(face_info: Dictionary) -> Dictionary:
+	var text: String = Txt.of(face_info.get("text"))
+	return {"hidden": false, "name": Txt.of(face_info.get("label", face_info.get("name", ""))), "cost": Txt.of(face_info.get("cost")),
+		"type": Txt.of(face_info.get("type_line")), "type_change": "", "text": without_card_ids(text), "power": Txt.of(face_info.get("power")),
+		"toughness": Txt.of(face_info.get("toughness")), "base": "", "damage": 0, "keywords": PackedStringArray(), "counters": PackedStringArray(),
+		"notes": PackedStringArray()}
 
 
 ## O nome de uma palavra-chave nesta carta: a travessia diz de quê, a proteção contra o quê; as desconhecidas como o Forge escreve.

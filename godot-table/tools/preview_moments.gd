@@ -48,7 +48,6 @@ func _initialize() -> void:
 	root.add_child(_table)
 	_fx = Node3D.new()
 	root.add_child(_fx)
-	Fx.ambience(_fx)
 	var layer := CanvasLayer.new()
 	root.add_child(layer)
 	var hud := Hud.new()

@@ -9,7 +9,10 @@ const ICONS := {
 	"crown": '<path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/>',
 	"clip": '<path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
 	"exile": '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="m6.5 17.5 11-11" stroke="currentColor" stroke-width="2.4"/>',
-	"layers": '<path d="M12 2 2 7l10 5 10-5z" fill="currentColor"/><path d="m2 12 2.4-1.2L12 14.6l7.6-3.8L22 12l-10 5z" fill="currentColor"/><path d="m2 17 2.4-1.2L12 19.6l7.6-3.8L22 17l-10 5z" fill="currentColor"/>',
+	# Portador do Anel (RING_ICON de src/ui/playerCounters.ts) e Game Changer (ICON_GEM).
+	"ring": '<path d="M12 4C7 4 3 7.6 3 12s4 8 9 8 9-3.6 9-8-4-8-9-8zm0 3c3.6 0 6 2.3 6 5s-2.4 5-6 5-6-2.3-6-5 2.4-5 6-5z" fill="currentColor" fill-rule="evenodd"/>',
+	"gem": '<path d="M7.5 4h9L21 9.5 12 21 3 9.5z" fill="currentColor"/><path d="M3 9.5h18M7.5 4 10 9.5 12 21M16.5 4 14 9.5 12 21M10 9.5 12 4l2 5.5" fill="none" stroke="#5a3606" stroke-width="1" stroke-linejoin="round" opacity=".55"/>',
+	"layers":'<path d="M12 2 2 7l10 5 10-5z" fill="currentColor"/><path d="m2 12 2.4-1.2L12 14.6l7.6-3.8L22 12l-10 5z" fill="currentColor"/><path d="m2 17 2.4-1.2L12 19.6l7.6-3.8L22 17l-10 5z" fill="currentColor"/>',
 	"disc": '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10z" fill="currentColor" fill-rule="evenodd"/>',
 	"untap": '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
 	# Enjoo de invocação: as três estrelinhas em volta (sem girar).

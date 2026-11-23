@@ -1,7 +1,8 @@
 # A escolha de ataque (porte do essencial de src/ui/attackChoice.ts e commanderTable.ts): clicar na criatura marca ou
-# desmarca o ataque; com um defensor só, vai direto; com vários, a criatura fica marcada até escolher quem (o retrato,
-# o planeswalker ou a batalha), ou arrasta a criatura até ele. Manda {type:"attack-group", attackers, defender,
-# defenderKind, gen} como a mesa do navegador (defender null tira do combate).
+# desmarca o ataque; com um defensor só, vai direto; com vários, a criatura fica marcada até escolher quem (no painel
+# "Atacar quem?", no retrato, no planeswalker ou na batalha), ou arrasta a criatura até ele. A que já ataca, clicada,
+# fica marcada para trocar o defensor ou "Retirar do combate". Manda {type:"attack-group", attackers, defender,
+# defenderKind, gen} como a mesa do navegador (defender null tira do combate). O painel: AttackPanelModel.
 class_name AttackFlow
 extends RefCounted
 
@@ -141,12 +142,10 @@ func click_attacker(state: Dictionary, id: int, name_of: Callable = Callable()) 
 		if _has(targets, pinned):
 			return {"send": message([id], pinned, gen)}
 		return {"notice": refuse_text(state, id, pinned, name_of)}
-	# Já atacando: o clique tira do combate (com um defensor só, como no navegador; com vários, também: para trocar o
-	# defensor, arraste a criatura até o novo).
-	if is_assigned and selected.is_empty():
-		return {"send": message([id], null, gen)}
-	if selected.is_empty() and targets.size() == 1:
-		return {"send": message([id], targets[0], gen)}
+	# Um defensor só (e nada marcado nem escolhido): vai direto, e a que já ataca sai do combate. Senão a criatura fica
+	# marcada, e o painel mostra os defensores (e "Retirar do combate" para a que já ataca), como tapAttacker do navegador.
+	if selected.is_empty() and targets.size() == 1 and pinned.is_empty():
+		return {"send": message([id], null if is_assigned else targets[0], gen)}
 	selected.append(id)
 	selection_gen = gen
 	return {"changed": true}
@@ -169,6 +168,27 @@ func choose(state: Dictionary, defender: Dictionary, name_of: Callable = Callabl
 		return {}
 	pinned = {} if not pinned.is_empty() and _has([pinned], defender) else defender
 	return {"changed": true}
+
+
+## "Retirar do combate": as marcadas que já atacavam saem do ataque (removeSelected do navegador).
+func remove_selected(state: Dictionary) -> Dictionary:
+	if not active(state) or selection_gen != gen_of(state):
+		return {}
+	var ids: Array = selected.filter(func(a: int) -> bool: return assigned(state, a))
+	if ids.is_empty():
+		return {}
+	clear()
+	return {"send": message(ids, null, gen_of(state))}
+
+
+## As marcadas que já estão atacando (o painel oferece "Retirar do combate").
+func removable(state: Dictionary) -> bool:
+	return selected.any(func(a: int) -> bool: return assigned(state, a))
+
+
+## Os defensores que o painel oferece agora: os que todas as marcadas podem atacar, ou todos sem nenhuma marcada.
+func current_targets(state: Dictionary) -> Array:
+	return group_targets(state, selected) if not selected.is_empty() else all_targets(state)
 
 
 ## Arrastou a criatura até um defensor: ataca ele (ou avisa por que não pode).
