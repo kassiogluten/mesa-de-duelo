@@ -16,7 +16,9 @@ var _client: ForgeClient = ForgeClient.new()
 var _catalog: CardCatalog
 var _table: TableView
 var _hud: Hud
+var _stack: StackPanel
 var _question: QuestionDialog
+var _zones: ZoneViewer
 var _room: RoomPanel
 var _fx: FxDirector
 var _inspector: CardInspector
@@ -51,10 +53,25 @@ func _ready() -> void:
 	add_child(_fx)
 	var layer := CanvasLayer.new()
 	add_child(layer)
+	# A pilha antes do HUD: a tela do fim do jogo e as perguntas ficam por cima dela.
+	_stack = StackPanel.new()
+	_stack.catalog = _catalog
+	layer.add_child(_stack)
+	_stack.action.connect(func(message: Dictionary) -> void: _client.send(message))
+	_stack.preview.connect(func(tex: Texture2D) -> void: _inspector.show_texture(tex))
+	_stack.layout_changed.connect(func() -> void:
+		if not _state.is_empty():
+			_table.apply_state(_state))
+	_table.stack_slot = _stack.layer_rect
 	_hud = Hud.new()
 	_hud.catalog = _catalog
 	layer.add_child(_hud)
 	_fx.hud = _hud
+	_zones = ZoneViewer.new()
+	_zones.catalog = _catalog
+	layer.add_child(_zones)
+	_zones.action.connect(func(message: Dictionary) -> void: _client.send(message))
+	_hud.zone_requested.connect(open_zone)
 	_question = QuestionDialog.new()
 	_question.catalog = _catalog
 	layer.add_child(_question)
@@ -91,6 +108,11 @@ func _ready() -> void:
 	_hud.pass_level_changed.connect(_save_pass_level)
 	_hud.player_clicked.connect(_on_player_clicked)
 	_hud.leave_pressed.connect(_leave)
+	# Opções do menu da partida: valem na hora, sem sair da mesa.
+	_hud.effects_changed.connect(func(level: String) -> void:
+		_fx.automatic = level == "auto"
+		Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2))
+	_hud.volume_changed.connect(func(volume: float) -> void: _fx.sounds.volume = volume)
 	_question.answered.connect(func(message: Dictionary) -> void: _client.send(message))
 
 	_client.client_version = UpdateState.current_version()
@@ -106,6 +128,13 @@ func _ready() -> void:
 ## O último estado recebido do servidor.
 func current_state() -> Dictionary:
 	return _state
+
+
+## Abre a janela de uma zona do jogador: "graveyard", "exile", "command", "hand" (mão revelada) ou "damage" (dano de
+## comandante). Os selos do retrato já chamam; o clique nos montes 3D pode chamar com SeatInfo.owner_zone(estado, id).
+func open_zone(player_id: int, zone: String) -> void:
+	_zones.apply_state(_state)
+	_zones.open_zone(player_id, zone)
 
 
 func _process(delta: float) -> void:
@@ -160,6 +189,9 @@ func _autoplay_step() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Espaço aperta o botão principal da caixa de ação, como na mesa do navegador.
 	if event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_SPACE:
+		# Com a janela de uma zona aberta, o espaço não passa a prioridade sem querer.
+		if _zones.is_open():
+			return
 		var message: Dictionary = _hud.primary_message()
 		if not message.is_empty():
 			_client.send(message)
@@ -175,6 +207,7 @@ func _on_message(msg: Dictionary) -> void:
 	match Txt.of(msg.get("type", "")):
 		"room":
 			_room.show_room(msg.get("room", {}) if msg.get("room") is Dictionary else {})
+			_hud.set_room(msg.get("room", {}) if msg.get("room") is Dictionary else {})
 		"state":
 			_room.visible = false
 			if _state.is_empty():
@@ -184,8 +217,10 @@ func _on_message(msg: Dictionary) -> void:
 			_fx.before_state(msg)
 			_drag.before_state(msg)
 			_table.apply_state(msg)
+			_stack.apply_state(msg)
 			_play_finale(msg)
 			_hud.apply_state(msg, _blocker_name())
+			_zones.apply_state(msg)
 			_question.show_question(msg.get("question", {}) if msg.get("question") is Dictionary else {})
 			_refresh_highlights()
 			_probe_click.call_deferred()
@@ -256,7 +291,7 @@ func _probe_click() -> void:
 	if _probe_done or OS.get_environment("MESA_TESTE_CLIQUE") != "1":
 		return
 	var input: Dictionary = _input_data()
-	if input.get("opening") == "mulligan" and _hud.primary_message().size() > 0:
+	if input.get("opening") in ["mulligan", "play-draw", "starting-player"] and _hud.primary_message().size() > 0:
 		_client.send(_hud.primary_message())
 		return
 	var hand: Array = []
@@ -270,6 +305,8 @@ func _probe_click() -> void:
 	if target < 0 or not bool(input.get("priority", false)):
 		return
 	_probe_done = true
+	# A carta acabada de comprar ainda está voando do grimório: espera ela chegar na mão.
+	await get_tree().create_timer(HandMotion.ARRIVE_TIME + 0.4).timeout
 	# A mesa desenha em 1920x1080 e a janela pode ter outro tamanho: o evento vai em coordenadas da janela.
 	var screen: Vector2 = get_viewport().get_final_transform() * _table.camera.unproject_position(_table.card_node(target).global_position)
 	print("TESTE: clicando na carta %d da mão em %s" % [target, screen])
@@ -301,6 +338,8 @@ func _click_card(node: CardNode) -> void:
 	if OS.get_environment("MESA_LOG_ENVIO") == "1":
 		print("CLIQUE na carta %d (zona %s)" % [node.card_id, _table.zone_of(node.card_id)])
 	var input: Dictionary = _input_data()
+	if _open_pile(node, input):
+		return
 	var gen: int = int(input.get("gen", 0))
 	if gen == _clicked_gen:
 		return
@@ -320,6 +359,20 @@ func _click_card(node: CardNode) -> void:
 			_clicked_gen = gen
 			_client.send({"type": "card", "id": id, "gen": gen})
 			return
+
+
+## Carta de cemitério, exílio ou zona de comando que não é uma escolha agora: abre a janela daquela zona.
+func _open_pile(node: CardNode, input: Dictionary) -> bool:
+	if not ["graveyard", "exile", "command"].has(_table.zone_of(node.card_id)):
+		return false
+	for list: String in ["selectable", "actionable", "untappable", "manaOnly"]:
+		if (input.get(list, []) as Array).has(node.card_id):
+			return false
+	var where: Dictionary = SeatInfo.owner_zone(_state, node.card_id)
+	if where.is_empty():
+		return false
+	open_zone(int(where["player"]), Txt.of(where["zone"]))
+	return true
 
 
 ## Bloqueio: escolhe a sua criatura e depois o atacante (direto, se ela só pode bloquear um).

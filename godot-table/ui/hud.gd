@@ -1,4 +1,5 @@
-# O HUD por cima da mesa 3D: retratos com vida, fase do turno e a caixa de ação com os botões (a carta ampliada fica no CardInspector).
+# O HUD por cima da mesa 3D: retratos com vida, menu, relógios e histórico no alto, trilha de fases, caixa de ação com
+# os botões e a carta ampliada.
 class_name Hud
 extends Control
 
@@ -6,8 +7,13 @@ extends Control
 signal action(message: Dictionary)
 signal player_clicked(player_id: int)
 signal leave_pressed
+## Tocou num monte do assento ou no dano de comandante: abrir a janela de zona ("graveyard", "exile", "command", "damage", "hand").
+signal zone_requested(player_id: int, zone: String)
 ## O jogador trocou o nível de passar (para guardar).
 signal pass_level_changed(level: String)
+## Opções trocadas no menu da partida (valem na hora).
+signal effects_changed(level: String)
+signal volume_changed(volume: float)
 
 ## Nome das etapas (STOP_STEPS de src/ui/opponentStops.ts).
 const PHASES := {
@@ -24,18 +30,24 @@ var portrait_slot: Callable = func(_id: int) -> Vector2: return Vector2(-1, -1)
 ## Quantos jogadores há (retratos menores com mais de um oponente).
 var player_count: Callable = func() -> int: return 2
 
-var _phase: Label
+var _menu: MatchMenu
+var _history_button: Button
+var _clocks: TurnClocks
+var _track: PhaseTrack
+var _history: HistoryPanel
 var _action_panel: PanelContainer
 var _short: Label
 var _detail: Label
 var _progress: Label
 var _buttons_box: VBoxContainer
 var _primary: Dictionary = {}
+var _preview: TextureRect
 var _toast: Label
 var _toast_left: float = 0.0
 var _portraits: Dictionary = {}
-var _end_panel: PanelContainer
-var _end_label: Label
+var _seats: Dictionary = {}
+## A tela do fim do jogo (ui/result_screen.gd).
+var _result: ResultScreen
 var _bar: MatchBar
 var _forecast: Label
 var _between: PanelContainer
@@ -48,9 +60,29 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	_phase = _label(22, Color(1, 1, 1, 0.85))
-	_phase.position = Vector2(24, 18)
-	add_child(_phase)
+	# Alto à esquerda: menu, histórico e os relógios (duração, turno, tempo do turno, espera), como na mesa do navegador.
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	top.position = Vector2(24, 16)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(top)
+	_menu = MatchMenu.new()
+	_menu.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	_menu.leave_pressed.connect(func() -> void: leave_pressed.emit())
+	_menu.pass_level_changed.connect(func(level: String) -> void: pass_level_changed.emit(level))
+	_menu.effects_changed.connect(func(level: String) -> void: effects_changed.emit(level))
+	_menu.volume_changed.connect(func(volume: float) -> void: volume_changed.emit(volume))
+	top.add_child(_menu)
+	_history_button = Button.new()
+	_history_button.icon = HudIcons.texture(HudIcons.HISTORY, 40)
+	_history_button.add_theme_constant_override("icon_max_width", 20)
+	_history_button.tooltip_text = "Histórico da partida"
+	_history_button.custom_minimum_size = Vector2(44, 40)
+	_history_button.focus_mode = Control.FOCUS_NONE
+	MatchMenu._style(_history_button)
+	top.add_child(_history_button)
+	_clocks = TurnClocks.new()
+	top.add_child(_clocks)
 	_bar = MatchBar.new()
 	_bar.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
@@ -95,6 +127,44 @@ func _ready() -> void:
 	_buttons_box.add_theme_constant_override("separation", 8)
 	column.add_child(_buttons_box)
 
+	# Trilha de fases embaixo da caixa de ação, onde o olho já está para passar a vez.
+	_action_panel.offset_bottom = -82
+	_action_panel.offset_top = -158
+	_track = PhaseTrack.new()
+	_track.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_track.offset_left = -400
+	_track.offset_top = -72
+	_track.offset_right = -24
+	_track.offset_bottom = -24
+	_track.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_track.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_track.visible = false
+	_track.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	add_child(_track)
+
+	_preview = TextureRect.new()
+	_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_preview.set_anchors_preset(Control.PRESET_CENTER_LEFT)
+	_preview.offset_left = 24
+	_preview.offset_top = -260
+	_preview.offset_right = 24 + 372
+	_preview.offset_bottom = 260
+	_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_preview.visible = false
+	add_child(_preview)
+
+	# Gaveta do histórico, à esquerda, abaixo do menu.
+	_history = HistoryPanel.new()
+	_history.catalog = catalog
+	_history.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_history.offset_left = 24
+	_history.offset_right = 24 + 460
+	_history.offset_top = 68
+	_history.offset_bottom = -200
+	add_child(_history)
+	_history_button.pressed.connect(func() -> void: _history.toggle())
+
 	_toast = _label(20, Color(1, 0.85, 0.8))
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_toast.offset_top = 175
@@ -102,27 +172,11 @@ func _ready() -> void:
 	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_toast)
 
-	_end_panel = PanelContainer.new()
-	_end_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.04, 0.05, 0.09, 0.94), 18))
-	_end_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_end_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_end_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_end_panel.visible = false
-	add_child(_end_panel)
-	var end_column := VBoxContainer.new()
-	end_column.add_theme_constant_override("separation", 18)
-	_end_panel.add_child(end_column)
-	_end_label = _label(44, GOLD)
-	_end_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	end_column.add_child(_end_label)
-	var rematch := _button("Revanche", false)
-	rematch.pressed.connect(func() -> void:
-		action.emit({"type": "rematch"})
-		_end_label.text = "Revanche pedida…")
-	end_column.add_child(rematch)
-	var back := _button("Voltar ao início", true)
-	back.pressed.connect(func() -> void: leave_pressed.emit())
-	end_column.add_child(back)
+	_result = ResultScreen.new()
+	_result.catalog = catalog
+	_result.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	_result.leave_pressed.connect(func() -> void: leave_pressed.emit())
+	add_child(_result)
 
 	# Entre os jogos de uma melhor de três: seguir com o mesmo deck (trocar cartas com o sideboard fica para depois).
 	_between = PanelContainer.new()
@@ -153,32 +207,35 @@ func apply_state(state: Dictionary, blocker_name: String = "") -> void:
 	var input: Dictionary = state.get("input", {})
 	var you: int = int(state.get("you", 0))
 	var active: Variant = state.get("activePlayer")
-	var whose: String = "seu turno" if active != null and int(active) == you else "turno do oponente"
-	var phase: String = Txt.of(PHASES.get(Txt.of(state.get("phase", "")), ""))
-	_phase.text = "Turno %d · %s%s" % [int(state.get("turn", 0)), whose, (" · " + phase) if phase != "" else ""] if int(state.get("turn", 0)) > 0 else "Começando a partida…"
 	_apply_action_box(state, blocker_name)
 	_bar.apply_state(state)
+	_menu.apply_state(state)
+	_clocks.apply_state(state)
+	_track.apply_state(state)
+	_history.ingest(state)
 	_apply_between(state)
 	var selectable_players: Array = input.get("selectablePlayers", [])
 	for raw: Variant in state.get("players", []):
-		_update_portrait(raw as Dictionary, int((raw as Dictionary)["id"]) == you, selectable_players.has(int((raw as Dictionary)["id"])), active != null and int(active) == int((raw as Dictionary)["id"]))
-	if bool(state.get("gameOver", false)):
-		var winner: String = Txt.of(state.get("winner", ""))
-		var me: String = ""
-		for raw: Variant in state.get("players", []):
-			if int((raw as Dictionary)["id"]) == you:
-				me = Txt.of((raw as Dictionary)["name"])
-		_end_label.text = "Vitória!" if winner == me else ("Empate" if winner == "" else "Derrota")
-		var series: Variant = state.get("match")
-		_end_panel.visible = not (series is Dictionary and Txt.of((series as Dictionary).get("phase")) == "sideboarding")
-	else:
-		_end_panel.visible = false
+		_update_portrait(raw as Dictionary, int((raw as Dictionary)["id"]) == you, selectable_players.has(int((raw as Dictionary)["id"])), active != null and int(active) == int((raw as Dictionary)["id"]), state)
+	# A tela do fim do jogo vê todos os estados (guarda os eventos para o destaque do jogo) e aparece no fim.
+	_result.apply_state(state)
+
+
+## A sala da partida em rede (para o botão de revanche da tela do fim do jogo).
+func set_room(room: Dictionary) -> void:
+	_result.room = room
 
 
 func show_toast(text: String) -> void:
 	_toast.text = text
 	_toast_left = 4.0
 	_toast.modulate.a = 1.0
+
+
+## Mostra a carta ampliada (null esconde).
+func show_preview(tex: Texture2D) -> void:
+	_preview.texture = tex
+	_preview.visible = tex != null
 
 
 ## O centro do retrato de um jogador na tela (para as setas que miram jogadores); (-1, -1) se não há.
@@ -207,29 +264,9 @@ func _apply_between(state: Dictionary) -> void:
 	_between_button.pressed.connect(func() -> void: action.emit({"type": "next-game", "id": id}))
 
 
-## Faixa que atravessa o meio da tela ("Seu turno", "Ataque!"): entra deslizando, fica um instante e some.
+## Faixa que atravessa o meio da tela ("Seu turno", "Ataque!"), com o acabamento da mesa do navegador (ui/turn_banner.gd).
 func banner(text: String, color: Color) -> void:
-	var label := _label(64, color)
-	label.text = text
-	label.add_theme_constant_override("outline_size", 14)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	label.offset_left = -500
-	label.offset_right = 500
-	label.offset_top = -60
-	label.offset_bottom = 20
-	label.modulate.a = 0.0
-	label.pivot_offset = Vector2(500, 40)
-	label.scale = Vector2(1.3, 1.3)
-	add_child(label)
-	var tween := label.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "modulate:a", 1.0, 0.18)
-	tween.tween_property(label, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_interval(0.55)
-	tween.chain().tween_property(label, "modulate:a", 0.0, 0.3)
-	tween.parallel().tween_property(label, "position:y", label.position.y - 30, 0.3)
-	tween.chain().tween_callback(label.queue_free)
+	TurnBanner.play(self, text, color)
 
 
 ## O retrato pulsa quando a vida muda: cresce e acende em verde (ganho) ou vermelho (perda).
@@ -293,58 +330,29 @@ func _apply_action_box(state: Dictionary, blocker_name: String) -> void:
 	_action_panel.visible = _short.visible or not list.is_empty()
 
 
-func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: bool) -> void:
+## O assento de cada jogador (ui/seat_panel.gd): retrato, selos, reserva e montes; o seu no canto de baixo.
+func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: bool, state: Dictionary = {}) -> void:
 	var id: int = int(player["id"])
-	var portrait: Button = _portraits.get(id)
-	if portrait == null:
-		portrait = Button.new()
-		portrait.custom_minimum_size = Vector2(130, 130)
-		portrait.add_theme_font_size_override("font_size", 52)
-		portrait.pressed.connect(func() -> void: player_clicked.emit(id))
-		var caption := _label(20, Color(1, 1, 1, 0.85))
-		caption.name = "Caption"
-		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		caption.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		caption.offset_left = -110
-		caption.offset_right = 110
-		caption.offset_top = 2
-		caption.offset_bottom = 30
-		portrait.add_child(caption)
-		if mine:
-			portrait.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-			portrait.offset_left = 34
-			portrait.offset_top = -184
-			portrait.offset_right = 164
-			portrait.offset_bottom = -54
-		else:
-			portrait.set_anchors_preset(Control.PRESET_CENTER_TOP)
-			portrait.offset_left = -65
-			portrait.offset_top = 12
-			portrait.offset_right = 65
-			portrait.offset_bottom = 142
-		add_child(portrait)
-		_portraits[id] = portrait
-	if not mine:
+	var seat: SeatPanel = _seats.get(id)
+	if seat == null:
+		seat = SeatPanel.new()
+		seat.setup(id, mine)
+		add_child(seat)
+		# Atrás do resto do HUD: a carta ampliada e os avisos ficam por cima.
+		move_child(seat, 0)
+		seat.portrait_pressed.connect(func(pid: int) -> void: player_clicked.emit(pid))
+		seat.zone_pressed.connect(func(pid: int, zone: String) -> void: zone_requested.emit(pid, zone))
+		seat.mana_pressed.connect(func(message: Dictionary) -> void: action.emit(message))
+		_seats[id] = seat
+		_portraits[id] = seat.portrait
+	var crowded: bool = int(player_count.call()) > 2
+	if mine:
+		seat.place(Vector2(99, -119), 130.0, 520.0)
+	else:
 		var slot: Vector2 = portrait_slot.call(id)
-		if slot.x >= 0:
-			var side: float = 130.0 if int(player_count.call()) <= 2 else 100.0
-			portrait.set_anchors_preset(Control.PRESET_TOP_LEFT)
-			portrait.custom_minimum_size = Vector2(side, side)
-			portrait.add_theme_font_size_override("font_size", 52 if side > 110 else 40)
-			portrait.position = slot - Vector2(side, side) / 2.0
-			portrait.size = Vector2(side, side)
-	portrait.text = str(int(player.get("life", 0)))
-	var eliminated: bool = bool(player.get("eliminated", false))
-	(portrait.get_node("Caption") as Label).text = ("Você" if mine else Txt.of(player.get("name", ""))) + (" · eliminado" if eliminated else "")
-	portrait.modulate = Color(1, 1, 1, 0.45) if eliminated else Color.WHITE
-	var ring: Color = Color(1.0, 0.82, 0.3) if selectable else (GOLD if active else Color(1, 1, 1, 0.18))
-	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := _panel_style(Color(0.08, 0.1, 0.16, 0.92), 65)
-		style.border_color = ring
-		style.set_border_width_all(6 if selectable else 3)
-		if state_name == "hover" and selectable:
-			style.bg_color = Color(0.2, 0.17, 0.08, 0.95)
-		portrait.add_theme_stylebox_override(state_name, style)
+		seat.place(slot if slot.x >= 0 else Vector2(get_viewport_rect().size.x / 2.0, 77), 100.0 if crowded else 130.0, 190.0 if crowded else 460.0)
+	var translate: Callable = func(name: String) -> String: return catalog.label(name) if catalog else name
+	seat.apply(player, state, selectable, active, translate)
 
 
 static func _panel_style(color: Color, radius: int) -> StyleBoxFlat:

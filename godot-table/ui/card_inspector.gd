@@ -68,6 +68,24 @@ func show_preview(card: Dictionary, ctx: Dictionary, url: String) -> void:
 	_show_left = 0.0 if _preview.visible else SHOW_DELAY
 
 
+## Prévia só com a imagem (a pilha e outras listas que têm a textura e não o FCard); null esconde.
+func show_texture(tex: Texture2D) -> void:
+	if tex == null or is_open():
+		hide_preview()
+		return
+	_pending_card = {}
+	_show_left = -1.0
+	_hide_left = -1.0
+	_preview_url = ""
+	_preview_image.texture = tex
+	for child: Node in _preview_notes.get_children():
+		_preview_notes.remove_child(child)
+		child.queue_free()
+	_preview_notes.visible = false
+	_preview.visible = true
+	_place_preview()
+
+
 func hide_preview(immediate: bool = false) -> void:
 	_show_left = -1.0
 	if immediate:

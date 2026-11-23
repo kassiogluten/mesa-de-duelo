@@ -214,7 +214,11 @@ static func _thud(parent: Node3D, node: Node3D, floor_y: float, strength: float)
 static func _crown(parent: Node3D, die: Node3D) -> void:
 	var ground := Vector3(die.position.x, 0.0, die.position.z)
 	Fx.ring(parent, ground, GOLD, 1.7, 0.7, 0.14)
-	parent.get_tree().create_timer(0.18).timeout.connect(func() -> void: Fx.ring(parent, ground, GOLD, 1.2, 0.6, 0.1))
+	var weak: WeakRef = weakref(parent)
+	parent.get_tree().create_timer(0.18).timeout.connect(func() -> void:
+		var alive: Node3D = weak.get_ref() as Node3D
+		if alive != null:
+			Fx.ring(alive, ground, GOLD, 1.2, 0.6, 0.1))
 	Fx.burst(parent, ground + Vector3(0, 0.5, 0), GOLD, 40, 1.8, 0.8, 0.09)
 	Fx.light(parent, ground, GOLD, 4.0, 3.5, 0.8)
 	var halo := MeshInstance3D.new()

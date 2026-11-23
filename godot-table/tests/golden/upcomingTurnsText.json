@@ -1,0 +1,805 @@
+[
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "CLEANUP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DAMAGE",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DECLARE_ATTACKERS",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "combatNumber": 2
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DECLARE_ATTACKERS",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DECLARE_BLOCKERS",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_FIRST_STRIKE_DAMAGE",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "DRAW",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "END_OF_TURN",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "FUTURE_PHASE",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Ana"
+     },
+     {
+      "id": 3,
+      "name": "<b>\"Bia\"</b>"
+     },
+     {
+      "id": 4,
+      "name": "Caio"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "day",
+    "activeSpells": 0
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "match": {
+     "gameNumber": 1,
+     "wins": [
+      0,
+      0
+     ],
+     "draws": 0,
+     "over": false,
+     "phase": "playing",
+     "ready": [],
+     "elapsedMs": 754000
+    }
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "match": {
+     "gameNumber": 1,
+     "wins": [
+      0,
+      0
+     ],
+     "draws": 0,
+     "over": false,
+     "phase": "playing",
+     "ready": [],
+     "gameMs": 754000
+    }
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      0,
+      0
+     ],
+     "draws": 0,
+     "over": false,
+     "phase": "playing",
+     "ready": [],
+     "elapsedMs": 754000
+    }
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Ana"
+     },
+     {
+      "id": 3,
+      "name": "Bia"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "night",
+    "activeSpells": 1
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 2,
+      "name": "<img src=x>"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 3,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Ana"
+     },
+     {
+      "id": 3,
+      "name": "<b>\"Bia\"</b>"
+     },
+     {
+      "id": 4,
+      "name": "Caio"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 3,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     },
+     {
+      "id": 3,
+      "name": "<Ana>"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "night",
+    "activeSpells": 0
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 4,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Ana"
+     },
+     {
+      "id": 3,
+      "name": "<b>\"Bia\"</b>"
+     },
+     {
+      "id": 4,
+      "name": "Caio"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "extraTurn": true,
+    "extraTurns": [
+     1,
+     1
+    ],
+    "extraCombats": 1,
+    "extraCombatAfter": [
+     "MAIN2"
+    ],
+    "stack": []
+   }
+  ],
+  "out": "Depois: 2 turnos extras seu"
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "extraTurn": true,
+    "extraTurns": [
+     2
+    ],
+    "extraCombats": 1,
+    "extraCombatAfter": [
+     "MAIN2"
+    ],
+    "stack": []
+   }
+  ],
+  "out": "Depois: turno extra do oponente"
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UNTAP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": [
+     {
+      "id": 1
+     }
+    ]
+   }
+  ],
+  "out": ""
+ }
+]

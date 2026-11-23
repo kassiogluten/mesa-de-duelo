@@ -1,0 +1,10983 @@
+[
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "label": {
+       "Pyroclasm": "Pyroclasm"
+      },
+      "findCard": {}
+     }
+    }
+   },
+   {
+    "seq": 11,
+    "type": "damage",
+    "card": {
+     "id": 31,
+     "name": "Pyroclasm",
+     "manaCost": "{1}{R}"
+    },
+    "sourceId": 31,
+    "targets": {
+     "cards": [
+      40
+     ]
+    },
+    "delta": -2,
+    "sweep": {
+     "events": [
+      {
+       "seq": 11,
+       "type": "damage",
+       "card": {
+        "id": 31,
+        "name": "Pyroclasm",
+        "manaCost": "{1}{R}"
+       },
+       "sourceId": 31,
+       "targets": {
+        "cards": [
+         40
+        ]
+       },
+       "delta": -2
+      },
+      {
+       "seq": 12,
+       "type": "damage",
+       "card": {
+        "id": 31,
+        "name": "Pyroclasm",
+        "manaCost": "{1}{R}"
+       },
+       "sourceId": 31,
+       "targets": {
+        "cards": [
+         41
+        ]
+       },
+       "delta": -2
+      },
+      {
+       "seq": 13,
+       "type": "damage",
+       "card": {
+        "id": 31,
+        "name": "Pyroclasm",
+        "manaCost": "{1}{R}"
+       },
+       "sourceId": 31,
+       "targets": {
+        "cards": [
+         42
+        ]
+       },
+       "delta": -2
+      }
+     ],
+     "cause": {
+      "id": 31,
+      "name": "Pyroclasm",
+      "manaCost": "{1}{R}"
+     },
+     "wave": true
+    }
+   }
+  ],
+  "out": "Pyroclasm: 2 de dano em 3 criaturas."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 8,
+    "type": "left",
+    "actor": 1,
+    "card": {
+     "id": 1,
+     "name": "Criatura 1"
+    },
+    "from": "Battlefield",
+    "to": "Graveyard",
+    "reason": "destroyed",
+    "sweep": {
+     "events": [
+      {
+       "seq": 8,
+       "type": "left",
+       "actor": 1,
+       "card": {
+        "id": 1,
+        "name": "Criatura 1"
+       },
+       "from": "Battlefield",
+       "to": "Graveyard",
+       "reason": "destroyed"
+      },
+      {
+       "seq": 9,
+       "type": "left",
+       "actor": 2,
+       "card": {
+        "id": 2,
+        "name": "Criatura 2"
+       },
+       "from": "Battlefield",
+       "to": "Graveyard",
+       "reason": "destroyed"
+      },
+      {
+       "seq": 10,
+       "type": "left",
+       "actor": 2,
+       "card": {
+        "id": 3,
+        "name": "Criatura 3"
+       },
+       "from": "Battlefield",
+       "to": "Graveyard",
+       "reason": "destroyed"
+      }
+     ],
+     "cause": {
+      "id": 30,
+      "name": "Wrath of God",
+      "manaCost": "{2}{W}{W}"
+     },
+     "controller": 1,
+     "wave": true
+    }
+   }
+  ],
+  "out": "Wrath of God: 3 permanentes destruídas."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "findCard": {
+       "10": {
+        "id": 10,
+        "name": "Grizzly Bears",
+        "creature": true
+       }
+      },
+      "label": {
+       "Grizzly Bears": "Grizzly Bears"
+      }
+     }
+    }
+   },
+   {
+    "type": "damage",
+    "delta": -2,
+    "prevented": true,
+    "targets": {
+     "cards": [
+      10
+     ]
+    }
+   }
+  ],
+  "out": "Escudo preveniu 2 de dano a Grizzly Bears."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Aboleth Spawn": "Aboleth Spawn"
+      }
+     }
+    }
+   },
+   {
+    "type": "ability-activated",
+    "actor": 0,
+    "trigger": true,
+    "ward": true,
+    "card": {
+     "name": "Aboleth Spawn"
+    },
+    "wardAgainst": 5
+   }
+  ],
+  "out": "Proteção contra alvos de Aboleth Spawn."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Aboleth Spawn": "Aboleth Spawn"
+      }
+     }
+    }
+   },
+   {
+    "type": "resolved",
+    "actor": 0,
+    "trigger": true,
+    "ward": true,
+    "card": {
+     "name": "Aboleth Spawn"
+    },
+    "wardAgainst": 5,
+    "held": false
+   }
+  ],
+  "out": "Proteção contra alvos de Aboleth Spawn: custo pago."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Aboleth Spawn": "Aboleth Spawn"
+      }
+     }
+    }
+   },
+   {
+    "type": "resolved",
+    "actor": 0,
+    "trigger": true,
+    "ward": true,
+    "card": {
+     "name": "Aboleth Spawn"
+    },
+    "wardAgainst": 5,
+    "held": true
+   }
+  ],
+  "out": "Proteção contra alvos de Aboleth Spawn: anulou o efeito."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Donatello, Gadget Master": "Donatello, Gadget Master"
+      },
+      "ptName": {
+       "Shock": "Choque"
+      }
+     }
+    }
+   },
+   {
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "name": "Donatello, Gadget Master"
+    },
+    "from": "Stack",
+    "reason": "sneak",
+    "swapName": "Shock"
+   }
+  ],
+  "out": "Sneak: Donatello, Gadget Master entra atacando no lugar de Choque."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Forest": "Forest",
+       "Island": "Island"
+      },
+      "ptName": {
+       "Shock": "Choque"
+      }
+     }
+    }
+   },
+   {
+    "type": "mill",
+    "actor": 1,
+    "sourceName": "Shock",
+    "milled": [
+     {
+      "name": "Forest"
+     },
+     {
+      "name": "Island"
+     }
+    ]
+   }
+  ],
+  "out": "Ana moeu 2 cartas com Choque: Forest e Island."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Forest": "Forest"
+      }
+     }
+    }
+   },
+   {
+    "type": "land-played",
+    "actor": 1,
+    "card": {
+     "name": "Forest"
+    }
+   }
+  ],
+  "out": "Ana jogou Forest."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Ninja of the Deep Hours": "Ninja of the Deep Hours"
+      },
+      "ptName": {}
+     }
+    }
+   },
+   {
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "name": "Ninja of the Deep Hours"
+    },
+    "from": "Hand",
+    "to": "Battlefield",
+    "reason": "ninjutsu",
+    "swapWith": 10,
+    "swapName": "Slither Blade"
+   }
+  ],
+  "out": "Ninjutsu: Ninja of the Deep Hours entra atacando no lugar de Slither Blade."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock",
+       "Grizzly Bears": "Grizzly Bears"
+      },
+      "findCard": {
+       "10": {
+        "id": 10,
+        "name": "Grizzly Bears",
+        "creature": true
+       }
+      }
+     }
+    }
+   },
+   {
+    "type": "spell-cast",
+    "actor": 1,
+    "card": {
+     "name": "Shock"
+    },
+    "from": "Graveyard",
+    "targets": {
+     "players": [
+      0
+     ],
+     "cards": [
+      10
+     ]
+    }
+   },
+   true
+  ],
+  "out": "Ana conjurou Shock do cemitério em você e Grizzly Bears."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock"
+      }
+     }
+    }
+   },
+   {
+    "type": "damage",
+    "delta": -3,
+    "targets": {
+     "players": [
+      1
+     ]
+    },
+    "card": {
+     "name": "Shock"
+    }
+   }
+  ],
+  "out": "Ana sofreu 3 de dano de Shock."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock"
+      }
+     }
+    }
+   },
+   {
+    "type": "spell-cast",
+    "actor": 1,
+    "card": {
+     "name": "Shock"
+    },
+    "from": "Graveyard",
+    "targets": {
+     "players": [
+      0
+     ],
+     "cards": [
+      10
+     ]
+    }
+   }
+  ],
+  "out": "Ana conjurou Shock."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Slither Blade": "Slither Blade"
+      }
+     }
+    }
+   },
+   {
+    "type": "left",
+    "actor": 1,
+    "card": {
+     "name": "Slither Blade"
+    },
+    "from": "Battlefield",
+    "to": "Hand",
+    "reason": "ninjutsu",
+    "swapFor": 12
+   }
+  ],
+  "out": "Ninjutsu: Slither Blade volta para a mão."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "type": "attackers",
+    "actor": 0,
+    "targets": {
+     "players": [
+      1
+     ]
+    },
+    "cards": [
+     10,
+     12
+    ]
+   }
+  ],
+  "out": "Você ataca Ana com 2 criaturas."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Ana"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "type": "whatever"
+   }
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Steam Vents": "Steam Vents"
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "card": {
+     "controller": 1,
+     "creature": false,
+     "id": 107,
+     "land": true,
+     "manaCost": "",
+     "name": "Steam Vents",
+     "set": "TRK",
+     "tapped": false,
+     "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+     "token": false,
+     "typeLine": "Land - Island Mountain"
+    },
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "MAIN1",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [
+        {
+         "controller": 1,
+         "creature": false,
+         "id": 107,
+         "land": true,
+         "manaCost": "",
+         "name": "Steam Vents",
+         "set": "TRK",
+         "tapped": false,
+         "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+         "token": false,
+         "typeLine": "Land - Island Mountain"
+        }
+       ],
+       "commanderDamage": [],
+       "handCount": 5,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "from": "Hand",
+    "seq": 31,
+    "sourceId": 107,
+    "stateVersion": 45,
+    "to": "Battlefield",
+    "type": "entered"
+   },
+   false
+  ],
+  "out": "Steam Vents entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Steam Vents": "Steam Vents"
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "card": {
+     "controller": 1,
+     "creature": false,
+     "id": 107,
+     "land": true,
+     "manaCost": "",
+     "name": "Steam Vents",
+     "set": "TRK",
+     "tapped": false,
+     "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+     "token": false,
+     "typeLine": "Land - Island Mountain"
+    },
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "MAIN1",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [
+        {
+         "controller": 1,
+         "creature": false,
+         "id": 107,
+         "land": true,
+         "manaCost": "",
+         "name": "Steam Vents",
+         "set": "TRK",
+         "tapped": false,
+         "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+         "token": false,
+         "typeLine": "Land - Island Mountain"
+        }
+       ],
+       "commanderDamage": [],
+       "handCount": 5,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "from": "Hand",
+    "seq": 31,
+    "sourceId": 107,
+    "stateVersion": 45,
+    "to": "Battlefield",
+    "type": "entered"
+   },
+   true
+  ],
+  "out": "Steam Vents entrou no campo (de Oponente)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Steam Vents": "Steam Vents"
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "card": {
+     "controller": 1,
+     "creature": false,
+     "id": 107,
+     "land": true,
+     "manaCost": "",
+     "name": "Steam Vents",
+     "set": "TRK",
+     "tapped": false,
+     "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+     "token": false,
+     "typeLine": "Land - Island Mountain"
+    },
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "MAIN1",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [
+        {
+         "controller": 1,
+         "creature": false,
+         "id": 107,
+         "land": true,
+         "manaCost": "",
+         "name": "Steam Vents",
+         "set": "TRK",
+         "tapped": false,
+         "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+         "token": false,
+         "typeLine": "Land - Island Mountain"
+        }
+       ],
+       "commanderDamage": [],
+       "handCount": 5,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "seq": 32,
+    "sourceId": 107,
+    "stateVersion": 46,
+    "to": "Battlefield",
+    "type": "land-played"
+   },
+   false
+  ],
+  "out": "Oponente jogou Steam Vents."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Steam Vents": "Steam Vents"
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "card": {
+     "controller": 1,
+     "creature": false,
+     "id": 107,
+     "land": true,
+     "manaCost": "",
+     "name": "Steam Vents",
+     "set": "TRK",
+     "tapped": false,
+     "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+     "token": false,
+     "typeLine": "Land - Island Mountain"
+    },
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "MAIN1",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [
+        {
+         "controller": 1,
+         "creature": false,
+         "id": 107,
+         "land": true,
+         "manaCost": "",
+         "name": "Steam Vents",
+         "set": "TRK",
+         "tapped": false,
+         "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+         "token": false,
+         "typeLine": "Land - Island Mountain"
+        }
+       ],
+       "commanderDamage": [],
+       "handCount": 5,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "seq": 32,
+    "sourceId": 107,
+    "stateVersion": 46,
+    "to": "Battlefield",
+    "type": "land-played"
+   },
+   true
+  ],
+  "out": "Oponente jogou Steam Vents."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "frame": {
+     "activePlayer": 0,
+     "combat": [],
+     "phase": "UNTAP",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [
+        {
+         "controller": 1,
+         "creature": false,
+         "id": 107,
+         "land": true,
+         "manaCost": "",
+         "name": "Steam Vents",
+         "set": "TRK",
+         "tapped": false,
+         "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+         "token": false,
+         "typeLine": "Land - Island Mountain"
+        }
+       ],
+       "commanderDamage": [],
+       "handCount": 5,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 2
+    },
+    "seq": 45,
+    "stateVersion": 75,
+    "turn": 2,
+    "type": "turn"
+   },
+   false
+  ],
+  "out": "Turno de Você."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "frame": {
+     "activePlayer": 0,
+     "combat": [],
+     "phase": "UNTAP",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [
+        {
+         "controller": 1,
+         "creature": false,
+         "id": 107,
+         "land": true,
+         "manaCost": "",
+         "name": "Steam Vents",
+         "set": "TRK",
+         "tapped": false,
+         "text": "({T}: Add {U} or {R}.)\r\n\r\nAs Steam Vents enters, you may pay 2 life. If you don't, it enters tapped.",
+         "token": false,
+         "typeLine": "Land - Island Mountain"
+        }
+       ],
+       "commanderDamage": [],
+       "handCount": 5,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 2
+    },
+    "seq": 45,
+    "stateVersion": 75,
+    "turn": 2,
+    "type": "turn"
+   },
+   true
+  ],
+  "out": "Turno de Você."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 1,
+    "stateVersion": 4,
+    "type": "shuffle"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 1,
+    "stateVersion": 4,
+    "type": "shuffle"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 10,
+    "stateVersion": 15,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 10,
+    "stateVersion": 15,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 28,
+    "stateVersion": 40,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 28,
+    "stateVersion": 40,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 34,
+    "stateVersion": 49,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 34,
+    "stateVersion": 49,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 36,
+    "stateVersion": 53,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 36,
+    "stateVersion": 53,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 38,
+    "stateVersion": 57,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 38,
+    "stateVersion": 57,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 4,
+    "stateVersion": 9,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 4,
+    "stateVersion": 9,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 40,
+    "stateVersion": 61,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 40,
+    "stateVersion": 61,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 42,
+    "stateVersion": 65,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 42,
+    "stateVersion": 65,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 44,
+    "stateVersion": 69,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 44,
+    "stateVersion": 69,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 46,
+    "stateVersion": 77,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 46,
+    "stateVersion": 77,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 48,
+    "stateVersion": 80,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 48,
+    "stateVersion": 80,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 49,
+    "stateVersion": 82,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 49,
+    "stateVersion": 82,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 5,
+    "stateVersion": 10,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 5,
+    "stateVersion": 10,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 51,
+    "stateVersion": 86,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 51,
+    "stateVersion": 86,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 53,
+    "stateVersion": 99,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 53,
+    "stateVersion": 99,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 55,
+    "stateVersion": 103,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 55,
+    "stateVersion": 103,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 57,
+    "stateVersion": 107,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 57,
+    "stateVersion": 107,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 59,
+    "stateVersion": 111,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 59,
+    "stateVersion": 111,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 6,
+    "stateVersion": 11,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 6,
+    "stateVersion": 11,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 61,
+    "stateVersion": 123,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 61,
+    "stateVersion": 123,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 7,
+    "stateVersion": 12,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 7,
+    "stateVersion": 12,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 8,
+    "stateVersion": 13,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 8,
+    "stateVersion": 13,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 9,
+    "stateVersion": 14,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 0,
+    "seq": 9,
+    "stateVersion": 14,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Você comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "delta": -2,
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "MAIN1",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 6,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "seq": 30,
+    "stateVersion": 44,
+    "type": "life-changed"
+   },
+   false
+  ],
+  "out": "Oponente: -2 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "delta": -2,
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "MAIN1",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 6,
+       "id": 1,
+       "library": 54,
+       "life": 18
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "seq": 30,
+    "stateVersion": 44,
+    "type": "life-changed"
+   },
+   true
+  ],
+  "out": "Oponente: -2 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "UNTAP",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 6,
+       "id": 1,
+       "library": 54,
+       "life": 20
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "seq": 26,
+    "stateVersion": 37,
+    "turn": 1,
+    "type": "turn"
+   },
+   false
+  ],
+  "out": "Turno de Oponente."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "frame": {
+     "activePlayer": 1,
+     "combat": [],
+     "phase": "UNTAP",
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 7,
+       "id": 0,
+       "library": 53,
+       "life": 20
+      },
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 6,
+       "id": 1,
+       "library": 54,
+       "life": 20
+      }
+     ],
+     "stack": [],
+     "turn": 1
+    },
+    "seq": 26,
+    "stateVersion": 37,
+    "turn": 1,
+    "type": "turn"
+   },
+   true
+  ],
+  "out": "Turno de Oponente."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "frame": {
+     "activePlayer": null,
+     "combat": [],
+     "phase": null,
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 0,
+       "id": 0,
+       "library": 60,
+       "life": 20
+      },
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 0,
+       "id": 1,
+       "library": 60,
+       "life": 20
+      }
+     ],
+     "stack": [],
+     "turn": 0
+    },
+    "rolls": [
+     [
+      {
+       "player": 0,
+       "roll": 4
+      },
+      {
+       "player": 1,
+       "roll": 4
+      }
+     ],
+     [
+      {
+       "player": 0,
+       "roll": 4
+      },
+      {
+       "player": 1,
+       "roll": 6
+      }
+     ]
+    ],
+    "seq": 3,
+    "stateVersion": 6,
+    "type": "starting-roll"
+   },
+   false
+  ],
+  "out": "Dados para ver quem começa: Você 4, Oponente 4; desempate: Você 4, Oponente 6. Oponente escolhe quem começa."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "frame": {
+     "activePlayer": null,
+     "combat": [],
+     "phase": null,
+     "players": [
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 0,
+       "id": 0,
+       "library": 60,
+       "life": 20
+      },
+      {
+       "battlefield": [],
+       "commanderDamage": [],
+       "handCount": 0,
+       "id": 1,
+       "library": 60,
+       "life": 20
+      }
+     ],
+     "stack": [],
+     "turn": 0
+    },
+    "rolls": [
+     [
+      {
+       "player": 0,
+       "roll": 4
+      },
+      {
+       "player": 1,
+       "roll": 4
+      }
+     ],
+     [
+      {
+       "player": 0,
+       "roll": 4
+      },
+      {
+       "player": 1,
+       "roll": 6
+      }
+     ]
+    ],
+    "seq": 3,
+    "stateVersion": 6,
+    "type": "starting-roll"
+   },
+   true
+  ],
+  "out": "Dados para ver quem começa: Você 4, Oponente 4; desempate: Você 4, Oponente 6. Oponente escolhe quem começa."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 11,
+    "stateVersion": 16,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 11,
+    "stateVersion": 16,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 12,
+    "stateVersion": 17,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 12,
+    "stateVersion": 17,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 13,
+    "stateVersion": 18,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 13,
+    "stateVersion": 18,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 14,
+    "stateVersion": 19,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 14,
+    "stateVersion": 19,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 15,
+    "stateVersion": 20,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 15,
+    "stateVersion": 20,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 16,
+    "stateVersion": 21,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 16,
+    "stateVersion": 21,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 17,
+    "stateVersion": 22,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 17,
+    "stateVersion": 22,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 18,
+    "stateVersion": 23,
+    "type": "shuffle"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 18,
+    "stateVersion": 23,
+    "type": "shuffle"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 19,
+    "stateVersion": 24,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 19,
+    "stateVersion": 24,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 2,
+    "stateVersion": 5,
+    "type": "shuffle"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 2,
+    "stateVersion": 5,
+    "type": "shuffle"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 20,
+    "stateVersion": 25,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 20,
+    "stateVersion": 25,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 21,
+    "stateVersion": 26,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 21,
+    "stateVersion": 26,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 22,
+    "stateVersion": 27,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 22,
+    "stateVersion": 27,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 23,
+    "stateVersion": 28,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 23,
+    "stateVersion": 28,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 24,
+    "stateVersion": 29,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 24,
+    "stateVersion": 29,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 25,
+    "stateVersion": 30,
+    "type": "draw"
+   },
+   false
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 25,
+    "stateVersion": 30,
+    "type": "draw"
+   },
+   true
+  ],
+  "out": "Oponente comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 27,
+    "stateVersion": 39,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 27,
+    "stateVersion": 39,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 29,
+    "stateVersion": 43,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 29,
+    "stateVersion": 43,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 33,
+    "stateVersion": 48,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 33,
+    "stateVersion": 48,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 35,
+    "stateVersion": 52,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 35,
+    "stateVersion": 52,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 37,
+    "stateVersion": 56,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 37,
+    "stateVersion": 56,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 39,
+    "stateVersion": 60,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 39,
+    "stateVersion": 60,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 41,
+    "stateVersion": 64,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 41,
+    "stateVersion": 64,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 43,
+    "stateVersion": 68,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 43,
+    "stateVersion": 68,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 47,
+    "stateVersion": 79,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 47,
+    "stateVersion": 79,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 50,
+    "stateVersion": 84,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 50,
+    "stateVersion": 84,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 52,
+    "stateVersion": 97,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 52,
+    "stateVersion": 97,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 54,
+    "stateVersion": 101,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 54,
+    "stateVersion": 101,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 56,
+    "stateVersion": 105,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 56,
+    "stateVersion": 105,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 58,
+    "stateVersion": 109,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 58,
+    "stateVersion": 109,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 60,
+    "stateVersion": 121,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 60,
+    "stateVersion": 121,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 62,
+    "stateVersion": 125,
+    "type": "priority"
+   },
+   false
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 0,
+        "players": [
+         {
+          "id": 0,
+          "name": "Você"
+         },
+         {
+          "id": 1,
+          "name": "Oponente"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "actor": 1,
+    "seq": 62,
+    "stateVersion": 125,
+    "type": "priority"
+   },
+   true
+  ],
+  "out": "O jogo avançou."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "A": "A"
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "left",
+    "card": {
+     "id": 1,
+     "name": "A"
+    },
+    "reason": "destroyed"
+   },
+   false
+  ],
+  "out": "Carta destruída: A."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "A": "A"
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "left",
+    "card": {
+     "id": 1,
+     "name": "A"
+    },
+    "reason": "destroyed"
+   },
+   true
+  ],
+  "out": "Carta destruída: A."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "B": "B"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "left",
+    "card": {
+     "id": 2,
+     "name": "B"
+    },
+    "reason": "destroyed"
+   },
+   false
+  ],
+  "out": "Carta destruída: B."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "B": "B"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "left",
+    "card": {
+     "id": 2,
+     "name": "B"
+    },
+    "reason": "destroyed"
+   },
+   true
+  ],
+  "out": "Carta destruída: B."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "ability-activated",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 11,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 11
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Gatilho de Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "ability-activated",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 11,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 11
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Gatilho de Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "ability-activated",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 12,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 12
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Gatilho de Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "ability-activated",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 12,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 12
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Gatilho de Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "resolved",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 12,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 12
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "resolved",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 12,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 12
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "resolved",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 11,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 11
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Blood Artist": "Blood Artist"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "resolved",
+    "trigger": true,
+    "actor": 1,
+    "stackId": 11,
+    "card": {
+     "id": 4,
+     "name": "Blood Artist"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 11
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Blood Artist."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "C": "C"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "left",
+    "card": {
+     "id": 3,
+     "name": "C"
+    },
+    "to": "Exile"
+   },
+   false
+  ],
+  "out": "Carta exilada: C."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "C": "C"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "left",
+    "card": {
+     "id": 3,
+     "name": "C"
+    },
+    "to": "Exile"
+   },
+   true
+  ],
+  "out": "Carta exilada: C."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Divination": "Divination"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 7,
+    "card": {
+     "id": 7,
+     "name": "Divination"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 7
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Ana conjurou Divination."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Divination": "Divination"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 7,
+    "card": {
+     "id": 7,
+     "name": "Divination"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 7
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ana conjurou Divination."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Divination": "Divination"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 7,
+    "card": {
+     "id": 7,
+     "name": "Divination"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 7
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Divination."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Divination": "Divination"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 7,
+    "card": {
+     "id": 7,
+     "name": "Divination"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 7
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Divination."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Forest": "Forest"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "land-played",
+    "actor": 1,
+    "card": {
+     "id": 5,
+     "name": "Forest"
+    }
+   },
+   false
+  ],
+  "out": "Ana jogou Forest."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Forest": "Forest"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "land-played",
+    "actor": 1,
+    "card": {
+     "id": 5,
+     "name": "Forest"
+    }
+   },
+   true
+  ],
+  "out": "Ana jogou Forest."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Giant Growth": "Giant Growth"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "spell-cast",
+    "actor": 2,
+    "stackId": 2,
+    "card": {
+     "id": 2,
+     "name": "Giant Growth"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 2
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Bruno conjurou Giant Growth."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Giant Growth": "Giant Growth"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "spell-cast",
+    "actor": 2,
+    "stackId": 2,
+    "card": {
+     "id": 2,
+     "name": "Giant Growth"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 2
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Bruno conjurou Giant Growth."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Giant Growth": "Giant Growth"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "resolved",
+    "actor": 2,
+    "stackId": 2,
+    "card": {
+     "id": 2,
+     "name": "Giant Growth"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 2
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Giant Growth."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Giant Growth": "Giant Growth"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "resolved",
+    "actor": 2,
+    "stackId": 2,
+    "card": {
+     "id": 2,
+     "name": "Giant Growth"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 2
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Giant Growth."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Grizzly Bears": "Grizzly Bears"
+      },
+      "findCard": {}
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "damage",
+    "combat": true,
+    "delta": -2,
+    "targets": {
+     "cards": [
+      9
+     ]
+    },
+    "card": {
+     "id": 2,
+     "name": "Grizzly Bears"
+    }
+   },
+   false
+  ],
+  "out": "2 de dano causado de Grizzly Bears."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Grizzly Bears": "Grizzly Bears"
+      },
+      "findCard": {}
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "damage",
+    "combat": true,
+    "delta": -2,
+    "targets": {
+     "cards": [
+      9
+     ]
+    },
+    "card": {
+     "id": 2,
+     "name": "Grizzly Bears"
+    }
+   },
+   true
+  ],
+  "out": "2 de dano causado de Grizzly Bears."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Grizzly Bears": "Grizzly Bears"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "left",
+    "actor": 2,
+    "card": {
+     "id": 21,
+     "name": "Grizzly Bears"
+    },
+    "reason": "destroyed",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Carta destruída: Grizzly Bears."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Grizzly Bears": "Grizzly Bears"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "left",
+    "actor": 2,
+    "card": {
+     "id": 21,
+     "name": "Grizzly Bears"
+    },
+    "reason": "destroyed",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Carta destruída: Grizzly Bears (de Bruno)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Hare Apparent": "Hare Apparent"
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "ability-activated",
+    "actor": 1,
+    "trigger": true,
+    "stackId": 9,
+    "card": {
+     "id": 5,
+     "name": "Hare Apparent"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Gatilho de Hare Apparent."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Hare Apparent": "Hare Apparent"
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "ability-activated",
+    "actor": 1,
+    "trigger": true,
+    "stackId": 9,
+    "card": {
+     "id": 5,
+     "name": "Hare Apparent"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Gatilho de Hare Apparent."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Hare Apparent": "Hare Apparent"
+      }
+     }
+    }
+   },
+   {
+    "seq": 10,
+    "type": "resolved",
+    "actor": 1,
+    "trigger": true,
+    "stackId": 9,
+    "card": {
+     "id": 5,
+     "name": "Hare Apparent"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Hare Apparent."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Hare Apparent": "Hare Apparent"
+      }
+     }
+    }
+   },
+   {
+    "seq": 10,
+    "type": "resolved",
+    "actor": 1,
+    "trigger": true,
+    "stackId": 9,
+    "card": {
+     "id": 5,
+     "name": "Hare Apparent"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Hare Apparent."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Lightning Bolt": "Lightning Bolt"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 1,
+    "card": {
+     "id": 1,
+     "name": "Lightning Bolt"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Ana conjurou Lightning Bolt."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Lightning Bolt": "Lightning Bolt"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 1,
+    "card": {
+     "id": 1,
+     "name": "Lightning Bolt"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ana conjurou Lightning Bolt."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Lightning Bolt": "Lightning Bolt"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "damage",
+    "actor": 1,
+    "card": {
+     "id": 1,
+     "name": "Lightning Bolt"
+    },
+    "delta": -3,
+    "targets": {
+     "players": [
+      2
+     ]
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Bruno sofreu 3 de dano de Lightning Bolt."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Lightning Bolt": "Lightning Bolt"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "damage",
+    "actor": 1,
+    "card": {
+     "id": 1,
+     "name": "Lightning Bolt"
+    },
+    "delta": -3,
+    "targets": {
+     "players": [
+      2
+     ]
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Bruno sofreu 3 de dano de Lightning Bolt."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Lightning Bolt": "Lightning Bolt"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 1,
+    "card": {
+     "id": 1,
+     "name": "Lightning Bolt"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Lightning Bolt."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Lightning Bolt": "Lightning Bolt"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 1,
+    "card": {
+     "id": 1,
+     "name": "Lightning Bolt"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Lightning Bolt."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 4,
+    "sourceId": 5,
+    "card": {
+     "id": 5,
+     "name": "Llanowar Elves"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 4
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Ana conjurou Llanowar Elves."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 4,
+    "sourceId": 5,
+    "card": {
+     "id": 5,
+     "name": "Llanowar Elves"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 4
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ana conjurou Llanowar Elves."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "entered",
+    "actor": 1,
+    "sourceId": 5,
+    "card": {
+     "id": 5,
+     "name": "Llanowar Elves"
+    },
+    "from": "Stack",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 4
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Llanowar Elves entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "entered",
+    "actor": 1,
+    "sourceId": 5,
+    "card": {
+     "id": 5,
+     "name": "Llanowar Elves"
+    },
+    "from": "Stack",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 4
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Llanowar Elves entrou no campo (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "left",
+    "actor": 2,
+    "card": {
+     "id": 20,
+     "name": "Llanowar Elves"
+    },
+    "reason": "destroyed",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Carta destruída: Llanowar Elves."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "left",
+    "actor": 2,
+    "card": {
+     "id": 20,
+     "name": "Llanowar Elves"
+    },
+    "reason": "destroyed",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Carta destruída: Llanowar Elves (de Bruno)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 4,
+    "sourceId": 5,
+    "card": {
+     "id": 5,
+     "name": "Llanowar Elves"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 4
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Llanowar Elves."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 4,
+    "sourceId": 5,
+    "card": {
+     "id": 5,
+     "name": "Llanowar Elves"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 4
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Llanowar Elves."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "left",
+    "actor": 2,
+    "card": {
+     "id": 9,
+     "name": "Llanowar Elves"
+    },
+    "reason": "destroyed"
+   },
+   false
+  ],
+  "out": "Carta destruída: Llanowar Elves."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Llanowar Elves": "Llanowar Elves"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "left",
+    "actor": 2,
+    "card": {
+     "id": 9,
+     "name": "Llanowar Elves"
+    },
+    "reason": "destroyed"
+   },
+   true
+  ],
+  "out": "Carta destruída: Llanowar Elves (de Bruno)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Plains": "Plains"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "land-played",
+    "actor": 1,
+    "card": {
+     "id": 3,
+     "name": "Plains"
+    }
+   },
+   false
+  ],
+  "out": "Ana jogou Plains."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Plains": "Plains"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "land-played",
+    "actor": 1,
+    "card": {
+     "id": 3,
+     "name": "Plains"
+    }
+   },
+   true
+  ],
+  "out": "Ana jogou Plains."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 100,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 100,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 101,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 3,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 101,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 102,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 102,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 103,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 103,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 104,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 104,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 105,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 7,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 105,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 8,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 106,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 8,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 106,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 9,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 107,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Rabbit entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Rabbit": "Rabbit"
+      }
+     }
+    }
+   },
+   {
+    "seq": 9,
+    "type": "entered",
+    "actor": 1,
+    "card": {
+     "id": 107,
+     "name": "Rabbit",
+     "token": true
+    },
+    "from": null,
+    "stackId": 9,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ficha criada: Rabbit (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Serra Angel": "Serra Angel"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "damage",
+    "combat": true,
+    "delta": -4,
+    "targets": {
+     "players": [
+      2
+     ]
+    },
+    "card": {
+     "id": 1,
+     "name": "Serra Angel"
+    }
+   },
+   false
+  ],
+  "out": "Bruno sofreu 4 de dano de Serra Angel."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Serra Angel": "Serra Angel"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "damage",
+    "combat": true,
+    "delta": -4,
+    "targets": {
+     "players": [
+      2
+     ]
+    },
+    "card": {
+     "id": 1,
+     "name": "Serra Angel"
+    }
+   },
+   true
+  ],
+  "out": "Bruno sofreu 4 de dano de Serra Angel."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Serra Angel": "Serra Angel"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "left",
+    "actor": 1,
+    "card": {
+     "id": 22,
+     "name": "Serra Angel"
+    },
+    "reason": "destroyed",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Carta destruída: Serra Angel."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Serra Angel": "Serra Angel"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "left",
+    "actor": 1,
+    "card": {
+     "id": 22,
+     "name": "Serra Angel"
+    },
+    "reason": "destroyed",
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Carta destruída: Serra Angel (sua)."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock"
+      }
+     }
+    }
+   },
+   {
+    "seq": 8,
+    "type": "spell-cast",
+    "actor": 2,
+    "stackId": 3,
+    "card": {
+     "id": 3,
+     "name": "Shock"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 3
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Bruno conjurou Shock."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock"
+      }
+     }
+    }
+   },
+   {
+    "seq": 8,
+    "type": "spell-cast",
+    "actor": 2,
+    "stackId": 3,
+    "card": {
+     "id": 3,
+     "name": "Shock"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 3
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Bruno conjurou Shock."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock"
+      }
+     }
+    }
+   },
+   {
+    "seq": 9,
+    "type": "countered",
+    "actor": 2,
+    "stackId": 3,
+    "card": {
+     "id": 3,
+     "name": "Shock"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 3
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Anulado: Shock."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Shock": "Shock"
+      }
+     }
+    }
+   },
+   {
+    "seq": 9,
+    "type": "countered",
+    "actor": 2,
+    "stackId": 3,
+    "card": {
+     "id": 3,
+     "name": "Shock"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 3
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Anulado: Shock."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 9,
+    "card": {
+     "id": 30,
+     "name": "Wrath of God"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Ana conjurou Wrath of God."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "spell-cast",
+    "actor": 1,
+    "stackId": 9,
+    "card": {
+     "id": 30,
+     "name": "Wrath of God"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Ana conjurou Wrath of God."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 9,
+    "card": {
+     "id": 30,
+     "name": "Wrath of God"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Wrath of God."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 9,
+    "card": {
+     "id": 30,
+     "name": "Wrath of God"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Wrath of God."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 9,
+    "card": {
+     "id": 30,
+     "name": "Wrath of God"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Resolução: Wrath of God."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Wrath of God": "Wrath of God"
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "resolved",
+    "actor": 1,
+    "stackId": 9,
+    "card": {
+     "id": 30,
+     "name": "Wrath of God"
+    },
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 9
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Resolução: Wrath of God."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Zombie": "Zombie"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "entered",
+    "card": {
+     "id": 4,
+     "name": "Zombie"
+    }
+   },
+   false
+  ],
+  "out": "Zombie entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Zombie": "Zombie"
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "entered",
+    "card": {
+     "id": 4,
+     "name": "Zombie"
+    }
+   },
+   true
+  ],
+  "out": "Zombie entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Zombie": "Zombie"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "entered",
+    "card": {
+     "id": 5,
+     "name": "Zombie"
+    }
+   },
+   false
+  ],
+  "out": "Zombie entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      },
+      "label": {
+       "Zombie": "Zombie"
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "entered",
+    "card": {
+     "id": 5,
+     "name": "Zombie"
+    }
+   },
+   true
+  ],
+  "out": "Zombie entrou no campo."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "attackers",
+    "actor": 1,
+    "cards": [
+     1
+    ],
+    "frame": {
+     "players": [
+      {
+       "id": 1,
+       "battlefield": [
+        {
+         "id": 1,
+         "name": "Serra Angel"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "battlefield": [
+        {
+         "id": 2,
+         "name": "Grizzly Bears"
+        }
+       ]
+      }
+     ],
+     "stack": [],
+     "combat": [
+      {
+       "attacker": 1,
+       "blockers": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   false
+  ],
+  "out": "Você ataca com 1 criatura."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "attackers",
+    "actor": 1,
+    "cards": [
+     1
+    ],
+    "frame": {
+     "players": [
+      {
+       "id": 1,
+       "battlefield": [
+        {
+         "id": 1,
+         "name": "Serra Angel"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "battlefield": [
+        {
+         "id": 2,
+         "name": "Grizzly Bears"
+        }
+       ]
+      }
+     ],
+     "stack": [],
+     "combat": [
+      {
+       "attacker": 1,
+       "blockers": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   true
+  ],
+  "out": "Você ataca com 1 criatura."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "draw",
+    "actor": 1,
+    "count": 7
+   },
+   false
+  ],
+  "out": "Ana comprou 7 cartas."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "draw",
+    "actor": 1,
+    "count": 7
+   },
+   true
+  ],
+  "out": "Ana comprou 7 cartas."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 2
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 2
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 3
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 3
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 4
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 4
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 5
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 5
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 6
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 1,
+    "type": "turn",
+    "actor": 1,
+    "turn": 6
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "blockers",
+    "actor": 2,
+    "cards": [
+     2
+    ],
+    "frame": {
+     "players": [
+      {
+       "id": 1,
+       "battlefield": [
+        {
+         "id": 1,
+         "name": "Serra Angel"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "battlefield": [
+        {
+         "id": 2,
+         "name": "Grizzly Bears"
+        }
+       ]
+      }
+     ],
+     "stack": [],
+     "combat": [
+      {
+       "attacker": 1,
+       "blockers": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   false
+  ],
+  "out": "Bruno declarou bloqueadores."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "blockers",
+    "actor": 2,
+    "cards": [
+     2
+    ],
+    "frame": {
+     "players": [
+      {
+       "id": 1,
+       "battlefield": [
+        {
+         "id": 1,
+         "name": "Serra Angel"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "battlefield": [
+        {
+         "id": 2,
+         "name": "Grizzly Bears"
+        }
+       ]
+      }
+     ],
+     "stack": [],
+     "combat": [
+      {
+       "attacker": 1,
+       "blockers": [
+        2
+       ]
+      }
+     ]
+    }
+   },
+   true
+  ],
+  "out": "Bruno bloqueou com 1 criatura."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "draw",
+    "actor": 1
+   },
+   false
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "draw",
+    "actor": 1
+   },
+   true
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "turn",
+    "actor": 1,
+    "turn": 1
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 2,
+    "type": "turn",
+    "actor": 1,
+    "turn": 1
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "draw",
+    "actor": 1
+   },
+   false
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "draw",
+    "actor": 1
+   },
+   true
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -1,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 12
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Bruno: -1 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -1,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 12
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Bruno: -1 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -4
+   },
+   false
+  ],
+  "out": "Bruno: -4 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -4
+   },
+   true
+  ],
+  "out": "Bruno: -4 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "turn",
+    "actor": 2,
+    "turn": 2
+   },
+   false
+  ],
+  "out": "Turno de Bruno."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 4,
+    "type": "turn",
+    "actor": 2,
+    "turn": 2
+   },
+   true
+  ],
+  "out": "Turno de Bruno."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "draw",
+    "actor": 1,
+    "count": 1
+   },
+   false
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "draw",
+    "actor": 1,
+    "count": 1
+   },
+   true
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "draw",
+    "actor": 1
+   },
+   false
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "draw",
+    "actor": 1
+   },
+   true
+  ],
+  "out": "Ana comprou uma carta."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "life-changed",
+    "actor": 1,
+    "delta": 4
+   },
+   false
+  ],
+  "out": "Ana: +4 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "life-changed",
+    "actor": 1,
+    "delta": 4
+   },
+   true
+  ],
+  "out": "Ana: +4 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "turn",
+    "actor": 1,
+    "turn": 3
+   },
+   false
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 5,
+    "type": "turn",
+    "actor": 1,
+    "turn": 3
+   },
+   true
+  ],
+  "out": "Turno de Ana."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -1,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 11
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Bruno: -1 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -1,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 11
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Bruno: -1 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -3,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   false
+  ],
+  "out": "Bruno: -3 de vida."
+ },
+ {
+  "args": [
+   {
+    "$view": {
+     "$calls": {
+      "state": {
+       "": {
+        "you": 1,
+        "players": [
+         {
+          "id": 1,
+          "name": "Ana"
+         },
+         {
+          "id": 2,
+          "name": "Bruno"
+         }
+        ]
+       }
+      }
+     }
+    }
+   },
+   {
+    "seq": 6,
+    "type": "life-changed",
+    "actor": 2,
+    "delta": -3,
+    "frame": {
+     "players": [],
+     "stack": [
+      {
+       "id": 1
+      }
+     ],
+     "turn": 3,
+     "phase": "MAIN1",
+     "activePlayer": 1
+    }
+   },
+   true
+  ],
+  "out": "Bruno: -3 de vida."
+ }
+]

@@ -3,22 +3,8 @@
 class_name CardDetails
 extends RefCounted
 
-## Palavras-chave (KEYWORD_LABEL de src/ui/cardLabels.ts).
-const KEYWORDS := {
-	"FLYING": "Voar", "REACH": "Alcance", "TRAMPLE": "Atropelar", "MENACE": "Ameaçar", "FIRST_STRIKE": "Iniciativa",
-	"DOUBLE_STRIKE": "Golpe duplo", "DEATHTOUCH": "Toque mortífero", "LIFELINK": "Vínculo com a vida", "VIGILANCE": "Vigilância",
-	"HASTE": "Ímpeto", "DEFENDER": "Defensor", "HEXPROOF": "Resistência à magia", "SHROUD": "Manto", "WARD": "Proteção contra alvos",
-	"INDESTRUCTIBLE": "Indestrutível", "PROTECTION": "Proteção", "INTIMIDATE": "Intimidar", "FEAR": "Medo", "SHADOW": "Sombra",
-	"SKULK": "Sorrateiro", "HORSEMANSHIP": "Equitação", "LANDWALK": "Travessia",
-}
-## Marcadores de permanente (CARD_COUNTERS de src/ui/cardLabels.ts) e os do jogador (src/ui/playerCounters.ts).
-const COUNTERS := {
-	"P1P1": "+1/+1", "M1M1": "−1/−1", "LOYALTY": "Lealdade", "DEFENSE": "Defesa", "SHIELD": "Escudo", "STUN": "Atordoamento",
-	"TIME": "Tempo", "CHARGE": "Carga", "LORE": "Saga", "OIL": "Óleo", "AGE": "Idade", "FADE": "Desvanecer", "FLOOD": "Inundação",
-	"DIVINITY": "Divindade", "QUEST": "Missão", "LEVEL": "Nível", "FINALITY": "Finalidade", "BOUNTY": "Recompensa",
-	"POISON": "Veneno", "RAD": "Radiação", "ENERGY": "Energia", "EXPERIENCE": "Experiência", "TICKET": "Tíquete", "CONTRACT": "Contrato",
-	"EXALTED": "Exaltado",
-}
+## Marcadores que também existem no jogador (src/ui/playerCounters.ts); os da permanente e os de palavra-chave vêm de CardLabels.
+const PLAYER_COUNTERS := {"POISON": "Veneno", "RAD": "Radiação", "ENERGY": "Energia", "EXPERIENCE": "Experiência", "TICKET": "Tíquete", "CONTRACT": "Contrato"}
 ## De que a proteção protege (PROTECTION_LABEL de src/ui/permanentEffects.ts).
 const PROTECTION := {
 	"white": "branco", "blue": "azul", "black": "preto", "red": "vermelho", "green": "verde", "artifact": "artefatos", "artifacts": "artefatos",
@@ -89,21 +75,17 @@ static func keyword_name(card: Dictionary, key: String) -> String:
 		return "Proteção contra " + _join(from, "e")
 	if key == "WARD" and Txt.of(card.get("ward")) != "":
 		return "Proteção contra alvos — " + Txt.of(card["ward"])
-	if KEYWORDS.has(key):
-		return Txt.of(KEYWORDS[key])
+	if CardLabels.KEYWORD_LABEL.has(key):
+		return Txt.of(CardLabels.KEYWORD_LABEL[key])
 	var plain: String = key.replace("_", " ").to_lower()
 	return plain.substr(0, 1).to_upper() + plain.substr(1)
 
 
-## O nome de um marcador: os conhecidos em português; os de palavra-chave ("Flying") pela palavra; o resto como o Forge escreve.
+## O nome de um marcador: os da permanente e os de palavra-chave ("Flying") por CardLabels, os do jogador aqui.
 static func counter_name(key: String) -> String:
-	if COUNTERS.has(key):
-		return Txt.of(COUNTERS[key])
-	var keyword: String = key.split(":")[0].strip_edges().to_upper().replace(" ", "_")
-	if KEYWORDS.has(keyword):
-		return Txt.of(KEYWORDS[keyword])
-	var plain: String = key.replace("_", " ").to_lower()
-	return plain.substr(0, 1).to_upper() + plain.substr(1)
+	if PLAYER_COUNTERS.has(key):
+		return Txt.of(PLAYER_COUNTERS[key])
+	return CardLabels.counter_name(key)
 
 
 ## "Forest.Snow" → "floresta da neve".

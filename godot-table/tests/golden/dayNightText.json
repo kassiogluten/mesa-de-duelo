@@ -1,0 +1,627 @@
+[
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "CLEANUP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DAMAGE",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DECLARE_ATTACKERS",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "combatNumber": 2
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DECLARE_ATTACKERS",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_DECLARE_BLOCKERS",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "COMBAT_FIRST_STRIKE_DAMAGE",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "DRAW",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "END_OF_TURN",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "FUTURE_PHASE",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "day",
+    "activeSpells": 0
+   }
+  ],
+  "out": "Dia. Se você não conjurar mágicas neste turno, vira noite no próximo turno. Nenhuma mágica até agora."
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "day",
+    "activeSpells": 1
+   }
+  ],
+  "out": "Dia. Se você não conjurar mágicas neste turno, vira noite no próximo turno. Já foi conjurada 1 mágica: continua dia."
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "night",
+    "activeSpells": 1
+   }
+  ],
+  "out": "Noite. Se o oponente conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno. 1 mágica até agora."
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "night",
+    "activeSpells": 3
+   }
+  ],
+  "out": "Noite. Se o oponente conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno. Já foram conjuradas 3: vira dia."
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "night"
+   }
+  ],
+  "out": "Noite. Se o oponente conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno."
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 2,
+      "name": "<img src=x>"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN1",
+    "activePlayer": 3,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     },
+     {
+      "id": 3,
+      "name": "<Ana>"
+     }
+    ],
+    "gameOver": false,
+    "dayTime": "night",
+    "activeSpells": 0
+   }
+  ],
+  "out": "Noite. Se <Ana> conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno. Nenhuma mágica até agora."
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "extraTurn": true,
+    "extraTurns": [
+     1,
+     1
+    ],
+    "extraCombats": 1,
+    "extraCombatAfter": [
+     "MAIN2"
+    ],
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "MAIN2",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UNTAP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 1,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": []
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "turn": 4,
+    "phase": "UPKEEP",
+    "activePlayer": 2,
+    "you": 1,
+    "players": [
+     {
+      "id": 1,
+      "name": "Você"
+     },
+     {
+      "id": 2,
+      "name": "Oponente"
+     }
+    ],
+    "gameOver": false,
+    "stack": [
+     {
+      "id": 1
+     }
+    ]
+   }
+  ],
+  "out": ""
+ }
+]

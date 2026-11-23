@@ -1,0 +1,54 @@
+[
+ {
+  "args": [
+   {
+    "player": 0,
+    "name": "Você",
+    "mine": true,
+    "ms": 95000,
+    "stage": 1,
+    "since": 1905000
+   }
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   {
+    "player": 0,
+    "name": "Você",
+    "mine": true,
+    "ms": 95000,
+    "stage": 2,
+    "since": 1905000
+   }
+  ],
+  "out": "Sua vez já passa de 1 min 30 s"
+ },
+ {
+  "args": [
+   {
+    "player": 0,
+    "name": "Você",
+    "mine": true,
+    "ms": 95000,
+    "stage": 3,
+    "since": 1905000
+   }
+  ],
+  "out": "Sua vez já passa de 2 min: a mesa pode votar para pulá-la"
+ },
+ {
+  "args": [
+   {
+    "player": 1,
+    "name": "Ana",
+    "mine": false,
+    "ms": 90000,
+    "stage": 2,
+    "since": 910000
+   }
+  ],
+  "out": ""
+ }
+]

@@ -1,0 +1,111 @@
+[
+ {
+  "args": [
+   "UPKEEP"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   [
+    "CLEANUP"
+   ]
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   [
+    "DRAW"
+   ]
+  ],
+  "out": [
+   "DRAW"
+  ]
+ },
+ {
+  "args": [
+   [
+    "END_OF_TURN",
+    "UPKEEP",
+    "UPKEEP"
+   ]
+  ],
+  "out": [
+   "UPKEEP",
+   "END_OF_TURN"
+  ]
+ },
+ {
+  "args": [
+   [
+    "END_OF_TURN",
+    "UPKEEP"
+   ]
+  ],
+  "out": [
+   "UPKEEP",
+   "END_OF_TURN"
+  ]
+ },
+ {
+  "args": [
+   [
+    "END_OF_TURN"
+   ]
+  ],
+  "out": [
+   "END_OF_TURN"
+  ]
+ },
+ {
+  "args": [
+   [
+    "MAIN1"
+   ]
+  ],
+  "out": [
+   "MAIN1"
+  ]
+ },
+ {
+  "args": [
+   [
+    "UNTAP"
+   ]
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   [
+    "UPKEEP",
+    "END_OF_TURN"
+   ]
+  ],
+  "out": [
+   "UPKEEP",
+   "END_OF_TURN"
+  ]
+ },
+ {
+  "args": [
+   []
+  ],
+  "out": []
+ },
+ {
+  "args": [
+   [
+    1
+   ]
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   null
+  ],
+  "out": null
+ }
+]
