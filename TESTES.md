@@ -34,8 +34,9 @@ Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). 
 
 ```sh
 npm run godot:smoke              # conecta ao servidor local (npm run forge), confere o hello e mede um ping
-npm run godot:test-atualizador   # exporta o executável e testa o atualizador de ponta a ponta (uns 40 s)
+npm run godot:test-atualizador   # exporta o executável e testa o atualizador de ponta a ponta e o zip do site (uns 2 min)
 npm run godot:pck                # gera o pacote do jogo e o versao.json em dist/mesa-pc/ (o deploy faz isso sozinho)
+npm run godot:zip                # depois do godot:pck: exporta o executável e monta o mesa-de-duelo-pc.zip do site (o deploy faz isso sozinho)
 ```
 
 ```sh

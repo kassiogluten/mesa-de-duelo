@@ -13,7 +13,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 /** Sobe junto com BOOT_VERSION de godot-table/boot/boot.gd quando o pacote passa a depender de um boot novo. */
 const MIN_BOOT = 1;
-const DOWNLOAD_PAGE = 'https://mesao.online/mesa-pc/';
+/** Página do site com o zip da mesa no PC: o boot a abre quando a versão nova pede outro executável. */
+const DOWNLOAD_PAGE = 'https://mesao.online/baixar';
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);

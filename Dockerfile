@@ -12,23 +12,29 @@ ARG VITE_IMAGENS_URL=""
 ENV VITE_IMAGENS_URL=$VITE_IMAGENS_URL
 RUN npm run build
 
-# Pacote do jogo da mesa no PC (godot-table/) e o manifesto que o atualizador dela consulta, na mesma versão do site.
-# Não bloqueia o deploy: se o Godot não baixar ou o pacote não sair, o site sobe igual e a mesa no PC fica na versão
-# anterior até o próximo deploy (o aviso aparece no log do build).
+# Mesa no PC (godot-table/): o pacote do jogo, o zip que o jogador baixa (executável + pacote + LEIA-ME) e o manifesto
+# que o atualizador e a página /baixar consultam, na mesma versão do site.
+# Não bloqueia o deploy: se o Godot não baixar ou o pacote não sair, o site sobe igual e a mesa no PC fica sem manifesto
+# (quem já tem abre com a versão que tem); se só o zip falhar, o pacote sai e o manifesto vem sem os campos do zip.
 FROM node:20-bookworm-slim AS mesa-pc
 ARG GODOT_VERSION=4.7.2
 WORKDIR /app
+# O Godot e o template do Windows numa camada em cache: só baixam de novo quando GODOT_VERSION (ou o script) muda.
+COPY scripts/godot-docker-tools.sh scripts/
+RUN sh scripts/godot-docker-tools.sh "$GODOT_VERSION"
 COPY package.json ./
-COPY scripts/godot.mjs scripts/godot-pck.mjs scripts/
+COPY scripts/godot.mjs scripts/godot-pck.mjs scripts/godot-zip.mjs scripts/zip-file.mjs scripts/
 COPY shared shared
 COPY public/audio public/audio
 COPY godot-table godot-table
-RUN mkdir -p /out/mesa-pc && ( \
-      apt-get update && apt-get install -y --no-install-recommends ca-certificates wget unzip \
-      && wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip \
-      && unzip -q /tmp/godot.zip -d /tmp/godot && mv /tmp/godot/Godot_v*_linux.x86_64 /usr/local/bin/godot \
-      && GODOT=/usr/local/bin/godot node scripts/godot-pck.mjs --out /out/mesa-pc \
-    ) || (rm -rf /out/mesa-pc && mkdir -p /out/mesa-pc && echo "AVISO: o pacote da mesa no PC não foi gerado neste deploy.")
+# De novo a cada deploy, mas só baixa o que a camada em cache não tem (um download que falhou não fica preso no cache).
+RUN sh scripts/godot-docker-tools.sh "$GODOT_VERSION" && mkdir -p /out/mesa-pc \
+    && (GODOT=/usr/local/bin/godot node scripts/godot-pck.mjs --out /out/mesa-pc \
+      || (rm -rf /out/mesa-pc && mkdir -p /out/mesa-pc && echo "AVISO: o pacote da mesa no PC não foi gerado neste deploy.")) \
+    && if [ -f /out/mesa-pc/versao.json ]; then \
+      GODOT=/usr/local/bin/godot node scripts/godot-zip.mjs --out /out/mesa-pc \
+        || echo "AVISO: o zip da mesa no PC não foi gerado neste deploy."; \
+    fi
 
 FROM nginx:1.27-alpine
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
