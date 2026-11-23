@@ -29,7 +29,8 @@ var _status: Label
 var _column: VBoxContainer
 var _badges: VBoxContainer
 var _chips: HBoxContainer
-var _pool: HBoxContainer
+## A reserva de mana viva (ui/mana_pool_view.gd).
+var _pool: ManaPoolView
 var _forecast: PanelContainer
 var _forecast_label: Label
 var _damage_chip: Control
@@ -72,9 +73,9 @@ func setup(id: int, is_mine: bool) -> void:
 	_chips = HBoxContainer.new()
 	_chips.add_theme_constant_override("separation", 5)
 	_chips.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pool = HBoxContainer.new()
-	_pool.add_theme_constant_override("separation", 6)
-	_pool.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pool = ManaPoolView.new()
+	_pool.setup(mine, portrait, self)
+	_pool.mana_pressed.connect(func(message: Dictionary) -> void: mana_pressed.emit(message))
 	# O seu: a reserva mais perto do retrato (embaixo), os selos em cima; o do oponente: os selos primeiro.
 	for row: Control in ([_badges, _chips, _pool] if not mine else [_badges, _pool, _chips]):
 		_column.add_child(row)
@@ -145,6 +146,8 @@ func apply(player: Dictionary, state: Dictionary, selectable: bool, active: bool
 	var badges: Array = SeatInfo.badges(player, state, _turn_base_ms)
 	var damage: Dictionary = SeatInfo.commander_damage(player)
 	var pips: Array = SeatInfo.pool_pips(player, state)
+	# A reserva vê todo estado (o aviso de mana flutuando depende da prioridade; a chegada, das permanentes viradas).
+	_build_pool(pips, player, state)
 	var zones: Dictionary = {
 		"hand": int(player.get("handCount", 0)), "revealed": (player.get("revealedHand", []) as Array).size() if player.get("revealedHand") is Array else 0,
 		"graveyard": (player.get("graveyard", []) as Array).size() if player.get("graveyard") is Array else 0,
@@ -159,7 +162,6 @@ func apply(player: Dictionary, state: Dictionary, selectable: bool, active: bool
 	_signature = signature
 	_build_badges(badges)
 	_build_chips(zones, damage)
-	_build_pool(pips)
 	_layout_column.call_deferred()
 
 
@@ -308,40 +310,14 @@ func _build_chips(zones: Dictionary, damage: Dictionary) -> void:
 		_damage_chip = hit
 
 
-func _build_pool(pips: Array) -> void:
-	_clear(_pool)
-	_pool.visible = not pips.is_empty()
-	for raw: Variant in pips:
-		var pip: Dictionary = raw
-		var message: Dictionary = pip["message"]
-		var item: Control
-		if message.is_empty():
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 2)
-			row.tooltip_text = Txt.of(pip["hint"])
-			row.mouse_filter = Control.MOUSE_FILTER_PASS
-			row.add_child(_icon(SeatIcons.mana(Txt.of(pip["color"]), 28)))
-			if Txt.of(pip["label"]) != "":
-				var count := HudStyle.label(17, Color.WHITE)
-				count.text = Txt.of(pip["label"])
-				count.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				row.add_child(count)
-			item = row
-		else:
-			# Pagando: cada símbolo vira um botão que gasta uma mana daquela cor.
-			var button := Button.new()
-			button.icon = SeatIcons.mana(Txt.of(pip["color"]), 30)
-			button.text = Txt.of(pip["label"])
-			button.tooltip_text = Txt.of(pip["hint"])
-			button.focus_mode = Control.FOCUS_NONE
-			button.add_theme_font_size_override("font_size", 17)
-			for state_name: String in ["normal", "hover", "pressed", "focus"]:
-				var style := _chip_style(Color(0.25, 0.2, 0.08, 0.95) if state_name == "hover" else CHIP_BG, GOLD, 17)
-				style.set_border_width_all(2)
-				button.add_theme_stylebox_override(state_name, style)
-			button.pressed.connect(func() -> void: mana_pressed.emit(message))
-			item = button
-		_pool.add_child(item)
+## A reserva de mana: os pips vivos e os efeitos de chegar, gastar e se perder ficam em ManaPoolView.
+func _build_pool(pips: Array, player: Dictionary, state: Dictionary) -> void:
+	_pool.apply(pips, player, state)
+
+
+## A reserva de mana do assento (o HUD liga nela o ponto da mesa 3D na tela).
+func mana_pool() -> ManaPoolView:
+	return _pool
 
 
 ## O alinhamento das fileiras pela posição da coluna: encostadas no retrato.

@@ -82,6 +82,7 @@ func _ready() -> void:
 		if object:
 			objects.add_child(object)
 	_coin_task = WorkerThreadPool.add_task(_draw_coin)
+	ManaPoolFx.warm(self)
 	_free_later(holder)
 
 
