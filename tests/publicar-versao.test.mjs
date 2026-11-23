@@ -103,6 +103,19 @@ test('a mesma imagem em dois itens da mesma pasta vai uma vez só, com o mesmo n
   } finally { rmSync(root, { recursive: true }); }
 });
 
+test('o item só da mesa no PC ([Mesa no PC] depois do título) sai igual, com os prints pelo mesmo título', () => {
+  const root = project({
+    'pc/novidade.md': '### Novo\n\n- **Novidades na mesa no PC.** [Mesa no PC] O painel abre na tela inicial.\n',
+    'pc/imagens.json': JSON.stringify({ 'Novidades na mesa no PC': [{ img: 'painel.webp', legenda: 'O painel.' }] }),
+    'pc/painel.webp': 'p',
+  });
+  try {
+    run(root);
+    assert.ok(read(root, 'CHANGELOG.md').includes('- **Novidades na mesa no PC.** [Mesa no PC] O painel abre na tela inicial.\n'));
+    assert.deepEqual(JSON.parse(read(root, 'src/novidades.json'))['0.11.0']['Novidades na mesa no PC'], [{ img: '0.11.0/painel.webp', legenda: 'O painel.' }]);
+  } finally { rmSync(root, { recursive: true }); }
+});
+
 test('só correções sobem o Z; --x sobe o X; --dry não grava nada', () => {
   const root = project({ 'a/novidade.md': '### Corrigido\n\n- **Conserto.** Texto.\n' });
   try {

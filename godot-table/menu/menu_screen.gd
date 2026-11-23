@@ -160,6 +160,8 @@ func _ready() -> void:
 	add_child(toasts)
 	account.toast.connect(toasts.show_toast)
 	AccountSession.notifier().changed.connect(_on_account_changed)
+	# Novidades no canto de cima, à esquerda: o mesmo painel do navegador, com o ponto da versão ainda não vista.
+	add_child(NewsButton.new())
 
 	var version := Hud._label(16, Color(1, 1, 1, 0.4))
 	version.text = version_text

@@ -1,0 +1,79 @@
+{
+  "version": "0.239.0",
+  "releases": [
+    {
+      "version": "Próxima",
+      "title": "Próxima versão",
+      "date": "",
+      "visual": false,
+      "groups": [
+        {
+          "name": "Novo",
+          "items": [
+            {
+              "title": "Novidades na mesa no PC",
+              "text": "O botão **Novidades** abre o painel.",
+              "pc": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "0.239.0",
+      "title": "Versão 0.239.0",
+      "date": "24/11/2026",
+      "visual": true,
+      "groups": [
+        {
+          "name": "Novo",
+          "items": [
+            {
+              "title": "Selo nas novidades",
+              "text": "Os itens só da mesa no PC ganham um selo.",
+              "pc": false
+            },
+            {
+              "title": "Zip da mesa no PC",
+              "text": "Baixe em `/baixar` e extraia onde quiser.",
+              "pc": true
+            }
+          ]
+        },
+        {
+          "name": "Corrigido",
+          "items": [
+            {
+              "title": "Choque no alvo certo",
+              "text": "Agora acerta.",
+              "pc": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "0.238.0",
+      "title": "Versão 0.238.0",
+      "date": "22/11/2026",
+      "visual": false,
+      "groups": [
+        {
+          "name": "",
+          "items": [
+            {
+              "title": "Item sem grupo",
+              "text": "Texto.",
+              "pc": false
+            },
+            {
+              "title": "",
+              "text": "Com \"reduzir movimento\" ligado, nada se move.",
+              "pc": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

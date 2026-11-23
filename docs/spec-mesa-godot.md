@@ -189,7 +189,7 @@ Decisões (23/11/2026): **sem instalador e sem assinatura** por enquanto: a mesa
 
 - [x] Zip da mesa no PC publicado a cada deploy (`npm run godot:zip`, 39 MB, conferido pelo `npm run godot:test-atualizador`); página de download `/baixar` e link "Mesa no PC" no rodapé da tela inicial, só no Windows. Feito em 23/11/2026. **O build do Docker com a exportação do executável ainda não rodou** (sem Docker nesta máquina): conferir no primeiro deploy.
 - [x] Aviso de versão nova com a mesa aberta e recusa educada de cliente velho pelo `protocolVersion` (o servidor manda `minProtocolVersion` no hello e recusa a mesa no PC abaixo dele).
-- [ ] Novidades: selo "Mesa no PC" nos itens só dela, no painel do navegador e no painel da mesa no PC.
+- [x] Novidades: selo "Mesa no PC" nos itens só dela, no painel do navegador e no painel da mesa no PC (marca `[Mesa no PC]` depois do título no `novidade.md`; a mesa no PC lê o `/novidades.json` que o build gera do CHANGELOG, guarda a última cópia e marca com um ponto a versão não vista).
 
 ## Verificação
 

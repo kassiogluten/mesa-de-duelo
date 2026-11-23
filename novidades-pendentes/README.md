@@ -26,6 +26,15 @@ novidades-pendentes/<nome-da-mudanca>/
 - **Outro item.** ...
 ```
 
+Item que vale só para a mesa no PC: `[Mesa no PC]` logo depois do título, antes do texto. O título continua o mesmo (é
+ele que o `imagens.json` e o `cenarios.json` usam), e a marca vira o selo "Mesa no PC" no painel Novidades do navegador,
+na página Novidades em imagens e no painel Novidades da mesa no PC (que lê o `/novidades.json` que o build do site gera
+do `CHANGELOG.md`, `scripts/news-feed.mjs`). Item que vale para as duas mesas não leva marca.
+
+```markdown
+- **Novidades na mesa no PC.** [Mesa no PC] O botão Novidades, no canto da tela inicial, abre o mesmo painel do navegador.
+```
+
 `imagens.json`: título do item (sem o ponto) → prints desta pasta.
 
 ```json

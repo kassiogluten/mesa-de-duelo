@@ -3,10 +3,14 @@ import changelog from '../../CHANGELOG.md?raw';
 import older from '../../docs/changelog-antigo.md?raw';
 import visuals from '../novidades.json';
 import { PENDING, PENDING_CHANGELOG, PENDING_VISUALS } from '../pendingNews';
+import { PC_LABEL, takePcTag } from '../newsFeed';
 import { esc } from './cardtext';
 
-/** Um item da lista: o título em negrito do começo ("Relógio da partida") e o grupo em que está (Novo, Mudou...). */
-export interface ReleaseItem { group: string; title: string; text: string }
+/**
+ * Um item da lista: o título em negrito do começo ("Relógio da partida"), o grupo em que está (Novo, Mudou...) e se
+ * vale só para a mesa no PC (a marca [Mesa no PC] logo depois do título, que já sai do `text`).
+ */
+export interface ReleaseItem { group: string; title: string; text: string; pc: boolean }
 export interface Release { version: string; date: string; html: string; items: ReleaseItem[] }
 /** Imagens de cada item em src/novidades.json: versão → título do item → figuras (arquivo em public/novidades/). */
 export interface Shot { img: string; legenda: string }
@@ -18,6 +22,17 @@ export const releaseTitle = (r: Release) => r.version === PENDING ? 'Próxima ve
 
 /** Negrito e código, o pouco de Markdown inline que o CHANGELOG usa. */
 export const inline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>');
+/** O selo dos itens que valem só para a mesa no PC. */
+export const pcBadge = () => `<span class="pc-badge">${PC_LABEL}</span>`;
+
+/** Um item da lista em HTML: a marca [Mesa no PC] logo depois do título vira o selo. */
+function itemHTML(line: string) {
+  const titled = /^(\*\*.+?\*\*)\s*(.*)$/.exec(line);
+  const head = titled ? titled[1]! : '';
+  const { pc, text } = takePcTag(titled ? titled[2]! : line);
+  if (!pc) return inline(line);
+  return [head && inline(head), pcBadge(), inline(text)].filter(Boolean).join(' ');
+}
 
 /** Lê as seções `## [X.Y.Z] - AAAA-MM-DD` do CHANGELOG.md; o texto antes da primeira fica de fora. */
 export function parse(md: string): Release[] {
@@ -40,9 +55,9 @@ export function parse(md: string): Release[] {
     if (line.startsWith('### ')) { close(); group = line.slice(4); cur.html += `<h4>${inline(line.slice(4))}</h4>`; continue; }
     if (line.startsWith('- ')) {
       if (!list) { cur.html += '<ul>'; list = true; }
-      cur.html += `<li>${inline(line.slice(2))}</li>`;
+      cur.html += `<li>${itemHTML(line.slice(2))}</li>`;
       const item = /^\*\*(.+?)\.?\*\*\s*(.*)$/.exec(line.slice(2));
-      if (item) cur.items.push({ group, title: item[1]!, text: item[2]! });
+      if (item) cur.items.push({ group, title: item[1]!, ...takePcTag(item[2]!) });
       continue;
     }
     close();

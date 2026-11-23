@@ -1186,6 +1186,13 @@ html[data-pwa-update='downloading'] .news-sync { border-bottom-color: var(--gold
 .news-rel li { margin: 3px 0; }
 .news-rel code { background: var(--azul-18223a, #18223a); padding: 1px 5px; border-radius: 4px; }
 .news-rel h3:focus { outline: none; }
+/* Selo dos itens que valem só para a mesa no PC (no painel e na página Novidades em imagens). */
+.pc-badge {
+  display: inline-block; padding: 1px 8px; border-radius: 999px; vertical-align: 1px; white-space: nowrap;
+  font: 700 11px/1.5 var(--body); letter-spacing: 0.02em; color: var(--glow, #59b5ff);
+  background: color-mix(in srgb, var(--glow, #59b5ff) 14%, transparent); border: 1px solid color-mix(in srgb, var(--glow, #59b5ff) 45%, transparent);
+}
+.vis-text h3 .pc-badge { vertical-align: 3px; }
 .news-rel h3:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 /* Versões anteriores, de cinco em cinco, no fim do painel. */
 .news-more {
