@@ -139,10 +139,15 @@ void fragment() {
 	vec2 size = card + vec2(margin * 2.0);
 	vec2 p = (UV - 0.5) * size;
 	float d = box(p, card * 0.5, 0.035);
-	float fall = smoothstep(margin, 0.0, d) * step(0.0, d);
+	// Luz que cai como a de uma borda acesa de verdade: um fio forte junto da carta e uma névoa larga e macia, que some
+	// antes da beira da malha (sem o retângulo dela aparecer).
+	float outside = step(0.0, d);
+	float edge_fade = smoothstep(margin, margin * 0.5, d);
 	float breathe = 0.8 + 0.2 * sin(TIME * 3.2);
-	ALBEDO = color.rgb * 1.15;
-	ALPHA = fall * fall * color.a * 0.7 * breathe;
+	float core = exp(-d / 0.014);
+	float mist = exp(-d / 0.05);
+	ALBEDO = mix(color.rgb, vec3(1.0), 0.18 * core) * 1.15;
+	ALPHA = clamp(core * 0.55 + mist * 0.5, 0.0, 1.0) * outside * edge_fade * color.a * 0.8 * breathe;
 	if (style == 1) {
 		// Aura limpa: um brilho macio em volta, ondas lentas correndo pelo contorno e duas luzes viajando por ele.
 		float a = atan(p.y, p.x);
