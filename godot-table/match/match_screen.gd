@@ -343,6 +343,14 @@ func _on_message(msg: Dictionary) -> void:
 			_interaction.apply_state(msg)
 			_probe_click.call_deferred()
 		"error":
+			# O servidor recusou esta mesa por estar desatualizada: a tela de atualizar, como no hello.
+			if Txt.of(msg.get("reason")) == "outdated" and not _blocked:
+				_blocked = true
+				_awaiting_hello = false
+				_client.forget_session()
+				_client.close()
+				outdated.emit()
+				return
 			_hud.show_toast(Txt.of(msg.get("text", "")), "error")
 			if _room.visible:
 				_room.set_status(Txt.of(msg.get("text", "")), true)

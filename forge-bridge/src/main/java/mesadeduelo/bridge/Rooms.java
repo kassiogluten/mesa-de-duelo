@@ -159,11 +159,39 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
      * (docs/spec-mesa-godot.md) pedir a atualização em vez de jogar com mensagens que não entende.
      */
     static final int PROTOCOL_VERSION = 1;
+    /** A versão mais antiga do protocolo que a mesa no PC pode ter para jogar; abaixo dela, a mesa precisa se atualizar. */
+    static final int MIN_CLIENT_PROTOCOL = 1;
+    static final String OUTDATED_TEXT = "A mesa precisa ser atualizada para conversar com o servidor.";
+    /** As conexões de mesas no PC desatualizadas: não criam, entram, assistem nem voltam a partidas. */
+    private final java.util.Set<Channel> outdated = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /** Os pedidos que levam a uma partida ou sala, recusados a uma mesa desatualizada. */
+    private static final java.util.Set<String> ENTRY_TYPES = java.util.Set.of("start", "host", "join", "watch", "watch-player", "rejoin", "lab-host", "rematch");
+
+    /**
+     * Mesa no PC abaixo do protocolo mínimo: a que manda uma versão menor, ou nenhuma (as anteriores ao protocolVersion).
+     * A mesa do navegador vem sempre junto com o servidor e não é conferida.
+     */
+    static boolean outdatedClient(String client, JsonObject hello) {
+        if (!"godot".equals(client)) return false;
+        JsonElement version = hello.get("protocolVersion");
+        int v = version != null && version.isJsonPrimitive() && version.getAsJsonPrimitive().isNumber() ? version.getAsInt() : 0;
+        return v < MIN_CLIENT_PROTOCOL;
+    }
+
+    private static void refuseOutdated(Channel ch) {
+        JsonObject error = new JsonObject();
+        error.addProperty("type", "error");
+        error.addProperty("reason", "outdated");
+        error.addProperty("text", OUTDATED_TEXT);
+        BridgeServer.send(ch, error.toString());
+    }
 
     @Override public void onConnect(Channel ch) {
         JsonObject hello = new JsonObject();
         hello.addProperty("type", "hello");
         hello.addProperty("protocolVersion", PROTOCOL_VERSION);
+        hello.addProperty("minProtocolVersion", MIN_CLIENT_PROTOCOL);
         JsonArray formats = new JsonArray(); MatchConfig.FORMATS.forEach(formats::add);
         hello.add("supportedFormats", formats);
         MatchConfig.versions(hello);
@@ -172,6 +200,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     @Override
     public synchronized void onDisconnect(Channel ch) {
+        outdated.remove(ch);
         Session s = byChannel.remove(ch);
         if (s == null) return;
         if (dropWatcher(s, ch)) return;
@@ -213,6 +242,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         String type = null;
         try {
             type = MatchConfig.string(msg, "type");
+            if (outdated.contains(ch) && ENTRY_TYPES.contains(type)) { Metrics.requestRejected(type, "desatualizada"); refuseOutdated(ch); return; }
             switch (type) {
                 case "validate-deck", "fetch-deck", "similar-cards" -> LobbyRequests.handle(ch, type, msg, requestId);
                 case "lookup-room" -> lookup(ch, code(msg), requestId);
@@ -226,7 +256,13 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                     response.addProperty("requestId", requestId);
                     BridgeServer.send(ch, response.toString());
                 }
-                case "hello" -> { Metrics.clientHello(msg.has("client") && msg.get("client").isJsonPrimitive() ? msg.get("client").getAsString() : null); onConnect(ch); }
+                case "hello" -> {
+                    String client = msg.has("client") && msg.get("client").isJsonPrimitive() ? msg.get("client").getAsString() : null;
+                    Metrics.clientHello(client);
+                    onConnect(ch);
+                    if (outdatedClient(client, msg)) { outdated.add(ch); refuseOutdated(ch); }
+                    else outdated.remove(ch);
+                }
                 case "start" -> {
                     // Modo de repetição: o primeiro "start" vira a partida do relato, com os decks gravados nele.
                     Replay r = replay;
