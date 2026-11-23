@@ -21,6 +21,12 @@ const EXILED_SHOWN := 3
 const EXILED_DROP := 0.2
 const EXILED_SHIFT := 0.06
 const EXILED_SCALE := 0.94
+## Campo com poucas permanentes: as cartas ficam maiores (até ZOOM_MAX com ZOOM_FEW montes ou menos na fileira mais
+## cheia) e voltam ao tamanho normal aos poucos até ZOOM_FULL montes. Nunca a ponto de apertar a fileira, e no máximo o
+## que cabe entre a fileira da frente e a de trás.
+const ZOOM_MAX := 1.3
+const ZOOM_FEW := 2
+const ZOOM_FULL := 9
 
 
 ## O que vale para o estado inteiro: quem pode ser usado, a declaração em curso, combate, anexos e as cartas exiladas
@@ -239,3 +245,23 @@ static func _arrange(groups: Array, ctx: Dictionary, width: float) -> Array:
 		item["x"] = float(item["x"]) * squeeze - total * squeeze / 2.0
 		item["squeeze"] = squeeze
 	return items
+
+
+## O aumento das cartas de um jogador pelo tamanho do campo, a partir das fileiras arrumadas no tamanho normal
+## (`rows`, com `width` a largura disponível nesse tamanho): 1 com o campo cheio, até ZOOM_MAX com poucas permanentes.
+static func zoom(rows: Dictionary, width: float) -> float:
+	var busiest: int = 0
+	var widest: float = 0.0
+	for row: String in ["front", "back"]:
+		var items: Array = rows.get(row, [])
+		busiest = maxi(busiest, items.size())
+		if not items.is_empty():
+			var last: Dictionary = items[items.size() - 1]
+			widest = maxf(widest, float(last["left"]) + float(last["width"]))
+	if busiest == 0:
+		return ZOOM_MAX
+	var share: float = clampf(float(ZOOM_FULL - busiest) / float(ZOOM_FULL - ZOOM_FEW), 0.0, 1.0)
+	var wanted: float = 1.0 + (ZOOM_MAX - 1.0) * share * share * (3.0 - 2.0 * share)
+	# Sem apertar: a fileira mais larga ainda cabe inteira no tamanho maior.
+	var fits: float = width / widest if widest > 0.0 else ZOOM_MAX
+	return clampf(minf(wanted, fits), 1.0, ZOOM_MAX)

@@ -118,8 +118,14 @@ func place_all(players: Array, frames: Dictionary, seen: Dictionary, names: Pack
 func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
 	var ctx: Dictionary = view.badge_context()
 	var sleeve: Color = view.sleeve_of(int(player["id"]))
-	var scale: float = frame["scale"]
-	var rows: Dictionary = FieldLayout.rows(player, ctx, float(frame["width"]) / scale)
+	var base: float = frame["scale"]
+	var rows: Dictionary = FieldLayout.rows(player, ctx, float(frame["width"]) / base)
+	# Poucas permanentes: as cartas maiores, encolhendo conforme o campo enche (FieldLayout.zoom).
+	var scale: float = base * FieldLayout.zoom(rows, float(frame["width"]) / base)
+	if scale != base:
+		rows = FieldLayout.rows(player, ctx, float(frame["width"]) / scale)
+		frame = frame.duplicate()
+		frame["scale"] = scale
 	for row: String in ["front", "back"]:
 		var z: float = float(frame["others_z"] if row == "front" else frame["lands_z"])
 		_place_separator("sep:%d:%s" % [int(player["id"]), row], rows[row], frame, z)

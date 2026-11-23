@@ -68,12 +68,29 @@ vec4 effect(int mode, vec2 p, float d, float t, float seed, vec3 col, float para
 	vec3 light = vec3(0.0);
 	float cover = 0.0;
 	if (mode == 1) {
-		// Voar: fiapos de vento passando por baixo da carta, dos lados e no pé.
-		float band = smoothstep(0.0, 0.012, d) * smoothstep(pad * 0.85, 0.02, d);
-		float n = noise(vec2(p.x * 4.0 - t * 0.55 + seed * 9.0, p.y * 34.0));
-		float n2 = noise(vec2(p.y * 4.0 - t * 0.4 + seed * 5.0, p.x * 30.0));
-		float streak = smoothstep(0.52, 0.85, mix(n, n2, smoothstep(h.x - 0.05, h.x + 0.02, abs(p.x))));
-		light += vec3(0.78, 0.9, 1.0) * streak * band * (0.35 + 0.75 * smoothstep(-h.y, h.y * 0.5, p.y));
+		// Voar: de vez em quando uma corrente de ar fina passa pelo pé da carta, contornando os cantos de baixo (segue o
+		// contorno a uma distância própria), com as pontas afinando. Fica toda dentro da margem, sem tocar a beira da camada.
+		float room = smoothstep(0.002, 0.012, d) * smoothstep(pad * 0.95, pad * 0.6, d);
+		float lower = smoothstep(h.y * 0.62, h.y * 0.97, p.y);
+		vec3 air = vec3(0.8, 0.92, 1.0);
+		for (int i = 0; i < 3; i++) {
+			float fi = float(i);
+			float r1 = hash(fi * 3.7 + seed * 11.0);
+			float r2 = hash(fi * 9.1 + seed * 5.0);
+			// Cada corrente tem o seu ciclo: atravessa em ~1,4 s e some até a próxima.
+			float cycle = 3.2 + r1 * 2.4;
+			float run = fract(t / cycle + r2) * cycle / 1.4;
+			if (run < 1.0) {
+				float lane = 0.012 + r2 * 0.03 + sin(p.x * 11.0 + t * 1.3 + fi * 2.0) * 0.003;
+				float line = exp(-pow((d - lane) / 0.003, 2.0)) + exp(-pow((d - lane) / 0.012, 2.0)) * 0.22;
+				float head = mix(-h.x - 0.12, h.x + 0.3, run);
+				float behind = head - p.x;
+				float body = smoothstep(0.0, 0.035, behind) * smoothstep(0.3, 0.04, behind);
+				float life = sin(run * 3.14159);
+				light += air * line * body * life * 0.42;
+			}
+		}
+		light *= room * lower;
 	} else if (mode == 2) {
 		// Vínculo com a vida: a borda bate como um coração (dois toques) e luzinhas verdes sobem da carta.
 		float ph = fract(t / 2.6);
