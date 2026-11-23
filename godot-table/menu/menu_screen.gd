@@ -153,6 +153,14 @@ func _ready() -> void:
 	column.add_child(reports)
 	_fill_decks()
 
+	# A conta, no canto de cima (entrar pelo site, a conta ligada e Sair), com os avisos dela no meio da tela.
+	var account := AccountPanel.new()
+	add_child(account)
+	var toasts := ToastStack.new()
+	add_child(toasts)
+	account.toast.connect(toasts.show_toast)
+	AccountSession.notifier().changed.connect(_on_account_changed)
+
 	var version := Hud._label(16, Color(1, 1, 1, 0.4))
 	version.text = version_text
 	version.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -216,6 +224,12 @@ static func _select_first(picker: OptionButton, id: String) -> void:
 			return
 	if first >= 0:
 		picker.select(first)
+
+
+## Entrou pela conta no canto de cima: os decks da conta vêm para a lista (ao sair, os daqui ficam).
+func _on_account_changed() -> void:
+	if AccountSession.signed_in():
+		_sync.run()
 
 
 ## O seu deck escolhido ({} sem nenhum).

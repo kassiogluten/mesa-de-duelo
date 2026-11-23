@@ -54,6 +54,7 @@ import mesadeduelo.bridge.Admin.Response;
  *   GET    lixeira                 {decks}: os apagados nos últimos 30 dias
  *   POST   lixeira/{id}/restaurar  {id, rev, deck, contaRev}
  *   GET    partidas?periodo&formato&deck&pagina   as partidas da conta e os números (ver {@link AccountMatches})
+ *   POST   vincular/…              a mesa no PC entra pela conta do site (ver {@link AccountLinks})
  *
  * Só "sincronizar" aceita corpo grande (até {@link #MAX_SYNC_BYTES}, para o primeiro login com muitos decks);
  * o resto passa pelo agregador de 64 KB.
@@ -82,12 +83,18 @@ final class Accounts {
     private int accounts;
     /** Histórico das partidas, para Minhas partidas; sem ele, a lista vem vazia. */
     private volatile MatchHistory history;
+    /** Vínculos da mesa no PC em andamento (só na memória). */
+    private final AccountLinks links;
     private final ThreadPoolExecutor workers = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(64),
         r -> { Thread t = new Thread(r, "Contas"); t.setDaemon(true); return t; });
 
     /** {@code google} null desliga as contas. */
     Accounts(Path dir, GoogleIdToken google, LongSupplier clock) throws IOException {
         this.dir = dir; this.google = google; this.clock = clock;
+        this.links = new AccountLinks(new AccountLinks.Sessions() {
+            @Override public String account(String authorization) throws IOException { return authorized(authorization); }
+            @Override public JsonObject open(String account) throws IOException { return openSession(account); }
+        }, clock);
         if (google != null) load();
     }
 
@@ -101,6 +108,7 @@ final class Accounts {
         Metrics.gauge("mesa.accounts.sessions", "Sessões de conta abertas (aparelhos logados)", a, Accounts::sessionCount);
         // Séries com zero desde o início, para o painel não ficar vazio antes do primeiro login.
         for (String result : new String[]{"ok", "recusado", "limite", "erro"}) loginCounter(result);
+        for (String result : new String[]{"iniciado", "confirmado", "recusado", "ligado", "limite"}) AccountLinks.counter(result);
         syncCounter();
         return a;
     }
@@ -121,6 +129,7 @@ final class Accounts {
             path = path.substring(0, q);
         }
         try {
+            if (path.startsWith("vincular/")) return links.handle(method, path.substring("vincular/".length()), authorization, body, ip);
             if (path.equals("entrar")) return "POST".equals(method) ? login(body, ip) : Response.error(405, "Use POST para entrar.");
             String account = authorized(authorization);
             if (account == null) return Response.error(401, "Entre de novo: a sessão acabou.");
@@ -185,11 +194,25 @@ final class Accounts {
             token = newSession(id, now);
         }
         loginCounter("ok").increment();
+        return Response.json(200, sessionJson(id, profile, token, now));
+    }
+
+    /** {token, expiresAt, conta}: a resposta de entrar e de um vínculo da mesa no PC. */
+    private static JsonObject sessionJson(String id, JsonObject profile, String token, long now) {
         JsonObject o = new JsonObject();
         o.addProperty("token", token);
         o.addProperty("expiresAt", Instant.ofEpochMilli(now + SESSION_MILLIS).toString());
         o.add("conta", publicProfile(id, profile));
-        return Response.json(200, o);
+        return o;
+    }
+
+    /** Uma sessão nova para uma conta que já existe (a mesa no PC vinculada pelo site); null se ela foi apagada. */
+    private synchronized JsonObject openSession(String account) throws IOException {
+        JsonObject a = read(account);
+        if (a == null) return null;
+        long now = clock.getAsLong();
+        JsonObject profile = a.has("perfil") && a.get("perfil").isJsonObject() ? a.getAsJsonObject("perfil") : new JsonObject();
+        return sessionJson(account, profile, newSession(account, now), now);
     }
 
     private synchronized Response me(String account) throws IOException {
