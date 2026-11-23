@@ -35,8 +35,8 @@ var _preview: TextureRect
 var _toast: Label
 var _toast_left: float = 0.0
 var _portraits: Dictionary = {}
-var _end_panel: PanelContainer
-var _end_label: Label
+## A tela do fim do jogo (ui/result_screen.gd).
+var _result: ResultScreen
 var _bar: MatchBar
 var _forecast: Label
 var _between: PanelContainer
@@ -115,27 +115,11 @@ func _ready() -> void:
 	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_toast)
 
-	_end_panel = PanelContainer.new()
-	_end_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.04, 0.05, 0.09, 0.94), 18))
-	_end_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_end_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_end_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_end_panel.visible = false
-	add_child(_end_panel)
-	var end_column := VBoxContainer.new()
-	end_column.add_theme_constant_override("separation", 18)
-	_end_panel.add_child(end_column)
-	_end_label = _label(44, GOLD)
-	_end_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	end_column.add_child(_end_label)
-	var rematch := _button("Revanche", false)
-	rematch.pressed.connect(func() -> void:
-		action.emit({"type": "rematch"})
-		_end_label.text = "Revanche pedida…")
-	end_column.add_child(rematch)
-	var back := _button("Voltar ao início", true)
-	back.pressed.connect(func() -> void: leave_pressed.emit())
-	end_column.add_child(back)
+	_result = ResultScreen.new()
+	_result.catalog = catalog
+	_result.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	_result.leave_pressed.connect(func() -> void: leave_pressed.emit())
+	add_child(_result)
 
 	# Entre os jogos de uma melhor de três: seguir com o mesmo deck (trocar cartas com o sideboard fica para depois).
 	_between = PanelContainer.new()
@@ -175,17 +159,13 @@ func apply_state(state: Dictionary, blocker_name: String = "") -> void:
 	var selectable_players: Array = input.get("selectablePlayers", [])
 	for raw: Variant in state.get("players", []):
 		_update_portrait(raw as Dictionary, int((raw as Dictionary)["id"]) == you, selectable_players.has(int((raw as Dictionary)["id"])), active != null and int(active) == int((raw as Dictionary)["id"]))
-	if bool(state.get("gameOver", false)):
-		var winner: String = Txt.of(state.get("winner", ""))
-		var me: String = ""
-		for raw: Variant in state.get("players", []):
-			if int((raw as Dictionary)["id"]) == you:
-				me = Txt.of((raw as Dictionary)["name"])
-		_end_label.text = "Vitória!" if winner == me else ("Empate" if winner == "" else "Derrota")
-		var series: Variant = state.get("match")
-		_end_panel.visible = not (series is Dictionary and Txt.of((series as Dictionary).get("phase")) == "sideboarding")
-	else:
-		_end_panel.visible = false
+	# A tela do fim do jogo vê todos os estados (guarda os eventos para o destaque do jogo) e aparece no fim.
+	_result.apply_state(state)
+
+
+## A sala da partida em rede (para o botão de revanche da tela do fim do jogo).
+func set_room(room: Dictionary) -> void:
+	_result.room = room
 
 
 func show_toast(text: String) -> void:
