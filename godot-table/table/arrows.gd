@@ -1,26 +1,28 @@
-# Setas em arco na mesa 3D (alvo, ataque, bloqueio): uma fita curva com ponta, refeita a cada quadro para seguir as cartas;
-# a seta que segue o mouse (mirando um alvo, arrastando um atacante, escolhendo quem bloquear) é tracejada e anda.
+# Setas em arco na mesa 3D (alvo, ataque, bloqueio): um feixe de energia curvo com ponta, refeito a cada quadro para seguir
+# as cartas; a seta que segue o mouse (mirando um alvo, arrastando um atacante, escolhendo quem bloquear) leva pulsos
+# em chevron correndo para a ponta. O desenho (núcleo, brilho, pulsos, ponta) fica no arrows.gdshader.
 class_name Arrows
 extends MeshInstance3D
 
-const SEGMENTS := 28
-const WIDTH := 0.09
-const HEAD := 0.26
+const SHADER := preload("res://table/arrows.gdshader")
+const SEGMENTS := 32
+## Largura do feixe com o brilho (o núcleo claro é bem mais fino, no shader).
+const WIDTH := 0.24
+## A saída da carta é mais fina que o resto.
+const START_WIDTH := 0.45
+const HEAD := 0.27
+const HEAD_LENGTH := 0.36
 
 ## [{from: Vector3, to: Vector3, color: Color, live: bool}] — as pontas já em coordenadas da mesa, atualizadas por quem desenha.
 var arrows: Array = []
 var _mesh := ImmediateMesh.new()
-var _material := StandardMaterial3D.new()
+var _material := ShaderMaterial.new()
 var _time: float = 0.0
 
 
 func _ready() -> void:
 	mesh = _mesh
-	_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_material.vertex_color_use_as_albedo = true
-	_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_material.no_depth_test = true
-	_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_material.shader = SHADER
 	_material.render_priority = 10
 	material_override = _material
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -28,6 +30,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_material.set_shader_parameter("time", _time)
 	_mesh.clear_surfaces()
 	if arrows.is_empty():
 		return
@@ -38,51 +41,58 @@ func _process(delta: float) -> void:
 	_mesh.surface_end()
 
 
-## Um arco de `a` até `b` que sobe no meio, com a ponta deitada na direção do alvo; a cor pulsa de leve. A seta viva
-## (`live`) é tracejada, com os traços correndo para a ponta, e a ponta maior.
-func _draw(a: Vector3, b: Vector3, color: Color, live: bool = false) -> void:
+## Os pontos do arco de `a` até `b` (sobe no meio), parando antes do alvo para a ponta caber.
+static func arc(a: Vector3, b: Vector3, segments: int = SEGMENTS) -> Array[Vector3]:
 	var lift: float = clamp(a.distance_to(b) * 0.28, 0.4, 2.2)
 	var mid: Vector3 = (a + b) * 0.5 + Vector3(0, lift, 0)
 	var points: Array[Vector3] = []
-	for i: int in SEGMENTS + 1:
-		var t: float = float(i) / SEGMENTS * 0.92
+	var stop: float = 1.0 - clampf(HEAD_LENGTH / maxf(a.distance_to(b), 0.01), 0.05, 0.35)
+	for i: int in segments + 1:
+		var t: float = float(i) / segments * stop
 		points.append(a.lerp(mid, t).lerp(mid.lerp(b, t), t))
-	var pulse: float = 0.75 + 0.25 * sin(_time * 5.0)
+	return points
+
+
+## A largura do feixe em `t` (0 na origem, 1 no fim do corpo): fina ao sair da carta, cheia do primeiro terço em diante.
+static func width_at(t: float) -> float:
+	return WIDTH * lerpf(START_WIDTH, 1.0, smoothstep(0.0, 0.3, t))
+
+
+func _draw(a: Vector3, b: Vector3, color: Color, live: bool = false) -> void:
+	var points: Array[Vector3] = arc(a, b)
+	var flag: float = 1.0 if live else 0.0
+	var alpha: float = 1.0 if live else 0.85
 	for i: int in SEGMENTS:
 		var p0: Vector3 = points[i]
 		var p1: Vector3 = points[i + 1]
-		var side: Vector3 = (p1 - p0).cross(Vector3.UP).normalized() * WIDTH * 0.5
-		var fade0: float = float(i) / SEGMENTS
-		var fade1: float = float(i + 1) / SEGMENTS
-		if live and dash_gap(float(i) / SEGMENTS, _time):
-			continue
-		var c0 := Color(color, (0.25 + 0.75 * fade0) * pulse)
-		var c1 := Color(color, (0.25 + 0.75 * fade1) * pulse)
-		_quad(p0 - side, p0 + side, p1 + side, p1 - side, c0, c1)
-	# Ponta: um triângulo do fim da fita até o alvo.
+		var t0: float = float(i) / SEGMENTS
+		var t1: float = float(i + 1) / SEGMENTS
+		var along: Vector3 = (p1 - p0).normalized()
+		var side0: Vector3 = along.cross(Vector3.UP).normalized() * width_at(t0) * 0.5
+		var side1: Vector3 = along.cross(Vector3.UP).normalized() * width_at(t1) * 0.5
+		var c := Color(color, alpha)
+		_vertex(p0 - side0, c, Vector2(t0, 0.0), flag, 0.0)
+		_vertex(p0 + side0, c, Vector2(t0, 1.0), flag, 0.0)
+		_vertex(p1 + side1, c, Vector2(t1, 1.0), flag, 0.0)
+		_vertex(p0 - side0, c, Vector2(t0, 0.0), flag, 0.0)
+		_vertex(p1 + side1, c, Vector2(t1, 1.0), flag, 0.0)
+		_vertex(p1 - side1, c, Vector2(t1, 0.0), flag, 0.0)
+	# Ponta: um quadro deitado do fim do feixe até o alvo, um pouco recuado para cobrir a emenda; o shader desenha a forma.
 	var tail: Vector3 = points[SEGMENTS]
 	var dir: Vector3 = (b - tail).normalized()
-	var across: Vector3 = dir.cross(Vector3.UP).normalized() * HEAD * (0.8 if live else 0.6)
-	var tip_color := Color(color.lightened(0.15) if live else color, 1.0 if live else pulse)
-	_vertex(tail - across, tip_color)
-	_vertex(tail + across, tip_color)
-	_vertex(b, tip_color)
+	var back: Vector3 = tail - dir * HEAD_LENGTH * 0.25
+	var across: Vector3 = dir.cross(Vector3.UP).normalized() * HEAD * (1.0 if live else 0.85)
+	var tip := Color(color, alpha)
+	_vertex(back - across, tip, Vector2(0.0, 0.0), flag, 1.0)
+	_vertex(back + across, tip, Vector2(0.0, 1.0), flag, 1.0)
+	_vertex(b + across, tip, Vector2(1.0, 1.0), flag, 1.0)
+	_vertex(back - across, tip, Vector2(0.0, 0.0), flag, 1.0)
+	_vertex(b + across, tip, Vector2(1.0, 1.0), flag, 1.0)
+	_vertex(b - across, tip, Vector2(1.0, 0.0), flag, 1.0)
 
 
-## Na seta viva, se o pedaço em `t` (0 na origem, 1 na ponta) cai num vão do tracejado; os traços andam com o tempo.
-static func dash_gap(t: float, time: float) -> bool:
-	return fposmod(t * 7.0 - time * 2.2, 1.0) > 0.62
-
-
-func _quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, c0: Color, c1: Color) -> void:
-	_vertex(a, c0)
-	_vertex(b, c0)
-	_vertex(c, c1)
-	_vertex(a, c0)
-	_vertex(c, c1)
-	_vertex(d, c1)
-
-
-func _vertex(p: Vector3, color: Color) -> void:
+func _vertex(p: Vector3, color: Color, uv: Vector2, live: float, head: float) -> void:
 	_mesh.surface_set_color(color)
+	_mesh.surface_set_uv(uv)
+	_mesh.surface_set_uv2(Vector2(head, live))
 	_mesh.surface_add_vertex(p)

@@ -198,10 +198,12 @@ func test_hand_fan_fits_the_hud_strip() -> void:
 	check(is_equal_approx(crowded.x, 0.1), "nunca menos que o mínimo")
 
 
-func test_live_arrow_dashes_move() -> void:
-	var gaps: int = 0
-	for i: int in 28:
-		if Arrows.dash_gap(i / 28.0, 0.0):
-			gaps += 1
-	check(gaps > 4 and gaps < 20, "a seta viva tem traços e vãos")
-	check(Arrows.dash_gap(0.1, 0.0) != Arrows.dash_gap(0.1, 0.2), "os traços andam com o tempo")
+func test_arrow_arc_leaves_room_for_the_head_and_thins_at_the_card() -> void:
+	var a := Vector3(0, 0, 2)
+	var b := Vector3(0, 0, -2)
+	var points: Array[Vector3] = Arrows.arc(a, b)
+	check(points[0].is_equal_approx(a), "o feixe sai da carta")
+	check(points[points.size() - 1].distance_to(b) > 0.2, "o feixe para antes do alvo, onde entra a ponta")
+	check(points[points.size() / 2].y > 0.4, "o arco sobe no meio")
+	check(Arrows.width_at(0.0) < Arrows.width_at(0.5), "mais fino ao sair da carta")
+	check(is_equal_approx(Arrows.width_at(1.0), Arrows.WIDTH), "cheio no resto")
