@@ -120,6 +120,25 @@ func test_tapped_lands_pay_the_next_spell() -> void:
 	check((stale["mana"] as Dictionary).is_empty(), "terra virada há muito tempo não voa")
 
 
+func test_mana_that_went_through_the_pool_does_not_fly_twice() -> void:
+	var watch := StateWatch.new()
+	var old: Dictionary = {10: {"id": 10, "land": true, "tapped": false}, 11: {"id": 11, "land": true, "tapped": false}}
+	var previous: Callable = func(id: int) -> Dictionary: return old.get(id, {})
+	var forest: Dictionary = {"id": 10, "land": true, "tapped": true, "typeLine": "Basic Land — Forest"}
+	var island: Dictionary = {"id": 11, "land": true, "tapped": true, "typeLine": "Basic Land — Island"}
+	watch.observe(_state([{"id": 0, "battlefield": [], "pool": {}}]), [], previous, 0.0)
+	# A Floresta virou e a mana ficou na reserva (a HUD mostra a gota indo para lá).
+	watch.observe(_state([{"id": 0, "battlefield": [forest], "pool": {"G": 1}}]), [], previous, 0.5)
+	old[10] = forest
+	# A Ilha virou pagando direto, no mesmo estado da mágica.
+	var cast: Dictionary = {"seq": 3, "type": "spell-cast", "actor": 0, "card": {"id": 20}}
+	var out: Dictionary = watch.observe(_state([{"id": 0, "battlefield": [forest, island], "pool": {}}]), [cast], previous, 1.0)
+	var paid: Array = (out["mana"] as Dictionary).get(3, [])
+	check_eq(paid.size(), 1, "só a Ilha voa do terreno para a mágica")
+	if paid.size() == 1:
+		check_eq(int((paid[0] as Dictionary)["id"]), 11, "a Floresta já voou pela reserva")
+
+
 func test_commander_entry_needs_a_cast_from_the_command_zone() -> void:
 	var watch := StateWatch.new()
 	var none: Callable = func(_id: int) -> Dictionary: return {}

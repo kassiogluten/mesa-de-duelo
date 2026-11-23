@@ -23,7 +23,7 @@ func _ready() -> void:
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), PermanentFx._dome(), CardDressing._halo(),
 			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash(),
 			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER, StackPresence.HAZE_SHADER,
-			ExilePortal.SHADER]:
+			ExilePortal.SHADER, TrailRibbon.SHADER, EnergyBeam.SHADER]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
@@ -53,6 +53,9 @@ func _ready() -> void:
 	SpellMissile.warm(self, spot)
 	CombatFx.sparks(self, spot, Vector3.FORWARD, Color(0, 0, 0, 0), 4, 0.01)
 	TouchFx.dust(self, spot, Color(0, 0, 0, 0), 1.0)
+	# As gotas de mana (núcleo, cometa e faíscas) e os fiapos de luz que saem do grimório.
+	ManaOrb.warm(self, spot)
+	FlightPieces.flutter(self, spot, Color(0, 0, 0, 0), 3)
 	# Os números do dano e os textos (com contorno, na fonte dos títulos e na comum), já com os algarismos.
 	for font: Font in [MomentPieces._font(), null]:
 		var label := Label3D.new()

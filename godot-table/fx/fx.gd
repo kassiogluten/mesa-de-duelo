@@ -1,4 +1,4 @@
-# Peças dos efeitos da mesa 3D: faíscas (partículas na GPU), onda de choque no tampo, projétil com rastro, número que
+# Peças dos efeitos da mesa 3D: faíscas (partículas na GPU), onda de choque no tampo, gota de luz com rastro, número que
 # sobe, coluna de luz, clarão de luz de verdade e tremor de câmera. Cada peça se apaga sozinha quando termina.
 class_name Fx
 extends RefCounted
@@ -110,70 +110,12 @@ static func light(parent: Node3D, pos: Vector3, color: Color, energy: float = 4.
 	tween.tween_callback(lamp.queue_free)
 
 
-## Projétil em arco de `from` até `to`, com rastro de faíscas; `on_hit` roda quando chega.
-## `size` escala a bola e o rastro (a mana voando usa bolas pequenas, que não estouram em disco branco no brilho).
+## Projétil em arco de `from` até `to`: a gota de luz (ManaOrb: o núcleo do projétil das mágicas em pequeno, com um
+## cometa atrás e faíscas) que se funde no destino com um clarão pequeno; `on_hit` roda quando chega. `size` escala a
+## gota. Para o golpe de uma mágica com alvo, SpellMissile.
 static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, duration: float = 0.35, on_hit: Callable = Callable(), size: float = 1.0) -> void:
-	# A bola é luz, não um objeto: um halo na cor e um núcleo quente, de frente para a câmera (a esfera chapada
-	# virava um disco cor de pele no brilho da cena, com sombra no tampo).
-	var orb := MeshInstance3D.new()
-	var quad := QuadMesh.new()
-	quad.size = Vector2.ONE * 0.62 * size
-	orb.mesh = quad
-	orb.material_override = _glow_material(color)
-	orb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var core := MeshInstance3D.new()
-	var core_quad := QuadMesh.new()
-	core_quad.size = Vector2.ONE * 0.24 * size
-	core.mesh = core_quad
-	core.material_override = _glow_material(color.lerp(Color.WHITE, 0.75))
-	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	orb.add_child(core)
-	orb.position = from
-	parent.add_child(orb)
-	var trail := GPUParticles3D.new()
-	trail.amount = int((70 if quality > 0 else 24) * clampf(size, 0.4, 1.0))
-	trail.lifetime = 0.4
-	trail.local_coords = false
-	var process := ParticleProcessMaterial.new()
-	process.spread = 180.0
-	process.initial_velocity_min = 0.1
-	process.initial_velocity_max = 0.4
-	process.gravity = Vector3.ZERO
-	process.scale_min = 0.06 * size
-	process.scale_max = 0.14 * size
-	var ramp := Gradient.new()
-	ramp.set_color(0, Color(color.lerp(Color.WHITE, 0.3), 0.9))
-	ramp.set_color(1, Color(color, 0.0))
-	var ramp_tex := GradientTexture1D.new()
-	ramp_tex.gradient = ramp
-	process.color_ramp = ramp_tex
-	trail.process_material = process
-	trail.draw_pass_1 = _spark()
-	orb.add_child(trail)
-	if quality > 0:
-		var glow := OmniLight3D.new()
-		glow.light_color = color
-		glow.light_energy = 2.5 * size
-		glow.omni_range = 2.2 * maxf(size, 0.5)
-		orb.add_child(glow)
-	var lift: float = clampf(from.distance_to(to) * 0.25, 0.4, 1.8)
-	var tween := orb.create_tween()
-	tween.tween_method(func(t: float) -> void:
-		orb.position = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift, 0)
-		# Chegando perto da câmera (a pilha no painel), a bola encolhe: o mesmo tamanho na tela, não um sol branco.
-		orb.scale = Vector3.ONE * depth_scale(parent, orb.position), 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.tween_callback(func() -> void:
-		trail.emitting = false
-		for child: Node in orb.get_children():
-			if child is OmniLight3D:
-				(child as OmniLight3D).visible = false
-		# Some a luz; o rastro que já saiu termina sozinho.
-		orb.mesh = null
-		core.visible = false
-		if on_hit.is_valid():
-			on_hit.call())
-	tween.tween_interval(0.4)
-	tween.tween_callback(orb.queue_free)
+	var orb: ManaOrb = ManaOrb.launch(parent, from, to, color, duration, on_hit)
+	orb.size = size * 1.6
 
 
 ## Texto que sobe e some (marcadores, avisos), sempre de frente para a câmera e sem sair da tela pelos lados. `rise`: quanto sobe.
