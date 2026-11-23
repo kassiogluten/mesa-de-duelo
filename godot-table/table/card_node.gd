@@ -47,6 +47,16 @@ var _depth: float = THICKNESS
 var _tween: Tween
 var _target: Transform3D
 var _placed: bool = false
+## Destaque suave (fade_glow/fade_dim): o valor de agora, o pedido e a animação entre eles, para o estado novo não piscar.
+var _glow_now := Vector4.ZERO
+var _glow_goal := Vector4.ZERO
+var _glow_tween: Tween
+var _dim_now: float = 0.0
+var _dim_goal: float = 0.0
+var _dim_tween: Tween
+## Quanto o desenho sai do lugar quando a carta está selecionada (fora do levantar da mão sob o mouse).
+var _raise := Vector3.ZERO
+var _raise_tween: Tween
 
 
 func _init() -> void:
@@ -154,7 +164,7 @@ func _set_depth(depth: float) -> void:
 	_depth = depth
 	_edge.scale = Vector3(1, depth / THICKNESS, 1)
 	_bottom.position = Vector3(0, -depth, 0)
-	_shadow.position = Vector3(0, -depth - 0.0015, 0)
+	_shadow.position = Vector3(0, -depth - 0.0015 - _raise.y, 0)
 
 
 func set_texture(tex: Texture2D) -> void:
@@ -164,14 +174,92 @@ func set_texture(tex: Texture2D) -> void:
 		_name_label.text = ""
 
 
-## Destaque: força 0 apaga.
+## Destaque: força 0 apaga. Na hora, sem transição (os efeitos animam por fora).
 func set_glow(color: Color, strength: float) -> void:
-	_material.set_shader_parameter("glow", Vector4(color.r, color.g, color.b, strength))
+	if _glow_tween:
+		_glow_tween.kill()
+	_glow_now = Vector4(color.r, color.g, color.b, strength)
+	_glow_goal = _glow_now
+	_material.set_shader_parameter("glow", _glow_now)
 
 
 func set_dim(amount: float) -> void:
+	if _dim_tween:
+		_dim_tween.kill()
+	_dim_now = amount
+	_dim_goal = amount
 	_material.set_shader_parameter("dim", amount)
 	_badges.set_dim(amount)
+
+
+## O destaque dos estados da escolha (pode usar, alvo, selecionada): chega em `time` segundos, e pedir o mesmo de novo
+## não faz nada. Acender parte da cor nova e apagar mantém a cor que estava, para não piscar outra cor no caminho.
+func fade_glow(color: Color, strength: float, time: float = 0.14) -> void:
+	var goal := Vector4(color.r, color.g, color.b, strength)
+	if strength <= 0.0:
+		goal = Vector4(_glow_now.x, _glow_now.y, _glow_now.z, 0.0)
+	if goal.is_equal_approx(_glow_goal):
+		return
+	_glow_goal = goal
+	if _glow_tween:
+		_glow_tween.kill()
+	var from: Vector4 = _glow_now if _glow_now.w > 0.001 else Vector4(goal.x, goal.y, goal.z, 0.0)
+	if not is_inside_tree():
+		_glow_now = goal
+		_material.set_shader_parameter("glow", goal)
+		return
+	_glow_tween = create_tween()
+	_glow_tween.tween_method(func(v: Vector4) -> void:
+		_glow_now = v
+		_material.set_shader_parameter("glow", v), from, goal, time)
+
+
+## O escurecer dos estados da escolha, com transição (como fade_glow).
+func fade_dim(amount: float, time: float = 0.18) -> void:
+	if is_equal_approx(amount, _dim_goal):
+		return
+	_dim_goal = amount
+	if _dim_tween:
+		_dim_tween.kill()
+	if not is_inside_tree():
+		set_dim(amount)
+		return
+	_dim_tween = create_tween()
+	_dim_tween.tween_method(func(v: float) -> void:
+		_dim_now = v
+		_material.set_shader_parameter("dim", v)
+		_badges.set_dim(v), _dim_now, amount, time)
+
+
+## O destaque pedido agora (rgb e força), para os testes e para quem quer saber em que estado a carta está.
+func glow_goal() -> Vector4:
+	return _glow_goal
+
+
+func dim_goal() -> float:
+	return _dim_goal
+
+
+## A carta selecionada sai um pouco do lugar (`offset` no espaço da carta: +Y vem para a câmera, -Z sobe na tela); a
+## sombra de contato fica no tampo. Zero volta.
+func set_raise(offset: Vector3) -> void:
+	if offset.is_equal_approx(_raise):
+		return
+	_raise = offset
+	_shadow.position = Vector3(0, -_depth - 0.0015 - offset.y, 0)
+	if lifted:
+		return
+	if _raise_tween:
+		_raise_tween.kill()
+	if not is_inside_tree():
+		_visual.position = offset
+		return
+	_raise_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_raise_tween.tween_property(_visual, "position", offset, 0.18)
+
+
+func raise_offset() -> Vector3:
+	return _raise
 
 
 ## Leva a carta até `target`; com `arc`, sobe no meio do caminho (mudança de zona).
@@ -214,7 +302,7 @@ func set_lifted(on: bool) -> void:
 	if _lift_tween:
 		_lift_tween.kill()
 	_lift_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_lift_tween.tween_property(_visual, "position", LIFT if on else Vector3.ZERO, 0.14)
+	_lift_tween.tween_property(_visual, "position", LIFT if on else _raise, 0.14)
 	_lift_tween.tween_property(_visual, "scale", Vector3.ONE * (LIFT_SCALE if on else 1.0), 0.14)
 
 

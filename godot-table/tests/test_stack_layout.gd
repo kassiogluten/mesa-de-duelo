@@ -57,15 +57,15 @@ func test_stack_cards_land_on_the_panel_slot_top_in_front() -> void:
 	table.apply_state(_state(_items()))
 	var camera: Camera3D = table.camera
 	for depth: int in 3:
-		var t: Transform3D = table.call("_stack_transform", depth, 3)
+		var t: Transform3D = table.stack_transform(depth, 3)
 		var rect: Rect2 = panel.layer_rect(depth)
 		check(camera.unproject_position(t.origin).distance_to(rect.get_center()) < 1.5, "camada %d no centro do vão" % depth)
 		# A altura na tela: as pontas de cima e de baixo da carta projetadas.
 		var half: Vector3 = t.basis * Vector3(0, 0, CardNode.SIZE.y / 2.0)
 		var height: float = absf(camera.unproject_position(t.origin + half).y - camera.unproject_position(t.origin - half).y)
 		check(absf(height - rect.size.y) < rect.size.y * 0.06, "camada %d do tamanho do vão (%.0f px para %.0f)" % [depth, height, rect.size.y])
-	var near: float = camera.global_position.distance_to((table.call("_stack_transform", 0, 3) as Transform3D).origin)
-	var far: float = camera.global_position.distance_to((table.call("_stack_transform", 2, 3) as Transform3D).origin)
+	var near: float = camera.global_position.distance_to((table.stack_transform(0, 3) as Transform3D).origin)
+	var far: float = camera.global_position.distance_to((table.stack_transform(2, 3) as Transform3D).origin)
 	check(near < far, "o topo fica na frente das de baixo")
 	check(table.card_node(300) != null and table.zone_of(300) == "stack", "a mágica do topo é a carta dela")
 	check_eq(int(table.card_node(300).data.get("stackId", -1)), 3, "a carta sabe qual item da pilha é (para o clique)")
@@ -76,6 +76,6 @@ func test_stack_cards_land_on_the_panel_slot_top_in_front() -> void:
 func test_without_panel_the_stack_stays_on_the_table() -> void:
 	var nodes: Array = _setup()
 	var table: TableView = nodes[1]
-	var t: Transform3D = table.call("_stack_transform", 0, 3)
+	var t: Transform3D = table.stack_transform(0, 3)
 	check(t.origin.x > 4.5 and t.origin.y < 1.5, "o monte inclinado no tampo, à direita")
 	_cleanup(nodes)
