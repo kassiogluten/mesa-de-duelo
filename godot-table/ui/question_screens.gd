@@ -1,52 +1,19 @@
-# As telas especiais das perguntas, com as respostas no formato da mesa do navegador (src/ui/questionView.ts e vizinhos):
-# modos, jeito de jogar, vidência, montes, dano de combate, quantidades, número, voto, masmorra, substituição, nomes e destinos.
+# As telas das perguntas que várias finalidades usam (escolher cartas ou opções, ordenar, número, quantidades e dano de combate),
+# com as respostas no formato da mesa do navegador (src/ui/questionView.ts e vizinhos); as de uma finalidade só ficam em question_purposes.gd.
 class_name QuestionScreens
 extends RefCounted
-
-const ZONES_PT := {"hand": "a mão", "graveyard": "o cemitério", "battlefield": "o campo", "library": "o grimório", "exile": "o exílio"}
 
 
 ## Monta a tela pela finalidade; false quando é uma pergunta genérica (o QuestionDialog cuida).
 static func build(d: QuestionDialog) -> bool:
 	var q: Dictionary = d.question
 	var purpose: String = Txt.of(q.get("purpose"))
-	var kind: String = Txt.of(q.get("kind"))
 	if purpose == "combat-damage":
 		amounts(d, true)
 	elif purpose == "triggers":
 		order(d)
-	elif purpose == "play-mode" or q.get("method") == "getAbilityToPlay":
-		_play_mode(d)
-	elif purpose == "library" and q.get("library") != null and not d.options().is_empty():
-		_library(d)
-	elif purpose == "vote":
-		_vote(d)
-	elif purpose == "piles-split":
-		_piles_split(d)
-	elif purpose == "piles-choose" and (q.get("piles", []) as Array).size() == 2:
-		_piles_choose(d)
-	elif purpose == "replacement-order":
-		_replacement(d)
-	elif purpose == "optional-costs":
-		_optional_costs(d)
-	elif purpose == "creature-type":
-		_search(d, true)
-	elif purpose == "modes":
-		_modes(d)
-	elif kind == "number":
-		number(d)
-	elif purpose == "dungeon-room" or purpose == "dungeon-choice":
-		_dungeon(d)
-	elif purpose == "card-name" and d.options().size() >= 100:
-		_search(d, false)
-	elif purpose == "split-destinations" and (q.get("destinations", []) as Array).size() == 2:
-		_split_destinations(d)
-	elif purpose == "commander-zone":
-		var zone: String = "Exílio" if Txt.of(q.get("zone")) == "Exile" else "Cemitério"
-		d.source_card()
-		d.button_row([[zone, {"value": false}, false], ["Zona de comando", {"value": true}, true]])
 	else:
-		return false
+		return QuestionPurposes.build(d)
 	return true
 
 
@@ -56,597 +23,378 @@ static func build(d: QuestionDialog) -> bool:
 static func pick_cards(d: QuestionDialog, indices: Array, revealed: Array, done: Callable) -> void:
 	var max_pick: int = int(d.question.get("max", 1))
 	var min_pick: int = int(d.question.get("min", 1))
+	var single: bool = max_pick <= 1 and min_pick >= 1
+	var total: int = indices.size() + revealed.size()
+	var holder: Container = _card_holder(d, total)
+	var width: float = float(holder.get_meta("card_width"))
 	var chosen: Array = []
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(min(indices.size() + revealed.size(), 5) * (QuestionDialog.CARD_SIZE.x + 14), QuestionDialog.CARD_SIZE.y + 90)
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	scroll.add_child(row)
-	d.column.add_child(scroll)
-	var confirm: Button = Hud._button("Confirmar", true)
 	var tiles: Dictionary = {}
-	for i: Variant in indices:
-		var index: int = int(i)
-		var tile: Control = d.card_tile(d.option_card(index), d.option_label(index) if d.option_card(index) == null else "", "", false)
+	var confirm := ModalStyle.button("Confirmar", ModalStyle.Kind.PRIMARY, 220)
+	var refresh: Callable = func() -> void:
+		for k: Variant in tiles.keys():
+			(tiles[k] as ChoiceCard).set_selected(chosen.has(k))
+		var status: Array = QuestionDialog.count_text(chosen.size(), min_pick, max_pick)
+		d.set_status(status[0], status[1])
+		confirm.disabled = chosen.size() < min_pick
+	for k: int in indices.size():
+		var index: int = int(indices[k])
+		var data: Variant = d.option_card(index)
+		var tile: ChoiceCard = d.card(data, width, d.option_label(index) if data == null else "")
+		if k < 9:
+			tile.set_key(str(k + 1))
 		tiles[index] = tile
-		tile.gui_input.connect(func(event: InputEvent) -> void:
-			if not QuestionDialog.clicked(event):
-				return
-			if max_pick <= 1 and min_pick >= 1:
+		var act: Callable = func() -> void:
+			if single:
 				done.call([index])
 				return
 			if chosen.has(index):
 				chosen.erase(index)
 			elif chosen.size() < max_pick:
 				chosen.append(index)
-			for k: Variant in tiles.keys():
-				QuestionDialog.set_marked(tiles[k], chosen.has(k))
-			confirm.disabled = chosen.size() < min_pick)
-		row.add_child(tile)
+			elif max_pick == 1:
+				chosen = [index]
+			refresh.call()
+		tile.pressed.connect(act)
+		d.hotkeys.append(act)
+		holder.add_child(tile)
 	for card: Variant in revealed:
-		var gone: Control = d.card_tile(card, "", "", false)
-		gone.modulate = Color(1, 1, 1, 0.35)
-		gone.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(gone)
-	if max_pick > 1 or min_pick < 1:
-		d.hint("Escolha %s." % ("até %d" % max_pick if min_pick < max_pick else str(max_pick)))
-		confirm.disabled = min_pick > 0
-		confirm.pressed.connect(func() -> void: done.call(chosen.duplicate()))
-		d.column.add_child(confirm)
+		var gone: ChoiceCard = d.card(card, width)
+		gone.set_dimmed(true)
+		holder.add_child(gone)
+	if single:
+		return
+	d.add_status()
+	var buttons: Array = []
 	if min_pick == 0:
-		d.button_row([["Nenhuma", {"indices": []}, false]])
+		var none := ModalStyle.button("Nenhuma", ModalStyle.Kind.SECONDARY, 170)
+		none.pressed.connect(func() -> void: done.call([]))
+		buttons.append(none)
+	confirm.pressed.connect(func() -> void: done.call(chosen.duplicate()))
+	buttons.append(confirm)
+	d.actions(buttons)
+	d.primary = confirm
+	refresh.call()
 
 
-## Opções em lista de botões, com as mesmas regras de mínimo e máximo.
-static func pick_list(d: QuestionDialog, done: Callable, labels: Array = [], disabled: Dictionary = {}) -> void:
+## Onde ficam as cartas: uma fileira quando cabem grandes o bastante; senão uma grade com rolagem.
+static func _card_holder(d: QuestionDialog, total: int) -> Container:
+	var screen: Vector2 = d.get_viewport_rect().size if d.is_inside_tree() else Vector2(1600, 900)
+	var width: float = d.card_width(total)
+	if total <= 7 or width > 150.0:
+		var row := d.card_row()
+		row.set_meta("card_width", width)
+		return row
+	width = 150.0
+	var columns: int = maxi(1, mini(total, int((screen.x * 0.84 - 80.0) / (width + QuestionDialog.CARD_GAP))))
+	var rows: int = ceili(float(total) / columns)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var row_height: float = width * ChoiceCard.ASPECT + ChoiceCard.LIFT_ROOM + 16.0
+	scroll.custom_minimum_size = Vector2(columns * (width + QuestionDialog.CARD_GAP), minf(rows * row_height, screen.y * 0.56))
+	scroll.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	d.column.add_child(scroll)
+	var grid := GridContainer.new()
+	grid.columns = columns
+	grid.add_theme_constant_override("h_separation", int(QuestionDialog.CARD_GAP))
+	grid.add_theme_constant_override("v_separation", 10)
+	scroll.add_child(grid)
+	grid.set_meta("card_width", width)
+	return grid
+
+
+## Opções em lista, com as mesmas regras de mínimo e máximo; `details` é o texto menor de cada uma e `disabled` o motivo das apagadas.
+static func pick_list(d: QuestionDialog, done: Callable, labels: Array = [], disabled: Dictionary = {}, details: Array = []) -> void:
 	var max_pick: int = int(d.question.get("max", 1))
 	var min_pick: int = int(d.question.get("min", 1))
+	var multi: bool = max_pick > 1
 	var chosen: Array = []
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 8)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var scroll := ScrollContainer.new()
 	var count: int = labels.size() if not labels.is_empty() else d.options().size()
-	scroll.custom_minimum_size = Vector2(680, min(count * 60, 440))
-	scroll.add_child(list)
-	d.column.add_child(scroll)
-	var confirm: Button = Hud._button("Confirmar", true)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 10)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if count > 6:
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(640, 440)
+		scroll.add_child(list)
+		d.column.add_child(scroll)
+	else:
+		d.column.add_child(list)
+	var confirm := ModalStyle.button("Confirmar", ModalStyle.Kind.PRIMARY, 220)
+	var rows: Array[ChoiceOption] = []
+	var refresh: Callable = func() -> void:
+		for i: int in rows.size():
+			if rows[i].selected != chosen.has(i):
+				rows[i].set_selected(chosen.has(i))
+		var status: Array = QuestionDialog.count_text(chosen.size(), min_pick, max_pick)
+		d.set_status(status[0], status[1])
+		confirm.disabled = chosen.size() < min_pick
 	for i: int in count:
 		var text: String = Txt.of(labels[i]) if not labels.is_empty() else d.option_label(i)
-		var button := Hud._button(text, false)
-		button.toggle_mode = max_pick > 1
-		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var detail: String = Txt.of(details[i]) if i < details.size() else ""
+		var row := ChoiceOption.new().setup(text, detail, "", str(i + 1) if i < 9 else "")
+		rows.append(row)
+		list.add_child(row)
 		if disabled.has(i):
-			button.disabled = true
-			button.text = "%s · %s" % [text, disabled[i]]
-		button.pressed.connect(func() -> void:
-			if max_pick <= 1:
+			row.set_disabled(true, Txt.of(disabled[i]))
+			d.hotkeys.append(func() -> void: pass)
+			continue
+		var act: Callable = func() -> void:
+			if not multi:
 				done.call([i])
 				return
-			if button.button_pressed and chosen.size() < max_pick:
-				chosen.append(i)
-			elif not button.button_pressed:
+			if chosen.has(i):
 				chosen.erase(i)
-			else:
-				button.set_pressed_no_signal(false)
-			confirm.disabled = chosen.size() < min_pick)
-		list.add_child(button)
-	if max_pick > 1:
-		confirm.disabled = min_pick > 0
+			elif chosen.size() < max_pick:
+				chosen.append(i)
+			refresh.call()
+		row.pressed.connect(act)
+		d.hotkeys.append(act)
+	if multi:
+		d.add_status()
+		var buttons: Array = []
+		if min_pick == 0:
+			var none := ModalStyle.button("Nenhuma", ModalStyle.Kind.SECONDARY, 170)
+			none.pressed.connect(func() -> void: done.call([]))
+			buttons.append(none)
 		confirm.pressed.connect(func() -> void: done.call(chosen.duplicate()))
-		d.column.add_child(confirm)
+		buttons.append(confirm)
+		d.actions(buttons)
+		d.primary = confirm
+		refresh.call()
 	elif min_pick == 0:
 		d.button_row([["Nenhuma", {"indices": []}, false]])
 
 
 # — Ordem —
 
-## Ordem (gatilhos e outras): cartas lado a lado; um toque leva a carta à próxima posição livre.
+## Ordem (gatilhos e outras): cartas lado a lado com o número de cada uma; um toque leva a carta à próxima posição livre.
 static func order(d: QuestionDialog) -> void:
 	var q: Dictionary = d.question
-	var st: Dictionary = {"order": range(d.options().size()), "placed": 0, "history": [], "remember": false}
 	var triggers: bool = q.get("purpose") == "triggers"
+	var count: int = d.options().size()
+	var st: Dictionary = {"order": range(count), "placed": 0, "history": [], "remember": false}
 	if triggers:
-		d.hint("A da esquerda resolve primeiro. Toque nas cartas na ordem que quiser.")
+		d.hint("A da esquerda resolve primeiro. Toque nas cartas na ordem em que devem resolver.")
 	else:
 		d.hint("Toque na ordem desejada (a primeira fica %s)." % ("embaixo" if q.get("firstAt") == "bottom" else "em cima"))
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 14)
-	d.column.add_child(row)
-	var fill: Callable = func(self_call: Callable) -> void:
-		for child: Node in row.get_children():
-			child.queue_free()
+	if count > 1:
+		d.column.add_child(_ribbon("RESOLVE PRIMEIRO" if triggers else ("PRIMEIRA, EMBAIXO" if q.get("firstAt") == "bottom" else "PRIMEIRA, EM CIMA"), "RESOLVE POR ÚLTIMO" if triggers else "ÚLTIMA"))
+	var row := d.card_row()
+	var width: float = d.card_width(count, 230.0)
+	var tiles: Dictionary = {}
+	var status: Label = d.add_status()
+	var refresh: Callable = func(placed_now: int) -> void:
 		var list: Array = st["order"]
+		var old: Dictionary = {}
+		for option: Variant in list:
+			old[option] = (tiles[option] as ChoiceCard).global_position.x
 		for pos: int in list.size():
-			var option: int = list[pos]
-			var caption: String = "%dº · %s" % [pos + 1, "resolve primeiro" if pos == 0 else ("resolve por último" if pos == list.size() - 1 else "resolve em %dº" % (pos + 1))] if triggers else "%dº" % (pos + 1)
-			var tile: Control = d.card_tile(d.option_card(option), d.option_label(option), caption, pos < int(st["placed"]))
-			tile.gui_input.connect(func(event: InputEvent) -> void:
-				if not QuestionDialog.clicked(event):
-					return
-				var at: int = (st["order"] as Array).find(option)
-				if at >= int(st["placed"]):
-					(st["history"] as Array).append([(st["order"] as Array).duplicate(), st["placed"]])
-					(st["order"] as Array).remove_at(at)
-					(st["order"] as Array).insert(int(st["placed"]), option)
-					st["placed"] = int(st["placed"]) + 1
-					self_call.call(self_call))
-			row.add_child(tile)
-	fill.call(fill)
+			var tile: ChoiceCard = tiles[list[pos]]
+			row.move_child(tile, pos)
+			var placed: bool = pos < int(st["placed"])
+			tile.set_badge(str(pos + 1), placed)
+			tile.set_selected(placed, false)
+			var caption: String = ("Resolve primeiro" if pos == 0 else ("Resolve por último" if pos == list.size() - 1 else "Resolve em %dº" % (pos + 1))) if triggers else "%dº" % (pos + 1)
+			tile.set_caption(caption, placed)
+			tile.set_key(str(pos + 1) if not placed and pos < 9 else "")
+		if placed_now >= 0 and row.is_inside_tree():
+			row.sort_children.connect(func() -> void:
+				for option: Variant in old.keys():
+					if is_instance_valid(tiles[option]):
+						(tiles[option] as ChoiceCard).slide_from(float(old[option])), CONNECT_ONE_SHOT)
+		var done: int = int(st["placed"])
+		status.text = "Ordem atual: da esquerda para a direita." if done == 0 else ("Ordem pronta." if done >= list.size() - 1 else "%d de %d na ordem." % [done, list.size()])
+		status.add_theme_color_override("font_color", ModalStyle.GOOD if done >= list.size() - 1 else ModalStyle.MUTED)
+	var place: Callable = func(option: int) -> void:
+		var at: int = (st["order"] as Array).find(option)
+		if at < int(st["placed"]):
+			return
+		(st["history"] as Array).append([(st["order"] as Array).duplicate(), st["placed"]])
+		(st["order"] as Array).remove_at(at)
+		(st["order"] as Array).insert(int(st["placed"]), option)
+		st["placed"] = int(st["placed"]) + 1
+		refresh.call(option)
+	for option: int in count:
+		var data: Variant = d.option_card(option)
+		var tile: ChoiceCard = d.card(data, width, d.option_label(option) if triggers or data == null else "")
+		tiles[option] = tile
+		row.add_child(tile)
+		tile.pressed.connect(place.bind(option))
+		# A tecla é a da posição na tela (a carta que está ali agora), não a da carta.
+		d.hotkeys.append(func() -> void:
+			if option < (st["order"] as Array).size():
+				place.call(int((st["order"] as Array)[option])))
+	refresh.call(-1)
 	if triggers and bool(q.get("canRemember", false)):
-		var remember := CheckBox.new()
-		remember.text = "Lembrar esta ordem até o fim da partida"
+		var remember := ModalStyle.checkbox("Lembrar esta ordem até o fim da partida")
 		remember.toggled.connect(func(on: bool) -> void: st["remember"] = on)
 		d.column.add_child(remember)
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 12)
-	var undo := Hud._button("Desfazer", false)
-	undo.custom_minimum_size = Vector2(180, 52)
+	var undo := ModalStyle.button("Desfazer", ModalStyle.Kind.SECONDARY, 170)
 	undo.pressed.connect(func() -> void:
 		if not (st["history"] as Array).is_empty():
 			var last: Array = (st["history"] as Array).pop_back()
 			st["order"] = last[0]
 			st["placed"] = last[1]
-			fill.call(fill))
-	actions.add_child(undo)
-	var confirm := Hud._button("Confirmar ordem", true)
-	confirm.custom_minimum_size = Vector2(240, 52)
+			refresh.call(0))
+	var confirm := ModalStyle.button("Confirmar ordem", ModalStyle.Kind.PRIMARY, 240)
 	confirm.pressed.connect(func() -> void:
 		var reply: Dictionary = {"indices": (st["order"] as Array).duplicate()}
 		if bool(st["remember"]):
 			reply["remember"] = true
 		d.send(reply))
-	actions.add_child(confirm)
-	d.column.add_child(actions)
+	d.actions([undo, confirm])
+	d.primary = confirm
+
+
+## A faixa "primeiro ——→ último" em cima das cartas ordenadas.
+static func _ribbon(first: String, last: String) -> HBoxContainer:
+	var ribbon := HBoxContainer.new()
+	ribbon.alignment = BoxContainer.ALIGNMENT_CENTER
+	ribbon.add_theme_constant_override("separation", 14)
+	ribbon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ribbon.add_child(ModalStyle.label(14, ModalStyle.GOLD, first))
+	var line := ColorRect.new()
+	line.color = Color(ModalStyle.GOLD, 0.45)
+	line.custom_minimum_size = Vector2(300, 2)
+	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ribbon.add_child(line)
+	ribbon.add_child(ModalStyle.label(14, ModalStyle.MUTED, last + "  ›"))
+	return ribbon
 
 
 # — Números —
 
-## number: os números soltos como botões; senão um contador entre min e max (sem max, sem teto), e o desistir.
+## number: os números soltos como botões; senão o número grande entre − e +, com o custo total, e o desistir.
 static func number(d: QuestionDialog) -> void:
 	var q: Dictionary = d.question
-	d.source_card()
+	d.split_with_source()
 	var values: Array = q.get("values", []) if q.get("values") is Array else []
+	var cancel: Array = [["Cancelar mágica" if q.get("cancel") == "spell" else "Cancelar habilidade", {"indices": []}, false]] if q.get("cancel") != null else []
 	if not values.is_empty():
 		var buttons: Array = []
-		for v: Variant in values:
-			buttons.append([str(int(v)), {"number": int(v)}, false])
-		d.button_row(buttons)
-	else:
-		var spin := SpinBox.new()
-		spin.min_value = int(q.get("min", 0)) if q.get("min") != null else 0
-		spin.max_value = int(q["max"]) if q.get("max") != null else 9999
-		spin.value = spin.min_value
-		spin.custom_minimum_size = Vector2(220, 48)
-		var holder := CenterContainer.new()
-		holder.add_child(spin)
-		d.column.add_child(holder)
-		var cost: Variant = q.get("cost")
-		if cost is Dictionary:
-			d.hint("Custo: %s + %s por unidade%s." % [Txt.of((cost as Dictionary).get("base")), Txt.of((cost as Dictionary).get("each")), (" · mana disponível: %d" % int((cost as Dictionary)["available"])) if (cost as Dictionary).get("available") != null else ""])
-		var ok := Hud._button("Confirmar", true)
-		var unit: String = Txt.of(q.get("unit"))
-		var relabel: Callable = func(n: float) -> void:
-			ok.text = "Confirmar X = %d" % int(n) if unit == "x" else (("Pagar %d %s" % [int(n), "vez" if int(n) == 1 else "vezes"]) if int(n) > 0 else "Não pagar") if unit == "times" else "Confirmar"
-		relabel.call(spin.value)
-		spin.value_changed.connect(relabel)
-		ok.pressed.connect(func() -> void: d.send({"number": int(spin.value)}))
-		d.column.add_child(ok)
-	if q.get("cancel") != null:
-		d.button_row([["Cancelar mágica" if q["cancel"] == "spell" else "Cancelar habilidade", {"indices": []}, false]])
-
-
-## amount (e dano de combate): −/+ por opção, a soma tem que dar o total; no combate, letal e a ordem dos bloqueadores.
-static func amounts(d: QuestionDialog, combat: bool) -> void:
-	var q: Dictionary = d.question
-	var total: int = int(q.get("total", 0))
-	var options: Array = d.options()
-	var values: Array = []
-	var suggested: Array = q.get("suggested", []) if q.get("suggested") is Array else []
-	for i: int in options.size():
-		values.append(int(suggested[i]) if i < suggested.size() else 0)
-	if suggested.is_empty() and not combat and not options.is_empty():
-		for i: int in total:
-			values[i % options.size()] += 1
-	var what: String = {"damage": "dano", "shield": "prevenção", "counters": "marcadores"}.get(Txt.of(q.get("amountOf")), "")
-	var summary: Label = d.hint("")
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation", 8)
-	d.column.add_child(rows)
-	var confirm := Hud._button("Confirmar", true)
-	var limits: Callable = func(i: int) -> Vector2i:
-		var option: Dictionary = options[i] if options[i] is Dictionary else {}
-		return Vector2i(int(option.get("min", 0)), mini(int(option.get("max", total)), total))
-	var labels: Array[Label] = []
-	var valid: Callable = func() -> bool:
-		var sum: int = 0
-		for v: Variant in values:
-			sum += int(v)
-		if sum != total:
-			return false
-		if not combat:
-			return true
-		var blockers_lethal: bool = true
-		for i: int in options.size():
-			var option: Dictionary = options[i] if options[i] is Dictionary else {}
-			if bool(option.get("defender", false)):
-				if int(values[i]) > 0 and not bool(q.get("free", false)) and not blockers_lethal:
-					return false
-				continue
-			var lethal: int = int(option.get("lethal", 0))
-			if bool(q.get("ordered", false)) and not blockers_lethal and int(values[i]) > 0:
-				return false
-			if int(values[i]) < lethal:
-				blockers_lethal = false
-		return true
-	var refresh: Callable = func() -> void:
-		var sum: int = 0
-		for i: int in values.size():
-			sum += int(values[i])
-			labels[i].text = str(int(values[i]))
-		summary.text = "Distribua %d de %s: falta %d." % [total, what if what != "" else "pontos", total - sum] if sum != total else "Total distribuído: %d." % total
-		confirm.disabled = not bool(valid.call())
-	for i: int in options.size():
-		var option: Dictionary = options[i] if options[i] is Dictionary else {}
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		var name := Hud._label(18, Color.WHITE)
-		var lethal_text: String = " · morre com %d" % int(option["lethal"]) if combat and option.get("lethal") != null else ""
-		name.text = ("Jogador ou planeswalker atacado" if bool(option.get("defender", false)) else d.option_label(i)) + lethal_text
-		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name.custom_minimum_size = Vector2(420, 0)
-		row.add_child(name)
-		var minus := Hud._button("−", false)
-		minus.custom_minimum_size = Vector2(52, 44)
-		var value := Hud._label(22, Hud.GOLD)
-		value.custom_minimum_size = Vector2(44, 0)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		labels.append(value)
-		var plus := Hud._button("+", false)
-		plus.custom_minimum_size = Vector2(52, 44)
-		minus.pressed.connect(func() -> void:
-			values[i] = maxi(int(values[i]) - 1, (limits.call(i) as Vector2i).x)
-			refresh.call())
-		plus.pressed.connect(func() -> void:
-			values[i] = mini(int(values[i]) + 1, (limits.call(i) as Vector2i).y)
-			refresh.call())
-		row.add_child(minus)
-		row.add_child(value)
-		row.add_child(plus)
-		if combat and option.get("lethal") != null and not bool(option.get("defender", false)):
-			var lethal := Hud._button("Letal", false)
-			lethal.custom_minimum_size = Vector2(90, 44)
-			lethal.pressed.connect(func() -> void:
-				values[i] = mini(int(option["lethal"]), (limits.call(i) as Vector2i).y)
-				refresh.call())
-			row.add_child(lethal)
-		var rest := Hud._button("Todo o resto", false)
-		rest.custom_minimum_size = Vector2(130, 44)
-		rest.pressed.connect(func() -> void:
-			var others: int = 0
-			for j: int in values.size():
-				if j != i:
-					others += int(values[j])
-			values[i] = clampi(total - others, (limits.call(i) as Vector2i).x, (limits.call(i) as Vector2i).y)
-			refresh.call())
-		row.add_child(rest)
-		rows.add_child(row)
-	if not combat:
-		var even := Hud._button("Dividir igual", false)
-		even.pressed.connect(func() -> void:
-			for j: int in values.size():
-				values[j] = 0
-			for k: int in total:
-				values[k % values.size()] += 1
-			refresh.call())
-		d.column.add_child(even)
-	confirm.pressed.connect(func() -> void: d.send({"amounts": values.duplicate()}))
-	d.column.add_child(confirm)
-	refresh.call()
-
-
-# — Finalidades —
-
-## Modos de uma mágica modal: os indisponíveis apagados com o motivo (não entram na resposta).
-static func _modes(d: QuestionDialog) -> void:
-	d.source_card()
-	var labels: Array = []
-	for i: int in d.options().size():
-		labels.append(d.option_label(i))
-	pick_list(d, func(picked: Array) -> void: d.send({"indices": picked}), labels)
-	for raw: Variant in d.question.get("unavailableModes", []):
-		var mode: Dictionary = raw
-		var gone := Hud._label(16, Color(1, 1, 1, 0.4))
-		gone.text = "%s · %s" % [Txt.of(mode.get("label")), "Sem alvo possível agora" if mode.get("reason") == "target" else "Já escolhido antes"]
-		gone.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		gone.custom_minimum_size = Vector2(680, 0)
-		d.column.add_child(gone)
-	if int(d.question.get("min", 1)) == 0 and int(d.question.get("max", 1)) <= 1:
-		d.button_row([["Nenhum modo", {"indices": []}, false]])
-
-
-## Jeito de jogar a carta: a carta grande e um botão por jeito (conjurar, ciclar, aventura…), com o custo.
-static func _play_mode(d: QuestionDialog) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
-	d.column.add_child(row)
-	var card: Variant = d.question.get("card")
-	if card == null and not d.options().is_empty():
-		card = d.option_card(0)
-	if card is Dictionary:
-		row.add_child(d.card_tile(card, "", "", false))
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 10)
-	list.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_child(list)
-	for i: int in d.options().size():
-		var option: Dictionary = d.options()[i] if d.options()[i] is Dictionary else {"label": d.options()[i]}
-		var text: String = d.option_label(i)
-		if Txt.of(option.get("cost")) != "":
-			text += "  ·  %s" % option["cost"]
-		if Txt.of(option.get("loyalty")) != "":
-			text = "%s  %s" % [option["loyalty"], text]
-		var button := Hud._button(text, i == 0)
-		button.custom_minimum_size = Vector2(420, 56)
-		button.pressed.connect(func() -> void: d.send({"indices": [i]}))
-		list.add_child(button)
-	var cancel := Hud._button("Cancelar", false)
-	cancel.pressed.connect(func() -> void: d.send({"indices": []}))
-	list.add_child(cancel)
-
-
-## Vidência e vigilância: a da esquerda é o topo; cada carta fica no topo ou vai para o fundo/cemitério; "top" reordena.
-static func _library(d: QuestionDialog) -> void:
-	var where: String = Txt.of(d.question.get("library"))
-	var away: String = "Cemitério" if where == "graveyard" else "Fundo"
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 14)
-	d.column.add_child(row)
-	var st: Dictionary = {"leaving": [], "order": range(d.options().size())}
-	d.hint("A da esquerda é o topo do grimório." + (" Use as setas para mudar a ordem." if where == "top" else " Toque para mandar a carta para %s." % ("o cemitério" if where == "graveyard" else "o fundo")))
-	var fill: Callable = func(self_call: Callable) -> void:
-		for child: Node in row.get_children():
-			child.queue_free()
-		var list: Array = st["order"]
-		for pos: int in list.size():
-			var index: int = list[pos]
-			var leaving: bool = (st["leaving"] as Array).has(index)
-			var holder := VBoxContainer.new()
-			var tile: Control = d.card_tile(d.option_card(index), "", away if leaving else ("Topo" if where != "top" else "%dº" % (pos + 1)), not leaving, QuestionDialog.SMALL_CARD)
-			if leaving:
-				tile.modulate = Color(1, 1, 1, 0.5)
-			holder.add_child(tile)
-			if where == "top":
-				var arrows := HBoxContainer.new()
-				for step: int in [-1, 1]:
-					var arrow := Hud._button("←" if step < 0 else "→", false)
-					arrow.custom_minimum_size = Vector2(60, 40)
-					arrow.pressed.connect(func() -> void:
-						var to: int = clampi(pos + step, 0, list.size() - 1)
-						list.remove_at(pos)
-						list.insert(to, index)
-						self_call.call(self_call))
-					arrows.add_child(arrow)
-				holder.add_child(arrows)
-			else:
-				tile.gui_input.connect(func(event: InputEvent) -> void:
-					if QuestionDialog.clicked(event):
-						if leaving:
-							(st["leaving"] as Array).erase(index)
-						else:
-							(st["leaving"] as Array).append(index)
-						self_call.call(self_call))
-			row.add_child(holder)
-	fill.call(fill)
-	var confirm := Hud._button("Confirmar", true)
-	confirm.pressed.connect(func() -> void:
-		if where == "top":
-			d.send({"indices": (st["order"] as Array).duplicate()})
-		else:
-			var out: Array = (st["leaving"] as Array).duplicate()
-			out.sort()
-			d.send({"indices": out}))
-	d.column.add_child(confirm)
-
-
-## Votação do conselho: a carta que vota, o placar e um botão por opção.
-static func _vote(d: QuestionDialog) -> void:
-	d.source_card()
-	var votes: Array = d.question.get("votes", []) if d.question.get("votes") is Array else []
-	if not votes.is_empty():
-		var tally: PackedStringArray = []
-		for raw: Variant in votes:
-			tally.append(Txt.of((raw as Dictionary).get("label")))
-		d.hint("Votos até agora: %s" % ", ".join(tally))
-	pick_list(d, func(picked: Array) -> void: d.send({"indices": picked}))
-	if int(d.question.get("min", 1)) == 0 and int(d.question.get("max", 1)) <= 1:
-		d.button_row([["Não votar", {"indices": []}, false]])
-
-
-## Separar em dois montes: tocar na carta a troca de monte; a resposta são as do monte 1.
-static func _piles_split(d: QuestionDialog) -> void:
-	var pile_one: Array = range(d.options().size())
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation", 10)
-	d.column.add_child(rows)
-	var chosen_to: String = Txt.of(ZONES_PT.get(Txt.of(d.question.get("chosenTo")).to_lower(), ""))
-	var other_to: String = Txt.of(ZONES_PT.get(Txt.of(d.question.get("otherTo")).to_lower(), ""))
-	if chosen_to != "":
-		d.hint("O monte escolhido vai para %s%s." % [chosen_to, "; o outro, para %s" % other_to if other_to != "" else ""])
-	var fill: Callable = func(self_call: Callable) -> void:
-		for child: Node in rows.get_children():
-			child.queue_free()
-		for pile: int in 2:
-			var title := Hud._label(18, Hud.GOLD)
-			title.text = "Monte %d" % (pile + 1)
-			rows.add_child(title)
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 10)
-			row.custom_minimum_size = Vector2(0, QuestionDialog.SMALL_CARD.y + 10)
-			for i: int in d.options().size():
-				if pile_one.has(i) != (pile == 0):
-					continue
-				var tile: Control = d.card_tile(d.option_card(i), "", "", false, QuestionDialog.SMALL_CARD)
-				tile.gui_input.connect(func(event: InputEvent) -> void:
-					if QuestionDialog.clicked(event):
-						if pile_one.has(i):
-							pile_one.erase(i)
-						else:
-							pile_one.append(i)
-						self_call.call(self_call))
-				row.add_child(tile)
-			rows.add_child(row)
-	fill.call(fill)
-	var confirm := Hud._button("Confirmar montes", true)
-	confirm.pressed.connect(func() -> void:
-		var out: Array = pile_one.duplicate()
-		out.sort()
-		d.send({"indices": out}))
-	d.column.add_child(confirm)
-
-
-## Escolher um de dois montes: cada monte com as cartas (o virado para baixo mostra só versos) e o botão dele.
-static func _piles_choose(d: QuestionDialog) -> void:
-	var piles: Array = d.question["piles"]
-	for p: int in piles.size():
-		var pile: Dictionary = piles[p]
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		var pick := Hud._button("Monte %d (%d)" % [p + 1, int(pile.get("size", 0))], p == 0)
-		pick.custom_minimum_size = Vector2(170, 56)
-		pick.pressed.connect(func() -> void: d.send({"indices": [int(pile["option"])]}))
-		row.add_child(pick)
-		var cards: Array = pile.get("cards", [])
-		for index: Variant in cards:
-			row.add_child(d.card_tile(d.option_card(int(index)), "", "", false, QuestionDialog.SMALL_CARD))
-		for k: int in maxi(0, int(pile.get("size", 0)) - cards.size()):
-			row.add_child(d.card_tile({"faceDown": true}, "", "", false, QuestionDialog.SMALL_CARD))
-		d.column.add_child(row)
-
-
-## Qual efeito de substituição vem primeiro, com "usar a mesma escolha" quando vale para o resto do efeito.
-static func _replacement(d: QuestionDialog) -> void:
-	var st: Dictionary = {"all": true}
-	if bool(d.question.get("applyToAll", false)):
-		var same := CheckBox.new()
-		same.text = "Usar a mesma escolha no resto deste efeito"
-		same.button_pressed = true
-		same.toggled.connect(func(on: bool) -> void: st["all"] = on)
-		d.column.add_child(same)
-	pick_list(d, func(picked: Array) -> void:
-		var reply: Dictionary = {"indices": picked}
-		if bool(d.question.get("applyToAll", false)):
-			reply["all"] = bool(st["all"])
-		d.send(reply))
-
-
-## Custos opcionais (reforço, oferenda…): com um só, "Sem" e "Com"; com vários, marcar e conjurar.
-static func _optional_costs(d: QuestionDialog) -> void:
-	d.source_card()
-	var cost: Variant = d.question.get("cost")
-	if cost is Dictionary:
-		d.hint("Custo sem os opcionais: %s%s." % [Txt.of((cost as Dictionary).get("base")), (" · mana disponível: %d" % int((cost as Dictionary)["available"])) if (cost as Dictionary).get("available") != null else ""])
-	if d.options().size() == 1 and int(d.question.get("max", 1)) <= 1:
-		d.button_row([["Sem", {"indices": []}, false], ["Com %s" % d.option_label(0), {"indices": [0]}, true]])
+		for k: int in values.size():
+			var v: int = int(values[k])
+			var chip := ModalStyle.button(str(v), ModalStyle.Kind.SECONDARY, 84, 64)
+			chip.add_theme_font_size_override("font_size", 28)
+			chip.pressed.connect(func() -> void: d.send({"number": v}))
+			d.hotkeys.append(func() -> void: d.send({"number": v}))
+			buttons.append(chip)
+		d.actions(buttons)
+		if not cancel.is_empty():
+			d.button_row(cancel)
 		return
-	pick_list(d, func(picked: Array) -> void: d.send({"indices": picked}))
-	d.button_row([["Sem custos opcionais", {"indices": []}, false]])
+	var unit: String = Txt.of(q.get("unit"))
+	var low: int = int(q.get("min", 0)) if q.get("min") != null else 0
+	var high: int = int(q["max"]) if q.get("max") != null else 9999
+	var cost: Dictionary = q.get("cost") if q.get("cost") is Dictionary else {}
+	var affordable: int = -1
+	if cost.has("available") and cost.get("available") != null:
+		var each: int = mana_value(Txt.of(cost.get("each")))
+		affordable = clampi((int(cost["available"]) - mana_value(Txt.of(cost.get("base")))) / maxi(each, 1), low, high) if each > 0 else high
+	var st: Dictionary = {"n": low}
+	var heading := ModalStyle.label(14, ModalStyle.GOLD, "VALOR DE X" if unit == "x" else ("QUANTAS VEZES" if unit == "times" else "NÚMERO"))
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	d.column.add_child(heading)
+	var dial := HBoxContainer.new()
+	dial.alignment = BoxContainer.ALIGNMENT_CENTER
+	dial.add_theme_constant_override("separation", 18)
+	d.column.add_child(dial)
+	var minus := ModalStyle.button("−", ModalStyle.Kind.SECONDARY, 60, 60)
+	minus.add_theme_font_size_override("font_size", 28)
+	dial.add_child(minus)
+	var box := PanelContainer.new()
+	var box_style := ModalStyle.box(Color(0.03, 0.05, 0.1, 0.9), 16, Color(ModalStyle.GOLD, 0.45), 1)
+	box_style.content_margin_left = 26
+	box_style.content_margin_right = 26
+	box.add_theme_stylebox_override("panel", box_style)
+	box.custom_minimum_size = Vector2(140, 100)
+	dial.add_child(box)
+	var value := ModalStyle.label(60, ModalStyle.GOLD_LIGHT, str(low))
+	value.name = "Value"
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(value)
+	var plus := ModalStyle.button("+", ModalStyle.Kind.SECONDARY, 60, 60)
+	plus.add_theme_font_size_override("font_size", 28)
+	dial.add_child(plus)
+	var chips := HBoxContainer.new()
+	chips.alignment = BoxContainer.ALIGNMENT_CENTER
+	chips.add_theme_constant_override("separation", 10)
+	d.column.add_child(chips)
+	var line := ModalStyle.rich("", 17, ModalStyle.MUTED, true)
+	line.custom_minimum_size = Vector2(440, 0)
+	d.column.add_child(line)
+	var ok := ModalStyle.button("Confirmar", ModalStyle.Kind.PRIMARY, 230)
+	var set_n: Callable = func(n: int) -> void:
+		var next: int = clampi(n, low, high)
+		var changed: bool = next != int(st["n"])
+		st["n"] = next
+		value.text = str(next)
+		if changed:
+			ModalStyle.pop(value, 0.75)
+		minus.disabled = next <= low
+		plus.disabled = next >= high
+		ok.text = "Confirmar X = %d" % next if unit == "x" else ((("Pagar %d %s" % [next, "vez" if next == 1 else "vezes"]) if next > 0 else "Não pagar") if unit == "times" else "Confirmar")
+		if not cost.is_empty():
+			var text: String = "Custo total: %s" % total_cost(Txt.of(cost.get("base")), Txt.of(cost.get("each")), next)
+			if affordable >= 0 and next > affordable:
+				text += "  ·  mais do que a mana disponível (%d)" % int(cost["available"])
+			ModalStyle.set_rich(line, text, 17, true)
+	minus.pressed.connect(func() -> void: set_n.call(int(st["n"]) - 1))
+	plus.pressed.connect(func() -> void: set_n.call(int(st["n"]) + 1))
+	var chip_list: Array = [["Mín %d" % low, low]]
+	if affordable >= 0:
+		chip_list.append(["O que dá para pagar (%d)" % affordable, affordable])
+	elif q.get("max") != null:
+		chip_list.append(["Máx %d" % high, high])
+	for entry: Array in chip_list:
+		var chip := ModalStyle.button(Txt.of(entry[0]), ModalStyle.Kind.GHOST, 0, 34)
+		var target: int = int(entry[1])
+		chip.pressed.connect(func() -> void: set_n.call(target))
+		chips.add_child(chip)
+	for k: int in 9:
+		d.hotkeys.append(func() -> void: set_n.call(k + 1))
+	set_n.call(low)
+	ok.pressed.connect(func() -> void: d.send({"number": int(st["n"])}))
+	var buttons: Array = []
+	if not cancel.is_empty():
+		var back := ModalStyle.button(Txt.of(cancel[0][0]), ModalStyle.Kind.SECONDARY, 190)
+		back.pressed.connect(func() -> void: d.send({"indices": []}))
+		buttons.append(back)
+	buttons.append(ok)
+	d.actions(buttons)
+	d.primary = ok
 
 
-## Masmorra: as salas (ou as masmorras) como botões, com a carta quando há.
-static func _dungeon(d: QuestionDialog) -> void:
-	if range(d.options().size()).all(func(i: int) -> bool: return d.option_card(i) != null):
-		pick_cards(d, range(d.options().size()), [], func(picked: Array) -> void: d.send({"indices": picked}))
-	else:
-		pick_list(d, func(picked: Array) -> void: d.send({"indices": picked}))
+## Valor de mana de um custo ("{1}{G}" → 2; X vale 0).
+static func mana_value(cost: String) -> int:
+	var total: int = 0
+	for symbol: String in ManaSymbols.parse(cost):
+		if symbol.is_valid_int():
+			total += int(symbol)
+		elif symbol not in ["X", "Y", "Z"]:
+			total += 1
+	return total
 
 
-## Nomear uma carta (centenas de nomes) ou escolher um tipo de criatura: busca e até 40 resultados.
-static func _search(d: QuestionDialog, creature_types: bool) -> void:
-	var labels: Array = []
-	for i: int in d.options().size():
-		labels.append(d.option_label(i))
-	var order: Array = range(labels.size())
-	if creature_types:
-		# Os tipos que o deck mais tem vêm primeiro (option.count).
-		order.sort_custom(func(a: int, b: int) -> bool:
-			var ca: int = int((d.options()[a] as Dictionary).get("count", 0)) if d.options()[a] is Dictionary else 0
-			var cb: int = int((d.options()[b] as Dictionary).get("count", 0)) if d.options()[b] is Dictionary else 0
-			return ca > cb)
-	var field := LineEdit.new()
-	field.placeholder_text = "Buscar tipo" if creature_types else "Buscar o nome da carta"
-	field.custom_minimum_size = Vector2(520, 48)
-	d.column.add_child(field)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 6)
-	d.column.add_child(list)
-	var fill: Callable = func(text: String) -> void:
-		for child: Node in list.get_children():
-			child.queue_free()
-		var needle: String = text.strip_edges().to_lower()
-		var shown: int = 0
-		for i: Variant in order:
-			if shown >= (8 if needle == "" else 40):
-				break
-			if needle != "" and not Txt.of(labels[i]).to_lower().contains(needle):
-				continue
-			var button := Hud._button(Txt.of(labels[i]), false)
-			button.custom_minimum_size = Vector2(520, 42)
-			button.pressed.connect(func() -> void: d.send({"indices": [int(i)]}))
-			list.add_child(button)
-			shown += 1
-	field.text_changed.connect(fill)
-	field.text_submitted.connect(func(_t: String) -> void:
-		if list.get_child_count() > 0:
-			(list.get_child(0) as Button).pressed.emit())
-	fill.call("")
-	if int(d.question.get("min", 1)) == 0:
-		d.button_row([["Não escolher" if creature_types else "Nenhum", {"indices": []}, false]])
-	field.grab_focus.call_deferred()
+## O custo base mais `times` vezes o de cada unidade, com as genéricas somadas: ("{R}", "{1}", 3) → "{3}{R}".
+static func total_cost(base: String, each: String, times: int) -> String:
+	var generic: int = 0
+	var colored: PackedStringArray = []
+	var symbols: PackedStringArray = ManaSymbols.parse(base)
+	for k: int in times:
+		symbols.append_array(ManaSymbols.parse(each))
+	for symbol: String in symbols:
+		if symbol.is_valid_int():
+			generic += int(symbol)
+		else:
+			colored.append("{%s}" % symbol)
+	var out: String = ("{%d}" % generic if generic > 0 else "") + "".join(colored)
+	return out if out != "" else "{0}"
 
 
-## Dois destinos das cartas buscadas (Cultivate): as primeiras tocadas vão para o primeiro lugar, o resto para o segundo.
-static func _split_destinations(d: QuestionDialog) -> void:
-	var destinations: Array = d.question["destinations"]
-	var first: Dictionary = destinations[0]
-	var second: Dictionary = destinations[1]
-	var max_pick: int = int(d.question.get("max", 2))
-	var first_count: int = mini(int(first.get("count", 1)), max_pick)
-	var name: Callable = func(dest: Dictionary) -> String:
-		var zone: String = Txt.of(ZONES_PT.get(Txt.of(dest.get("zone")).to_lower(), Txt.of(dest.get("zone"))))
-		return zone + (" (virada)" if bool(dest.get("tapped", false)) else "")
-	d.hint("As %d primeiras vão para %s; as outras, para %s." % [first_count, name.call(first), name.call(second)] if first_count != 1 else "A primeira vai para %s; a outra, para %s." % [name.call(first), name.call(second)])
-	var chosen: Array = []
-	var tiles: Dictionary = {}
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 12)
-	d.column.add_child(row)
-	var confirm := Hud._button("Confirmar", true)
-	confirm.disabled = int(d.question.get("min", 1)) > 0
-	for i: int in d.options().size():
-		var tile: Control = d.card_tile(d.option_card(i), "", "", false, QuestionDialog.SMALL_CARD)
-		var caption := Hud._label(15, Hud.GOLD)
-		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		tile.add_child(caption)
-		tiles[i] = caption
-		tile.gui_input.connect(func(event: InputEvent) -> void:
-			if not QuestionDialog.clicked(event):
-				return
-			if chosen.has(i):
-				chosen.erase(i)
-			elif chosen.size() < max_pick:
-				chosen.append(i)
-			for k: Variant in tiles.keys():
-				var at: int = chosen.find(k)
-				(tiles[k] as Label).text = "" if at < 0 else ("→ %s" % name.call(first if at < first_count else second))
-			confirm.disabled = chosen.size() < int(d.question.get("min", 1)))
-		row.add_child(tile)
-	confirm.pressed.connect(func() -> void: d.send({"indices": chosen.duplicate()}))
-	d.column.add_child(confirm)
-	if int(d.question.get("min", 1)) == 0:
-		d.button_row([["Não procurar", {"indices": []}, false]])
+## amount (e dano de combate): o painel de quantidades (question_amounts.gd).
+static func amounts(d: QuestionDialog, combat: bool) -> void:
+	QuestionAmounts.build(d, combat)
