@@ -38,7 +38,7 @@ static func build(table: TableView) -> Camera3D:
 	# Quase de cima: a sombra da mão (perto da câmera) cai atrás dela, e a das cartas no ar ainda aparece embaixo delas.
 	key_light.rotation_degrees = Vector3(-76, -25, 0)
 	# Quente: a face da carta pega um tom de lâmpada, e a contraluz fria desenha as bordas (profundidade por contraste).
-	key_light.light_energy = 0.97
+	key_light.light_energy = 0.86
 	key_light.light_color = Color(1.0, 0.955, 0.89)
 	key_light.shadow_enabled = true
 	# Sombra macia por filtro (a sombra "de verdade", com o tamanho do sol, sai pontilhada sem o antisserrilhado temporal).
@@ -54,7 +54,7 @@ static func build(table: TableView) -> Camera3D:
 	lamp.position = Vector3(0, 6.0, 0.9)
 	lamp.omni_range = 15.0
 	lamp.omni_attenuation = 1.3
-	lamp.light_energy = 1.05
+	lamp.light_energy = 0.9
 	lamp.light_color = Color(1.0, 0.9, 0.76)
 	lamp.light_specular = 0.6
 	table.add_child(lamp)
@@ -169,7 +169,7 @@ static func environment() -> Environment:
 	result.ambient_light_color = AMBIENT
 	result.ambient_light_energy = 0.5
 	result.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	result.tonemap_exposure = 1.04
+	result.tonemap_exposure = 1.0
 	result.tonemap_white = 6.0
 	# Brilho: só o que passa de 1 (efeitos, bordas acesas) floresce; níveis largos dão um halo macio, não um borrão.
 	result.glow_enabled = true
@@ -177,7 +177,7 @@ static func environment() -> Environment:
 	result.glow_intensity = 1.0
 	result.glow_strength = 1.0
 	result.glow_bloom = 0.02
-	result.glow_hdr_threshold = 1.0
+	result.glow_hdr_threshold = 1.4
 	result.glow_hdr_scale = 1.6
 	result.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 	result.set_glow_level(0, 0.0)

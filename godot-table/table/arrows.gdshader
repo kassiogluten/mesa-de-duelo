@@ -33,7 +33,7 @@ void fragment() {
 		}
 		// Nasce da carta aos poucos e chega cheia na ponta.
 		float grow = smoothstep(0.0, 0.18, u) * (0.55 + 0.45 * u);
-		light = (tint * glow * 0.7 + mix(tint, vec3(1.0), 0.3) * core * 0.95) * energy * grow;
+		light = (tint * glow * 0.55 + mix(tint, vec3(1.0), 0.25) * core * 0.85) * energy * grow;
 	} else {
 		// Ponta: triângulo com entalhe atrás (u = 0 na base, 1 na ponta), borda macia e brilho em volta.
 		float x = u;
@@ -45,7 +45,7 @@ void fragment() {
 		float glow = exp(-max(shape, 0.0) / 0.09) * 0.6;
 		float edge = exp(-pow(shape / 0.03, 2.0));
 		float beat = live ? 0.85 + 0.15 * sin(time * 6.0) : 1.0;
-		light = (tint * (fill * 0.75 + glow * 0.8) + mix(tint, vec3(1.0), 0.4) * edge * 0.75) * beat;
+		light = (tint * (fill * 0.55 + glow * 0.6) + mix(tint, vec3(1.0), 0.3) * edge * 0.7) * beat;
 	}
 	ALBEDO = light;
 	ALPHA = clamp(COLOR.a, 0.0, 1.0);

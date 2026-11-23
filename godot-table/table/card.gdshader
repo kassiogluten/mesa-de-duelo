@@ -121,6 +121,8 @@ void fragment() {
 	vec3 extra = vec3(0.0);
 	if (FRONT_FACING) {
 		color = has_front ? texture(front_tex, UV).rgb : vec3(0.18, 0.17, 0.2);
+		// O branco do papel (moldura e caixa de texto) não estoura sob a lâmpada: as partes mais claras descem um pouco.
+		color *= 1.0 - 0.1 * smoothstep(0.55, 1.0, max(max(color.r, color.g), color.b));
 		if (foil > 0.0 && has_front) {
 			// Foil: faixas de arco-íris na diagonal que andam com o ângulo da carta e com o tempo, mais fortes nas partes claras.
 			float diag = UV.x * 0.8 + UV.y * 1.1;
@@ -153,9 +155,9 @@ void fragment() {
 		// Verniz acetinado de cartão impresso: o reflexo é largo e fraco (não é plástico); só a laca fina dá um fio de
 		// brilho quando a carta fica de lado.
 		NORMAL_MAP = normalize(vec3(tilt.x, -tilt.y, 1.0)) * 0.5 + 0.5;
-		ROUGHNESS = 0.6;
-		SPECULAR = 0.34;
-		CLEARCOAT = 0.1;
+		ROUGHNESS = 0.66;
+		SPECULAR = 0.2;
+		CLEARCOAT = 0.05;
 		CLEARCOAT_ROUGHNESS = 0.32;
 	} else {
 		// O verso é papel: grão e linho no relevo e na cor, mais fosco que a frente.
