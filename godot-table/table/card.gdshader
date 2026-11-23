@@ -80,6 +80,8 @@ float crack_lines(vec2 p) {
 
 void fragment() {
 	float d = card_sdf(UV);
+	// O corte dos cantos é seco (alfa deixaria a carta translúcida e misturaria com a de baixo); o SMAA da tela
+	// (project.godot) é quem suaviza essa borda.
 	if (d > 0.0) {
 		discard;
 	}

@@ -398,6 +398,9 @@ static func font() -> SystemFont:
 		_font = SystemFont.new()
 		_font.font_names = PackedStringArray(["Segoe UI", "Arial", "Helvetica", "sans-serif"])
 		_font.font_weight = 700
+		# Campo de distância (MSDF): o texto 3D fica nítido em qualquer tamanho, sem serrilhar nem tremer de longe.
+		_font.multichannel_signed_distance_field = true
+		_font.generate_mipmaps = true
 	return _font
 
 
