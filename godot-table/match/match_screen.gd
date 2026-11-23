@@ -5,6 +5,10 @@ extends Node
 
 ## A partida acabou ou o jogador saiu: volta à tela inicial.
 signal finished
+## "Relatar um problema" (menu da partida ou tela do resultado): o contexto vai para a janela do relato (main.gd).
+signal report_requested(context: Dictionary)
+## O servidor fala um protocolo mais novo do que esta mesa entende: a partida nem começa.
+signal outdated
 
 const ForgeClient := preload("res://net/forge_client.gd")
 const StarterDecks := preload("res://cards/starter_decks.gd")
@@ -16,6 +20,11 @@ var start_message: Dictionary = {}
 var offline: bool = false
 
 var _client: ForgeClient = ForgeClient.new()
+## O que vai junto num relato: estados, jogadas e avisos desta partida.
+var _recorder: MatchRecorder = MatchRecorder.new()
+## O pedido de partida só sai depois do hello do servidor (para conferir o protocolo antes).
+var _awaiting_hello: bool = false
+var _blocked: bool = false
 var _catalog: CardCatalog
 var _table: TableView
 var _hud: Hud
@@ -156,10 +165,16 @@ func _ready() -> void:
 	_hud.volume_changed.connect(func(volume: float) -> void: _fx.sounds.volume = volume)
 	_question.answered.connect(func(message: Dictionary) -> void: _client.send(message))
 
+	_hud.report_pressed.connect(func() -> void: report_requested.emit(report_context()))
+	MatchRecorder.last = _recorder
 	_client.client_version = UpdateState.current_version()
-	_client.connected.connect(func() -> void: _client.send(start_message))
+	_client.connected.connect(func() -> void: _awaiting_hello = true)
+	_client.sent.connect(_recorder.sent)
 	_client.message.connect(_on_message)
 	_client.disconnected.connect(func(_code: int, _reason: String, retry: bool) -> void:
+		if _blocked:
+			return
+		_recorder.note("conexao", "A conexão com o servidor caiu.")
 		_hud.show_toast("A conexão com o servidor caiu. Tentando voltar…" if retry else "A conexão com o servidor caiu.", "error"))
 	_client.reconnected.connect(func() -> void: _hud.show_toast("De volta à partida.", "success"))
 	_client.gave_up.connect(func(reason: String) -> void: _hud.show_toast(reason if reason != "" else "Não foi possível voltar à partida.", "error"))
@@ -170,6 +185,27 @@ func _ready() -> void:
 ## O último estado recebido do servidor.
 func current_state() -> Dictionary:
 	return _state
+
+
+## O que a janela do relato precisa desta partida: a gravação e o assento (para o servidor juntar o diário dele).
+func report_context() -> Dictionary:
+	return {"from": "partida", "recorder": _recorder, "session": _recorder.session.duplicate()}
+
+
+## O hello do servidor: confere o protocolo e só então pede a partida.
+func _on_hello(msg: Dictionary) -> void:
+	if ForgeClient.needs_update(msg):
+		_blocked = true
+		_awaiting_hello = false
+		ClientLog.add("O servidor fala o protocolo %s; esta mesa entende até o %d." % [Txt.of(msg.get("minProtocolVersion", msg.get("protocolVersion"))), ForgeClient.SUPPORTED_PROTOCOL], "aviso")
+		_client.forget_session()
+		_client.close()
+		outdated.emit()
+		return
+	if _awaiting_hello:
+		_awaiting_hello = false
+		_recorder.start(start_message)
+		_client.send(start_message)
 
 
 ## Abre a janela de uma zona do jogador: "graveyard", "exile", "command", "hand" (mão revelada) ou "damage" (dano de
@@ -270,7 +306,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_message(msg: Dictionary) -> void:
+	_recorder.received(msg)
 	match Txt.of(msg.get("type", "")):
+		"hello":
+			_on_hello(msg)
 		"room":
 			_room.show_room(msg.get("room", {}) if msg.get("room") is Dictionary else {})
 			_hud.set_room(msg.get("room", {}) if msg.get("room") is Dictionary else {})

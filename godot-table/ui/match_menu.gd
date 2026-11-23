@@ -10,6 +10,8 @@ const EFFECTS := [["auto", "Automático"], ["alto", "Alto"], ["medio", "Médio"]
 signal action(message: Dictionary)
 ## Sair da partida (conceder, se ela está em andamento, e voltar ao início).
 signal leave_pressed
+## Relatar um problema (a janela do relato abre por cima de tudo, em main.gd).
+signal report_pressed
 signal effects_changed(level: String)
 signal volume_changed(volume: float)
 signal pass_level_changed(level: String)
@@ -24,6 +26,7 @@ var _volume: HSlider
 var _pass: OptionButton
 var _concede: Button
 var _exit: Button
+var _update: Label
 var _confirm: Control
 var _confirm_box: PanelContainer
 var _confirm_title: RichTextLabel
@@ -140,6 +143,16 @@ func _build_panel() -> void:
 		set_open(false)
 		leave_pressed.emit())
 	column.add_child(_exit)
+	var report := _item("Relatar um problema", HudIcons.REPORT, Color(1, 1, 1, 0.9))
+	report.name = "Report"
+	report.pressed.connect(func() -> void:
+		set_open(false)
+		report_pressed.emit())
+	column.add_child(report)
+	# Versão nova saiu com a mesa aberta: só uma linha aqui, nunca uma interrupção da partida.
+	_update = _text(13, ModalStyle.GOLD_LIGHT, "", 320)
+	_update.visible = false
+	column.add_child(_update)
 	var version: String = UpdateState.current_version()
 	column.add_child(_text(13, Color(1, 1, 1, 0.4), "Mesa de Duelo · %s" % ("versão %s" % version if version != "" else "versão de desenvolvimento")))
 
@@ -188,6 +201,8 @@ func set_open(open: bool) -> void:
 	_catcher.visible = open
 	if open:
 		apply_state(_state)
+		_update.text = "Nova versão disponível. Ela entra na próxima vez que você abrir a mesa." if not UpdateCheck.pending.is_empty() else ""
+		_update.visible = _update.text != ""
 		_catcher.position = Vector2.ZERO
 		_catcher.size = get_viewport_rect().size
 		_panel.position = get_global_rect().position + Vector2(0, size.y + 8)
