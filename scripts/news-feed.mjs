@@ -18,7 +18,10 @@ export function readNewsFeed(root) {
     const { pc } = mergePending(folders.map(f => ({ browser: optional(`novidades-pendentes/${f}/novidade.md`), pc: optional(`novidades-pendentes/${f}/novidade-pc.md`) })));
     if (pc.groups.length) pending = `## [${PENDING}]\n\n${pc.text}\n`;
   } catch { /* um novidade.md mal escrito: o teste das novidades é que avisa */ }
-  visuals[PENDING] = Object.assign({}, ...folders.map(f => JSON.parse(optional(`novidades-pendentes/${f}/imagens.json`) ?? '{}')));
+  // Os prints das pendentes ficam na pasta delas (o `npm run dev` serve a raiz do projeto): o endereço já vai inteiro.
+  const pendingShots = f => Object.fromEntries(Object.entries(JSON.parse(optional(`novidades-pendentes/${f}/imagens.json`) ?? '{}'))
+    .map(([title, list]) => [title, list.map(s => ({ ...s, img: `/novidades-pendentes/${f}/${s.img}` }))]));
+  visuals[PENDING] = Object.assign({}, ...folders.map(pendingShots));
   // Separadas: o título e a abertura do CHANGELOG-PC.md não podem entrar na seção das pendentes.
   const feed = buildNewsFeed(optional('CHANGELOG-PC.md') ?? '', visuals);
   return { ...feed, releases: [...buildNewsFeed(pending, visuals).releases, ...feed.releases] };

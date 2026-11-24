@@ -33,7 +33,13 @@
             },
             {
               "title": "Zip da mesa no PC",
-              "text": "Baixe em `/baixar` e extraia onde quiser."
+              "text": "Baixe em `/baixar` e extraia onde quiser.",
+              "images": [
+                {
+                  "src": "/novidades/0.239.0/zip.webp",
+                  "caption": "O zip."
+                }
+              ]
             }
           ]
         },

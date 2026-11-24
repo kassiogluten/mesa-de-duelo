@@ -1,4 +1,9 @@
 {
+  "0.251.0": {
+    "Vitrine de novidades na tela inicial": [
+      { "img": "0.251.0/vitrine.webp", "legenda": "A vitrine abaixo de Voltar à partida: a imagem da novidade, o nome da versão, o título, o começo do texto e um pontinho para cada novidade." }
+    ]
+  },
   "0.250.0": {
     "Gráficos do deck": [
       { "img": "0.250.0/graficos-terrenos.webp", "legenda": "A chance de ter terreno para baixar um por turno, jogando primeiro (linha cheia) e jogando depois (tracejada), com os números do turno 4 em destaque." },

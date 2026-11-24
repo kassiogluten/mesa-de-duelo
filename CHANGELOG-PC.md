@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.251.0] - 2026-11-24
+
+### Novo
+
+- **Vitrine de novidades na tela inicial.** Na coluna da tela inicial, abaixo dos botões, uma vitrine mostra as novidades da versão mais nova, uma de cada vez: a imagem de como ficou na mesa, o título e o começo do texto. Ela troca sozinha a cada poucos segundos e para enquanto o mouse está em cima, e os pontinhos embaixo levam direto a cada novidade. Clicar abre o painel Novidades. As imagens ficam guardadas para abrir sem internet, e numa janela baixa, sem espaço, a vitrine some.
+
 ## [0.249.0] - 2026-11-24
 
 ### Mudou

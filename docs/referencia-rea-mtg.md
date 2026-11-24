@@ -20,6 +20,15 @@ Só ideias de código escritas no próprio protótipo (`card/index.html`), refei
   da carta. O protótipo usava uma tabela de cores por cor de mana sobre texturas do Arena; a mesa usa `color-mix` com as
   cores de moldura que já tinha (`--c1`), sem textura nenhuma.
 
+Da tela inicial (`home/index.html`), para a mesa no PC (23/11/2026), também só as ideias, com o conteúdo da própria mesa:
+
+- **Vitrine de novidades** (`godot-table/menu/home_showcase.gd`): no lugar do carrossel de anúncios do Arena, os itens da
+  versão mais nova da mesa, com o print da página Novidades em imagens, trocando sozinhos.
+- **Luzinhas no fundo** (`godot-table/menu/home_cover.gd`): o protótipo tinha um canvas de partículas sobre o fundo; na
+  mesa no PC são umas poucas luzinhas douradas sobre a arte do deck, que somem no "Efeitos: leve".
+- Ficaram para depois, se fizer sentido: salas públicas e torneios como cartões com arte (no lugar dos eventos do Arena)
+  e um atalho "Jogar de novo" com o último formato e deck (a aba Recentes).
+
 ## O que não deu para aproveitar, e por quê
 
 ### Material extraído do cliente do Arena (direitos autorais e termos de uso)

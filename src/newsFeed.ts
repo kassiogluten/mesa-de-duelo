@@ -70,15 +70,26 @@ export function mergePending(folders: PendingTexts[]): { browser: ReturnType<typ
 /** Os títulos dos itens (`- **Título.**`, sem o ponto) de um trecho de CHANGELOG ou de um `novidade.md`. */
 export const itemTitles = (md: string) => new Set([...md.matchAll(/^- \*\*(.+?)\.?\*\*/gm)].map(m => m[1]!));
 
-/** Um item: título em negrito (vazio num parágrafo solto) e o texto com o pouco de Markdown do CHANGELOG. */
-export interface FeedItem { title: string; text: string }
+/** Um print de um item: o endereço no site (`/novidades/<versão>/<arquivo>.webp`) e a legenda. */
+export interface FeedImage { src: string; caption: string }
+/**
+ * Um item: título em negrito (vazio num parágrafo solto), o texto com o pouco de Markdown do CHANGELOG e, se o item tem
+ * prints na página Novidades em imagens, `images` (a vitrine da tela inicial da mesa no PC os mostra).
+ */
+export interface FeedItem { title: string; text: string; images?: FeedImage[] }
 export interface FeedGroup { name: string; items: FeedItem[] }
 /** `visual`: algum item da versão tem prints na página Novidades em imagens (/novidades?mesa=pc#v<versão>). */
 export interface FeedRelease { version: string; title: string; date: string; visual: boolean; groups: FeedGroup[] }
 /** O /novidades.json: `version` é a mais nova com número (a do ponto de "não vista"); as versões vêm da mais nova à mais antiga. */
 export interface NewsFeed { version: string; releases: FeedRelease[] }
-/** Os prints de src/novidades.json: versão → título do item → figuras (aqui só importa se há alguma). */
-export type Visuals = Record<string, Record<string, readonly unknown[]>>;
+/**
+ * Os prints de src/novidades.json: versão → título do item → figuras. `img` é `<versão>/<arquivo>.webp` (em
+ * public/novidades/) ou, nas pendentes, um endereço que já começa com `/`.
+ */
+export type Visuals = Record<string, Record<string, readonly { img?: unknown; legenda?: unknown }[]>>;
+
+/** O endereço de um print no site. */
+const imageSrc = (img: string) => img.startsWith('/') ? img : `/novidades/${img}`;
 
 /**
  * As versões de um CHANGELOG (`## [X.Y.Z] - AAAA-MM-DD`, grupos `### `, itens `- **Título.** texto`) no formato do
@@ -107,8 +118,12 @@ export function buildNewsFeed(md: string, visuals: Visuals = {}): NewsFeed {
     const body = line.startsWith('- ') ? line.slice(2) : line;
     const titled = line.startsWith('- ') ? /^\*\*(.+?)\.?\*\*\s*(.*)$/.exec(body) : null;
     const title = titled?.[1] ?? '';
-    group.items.push({ title, text: titled ? titled[2]! : body });
-    if (title && visuals[release.version]?.[title]?.length) release.visual = true;
+    const item: FeedItem = { title, text: titled ? titled[2]! : body };
+    const shots = title ? (visuals[release.version]?.[title] ?? []) : [];
+    const images = shots.filter(s => typeof s?.img === 'string' && s.img).map(s => ({ src: imageSrc(s.img as string), caption: typeof s.legenda === 'string' ? s.legenda : '' }));
+    if (images.length) item.images = images;
+    group.items.push(item);
+    if (shots.length) release.visual = true;
   }
   return { version: releases.find(r => r.version !== PENDING)?.version ?? '', releases };
 }

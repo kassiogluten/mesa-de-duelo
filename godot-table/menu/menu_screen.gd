@@ -38,6 +38,8 @@ var _cover: HomeCover
 var _strip: DeckStrip
 var _column: HomeColumn
 var _options: HomeOptions
+var _news: NewsButton
+var _showcase: HomeShowcase
 ## A conferência dos decks de Meus decks (criada só quando um deles é o escolhido).
 var _checker: DeckCheck
 ## O endereço da arte da capa à mostra e o de cada ladrilho, para encaixar a arte quando ela chega.
@@ -98,8 +100,19 @@ func _ready() -> void:
 	add_child(toasts)
 	account.toast.connect(toasts.show_toast)
 	AccountSession.notifier().changed.connect(_on_account_changed)
-	# Novidades no canto de cima, à esquerda: o mesmo painel do navegador, com o ponto da versão ainda não vista.
-	add_child(NewsButton.new())
+	# Novidades no canto de cima, à esquerda: o painel da mesa no PC, com o ponto da versão ainda não vista; e a vitrine
+	# na coluna, com os itens da versão mais nova (abre o mesmo painel).
+	_news = NewsButton.new()
+	add_child(_news)
+	_showcase = HomeShowcase.new()
+	add_child(_showcase)
+	_showcase.open_news.connect(func() -> void: _news.open())
+	_showcase.show_feed(_news.feed.feed)
+	_news.feed.updated.connect(func() -> void:
+		_showcase.show_feed(_news.feed.feed)
+		_place_showcase())
+	# Depois de cada arrumação da coluna (os botões mudam de lugar sem a coluna mudar de tamanho).
+	_column.sort_children.connect(func() -> void: _place_showcase.call_deferred())
 
 	# A versão no canto de baixo, com o botão de atualizar (Atualizar para X, ou Procurar atualização).
 	version_badge = VersionBadge.new()
@@ -130,6 +143,18 @@ func _layout() -> void:
 	var options_h: float = _options.get_combined_minimum_size().y
 	_options.position = Vector2(column_x, view.y - view.y * 0.05 - DeckTile.SIZE.y * 0.5 - options_h * 0.5 + DeckTile.LIFT * 0.5)
 	_options.size = Vector2(column_w, options_h)
+	_place_showcase()
+
+
+## A vitrine de novidades no vão entre a coluna e o pé (some quando não cabe, como numa janela baixa), depois de a
+## coluna se arrumar (o texto que quebra em linhas só se mede com a largura certa).
+func _place_showcase() -> void:
+	if _showcase == null or _column == null or _options == null:
+		return
+	# Pelo fim do último botão: a coluna em si pode ter ficado mais alta numa arrumação anterior, mais estreita.
+	var last: Control = _column.get_child(_column.get_child_count() - 1) as Control
+	var top: float = _column.position.y + last.position.y + last.size.y + 28.0
+	_showcase.place(Vector2(_column.position.x, top), _column.size.x, _options.position.y - 24.0 - top)
 
 
 ## Os decks do formato escolhido: na fileira, os de Meus decks e depois os prontos; no do computador, só os prontos.

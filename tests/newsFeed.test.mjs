@@ -69,7 +69,9 @@ test('o /novidades.json tem as versões, os grupos, os itens e a versão mais no
   ]);
   const [novo, corrigido] = feed.releases[1].groups;
   assert.equal(novo.name, 'Novo');
-  assert.deepEqual(novo.items[1], { title: 'Zip da mesa no PC', text: 'Baixe em `/baixar` e extraia onde quiser.' });
+  // O item com prints leva os endereços deles no site (a vitrine da tela inicial da mesa no PC); o sem prints, nada.
+  assert.deepEqual(novo.items[1], { title: 'Zip da mesa no PC', text: 'Baixe em `/baixar` e extraia onde quiser.', images: [{ src: '/novidades/0.239.0/zip.webp', caption: 'O zip.' }] });
+  assert.deepEqual(novo.items[0], { title: 'Setas de energia', text: 'As setas viraram feixes.' });
   assert.equal(corrigido.name, 'Corrigido');
   // Item sem grupo e parágrafo solto (sem título) também entram.
   assert.deepEqual(feed.releases[2].groups, [{ name: '', items: [
@@ -104,6 +106,9 @@ test('o /novidades.json do projeto vem do CHANGELOG-PC.md, com as pendentes da m
     assert.equal(feed.version, '0.10.2');
     assert.deepEqual(feed.releases.map(r => [r.version, r.visual]), [['Próxima', true], ['0.10.2', true], ['0.10.1', false]]);
     assert.deepEqual(feed.releases[0].groups.map(g => [g.name, g.items.map(i => [i.title, i.text])]), [['Novo', [['Painel no PC', 'Abre.']]], ['Corrigido', [['Conserto', 'Certo.']]]]);
+    // O print da pendente vem da pasta dela; o publicado, de public/novidades/.
+    assert.deepEqual(feed.releases[0].groups[0].items[0].images, [{ src: '/novidades-pendentes/pc/p.webp', caption: 'P.' }]);
+    assert.deepEqual(feed.releases[1].groups[0].items[0].images, [{ src: '/novidades/0.10.2/a.webp', caption: 'A.' }]);
   } finally { rmSync(root, { recursive: true }); }
 });
 
