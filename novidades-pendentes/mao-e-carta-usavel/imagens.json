@@ -1,0 +1,15 @@
+{
+  "Carta que dá para usar com borda azul": [
+    { "img": "carta-usavel-pc.webp", "legenda": "Na mesa no PC: as cartas que dá para usar, na mão e no campo, com a borda azul e o halo curto; as outras da mão, um pouco mais escuras." },
+    { "img": "carta-usavel-navegador.webp", "legenda": "No navegador: a mesma borda azul com o halo curto nas cartas da mão que dá para jogar." }
+  ],
+  "Mão mais fácil de ler": [
+    { "img": "mao-legivel-antes.webp", "legenda": "Antes: a luz da mesa acinzentava a caixa de texto e o brilho de jogável entrava na carta." },
+    { "img": "mao-legivel-depois.webp", "legenda": "Agora: as cores da carta impressa, o texto nítido, o leque mais reto e só a borda azul do lado de fora." }
+  ],
+  "Mão mais baixa": [
+    { "img": "mao-mais-baixa-parada.webp", "legenda": "Parada, a mão fica mais baixa, com a parte de baixo das cartas fora da tela." },
+    { "img": "mao-mais-baixa-mouse.webp", "legenda": "Com o mouse na mão, ela sobe um pouco e a carta debaixo do mouse cresce inteira na tela." },
+    { "img": "mao-mais-baixa-escolha.webp", "legenda": "Numa escolha sobre as cartas da mão, como descartar, a mão sobe inteira sozinha." }
+  ]
+}

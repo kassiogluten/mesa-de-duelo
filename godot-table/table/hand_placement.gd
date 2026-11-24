@@ -1,18 +1,31 @@
 # A sua mão em leque na base da tela (e os versos da mão do oponente): o lugar de cada carta, a ordem que o jogador arrumou
-# arrastando, as jogáveis mais altas e a carta comprada voando do grimório. Parte da TableView.
+# arrastando, as jogáveis mais altas, a mão que desce e sobe com o mouse e a carta comprada voando do grimório. Parte da
+# TableView.
 class_name HandPlacement
 extends RefCounted
 
-## Centro do leque da sua mão: perto da câmera, na base da tela.
+## Centro do leque da sua mão inteira à vista: perto da câmera, na base da tela.
 const HAND_CENTER := Vector3(0, 3.2, 4.45)
-## Na mão: quanto a carta jogável fica mais alta (para cima na tela) e quanto as outras apagam quando há o que jogar.
+## Quanto a mão desce do HAND_CENTER (para baixo na tela, unidades da mesa): parada, um quarto de baixo das cartas fica
+## fora da tela, para sobrar campo; com o mouse na mão, sobe até ficarem quase inteiras; numa escolha sobre as cartas da
+## mão (descartar, mulligan, revelar), sobe inteira (0).
+const REST_DROP := 0.42
+const PEEK_DROP := 0.23
+## Na mão: quanto a carta jogável fica mais alta (para cima na tela) e quanto as outras apagam (~8%) quando há o que jogar.
 const PLAYABLE_RISE := 0.07
-const UNPLAYABLE_DIM := 0.22
+const UNPLAYABLE_DIM := 0.12
+## Quanto cada carta gira no leque, por posição a partir do meio (radianos).
+const FAN_TURN := 0.025
+## Folga em volta da mão (pixels) para o mouse contar como em cima dela.
+const PEEK_MARGIN := 14.0
 
 var view: TableView
 ## A ordem da sua mão (a do servidor, com as mudanças que o jogador fez arrastando) e as cartas jogáveis nela.
 var order: Array[int] = []
 var playable: Array = []
+## O mouse está na mão (ela sobe até as cartas ficarem quase inteiras) e há uma escolha sobre as cartas dela (sobe inteira).
+var peek: bool = false
+var choosing: bool = false
 
 
 func _init(table: TableView) -> void:
@@ -67,14 +80,73 @@ func _searched_draw(player_id: int) -> bool:
 	return false
 
 
-## Leque da sua mão, de frente para a câmera, na base da tela; a carta jogável fica um pouco mais alta que as outras.
+## Leque da sua mão, de frente para a câmera, na base da tela (mais baixa ou mais alta, pelo drop); a carta jogável fica um
+## pouco mais alta que as outras.
 func transform_at(index: int, count: int, id: int) -> Transform3D:
 	var offset: float = index - (count - 1) / 2.0
 	var fan: Vector2 = fan_fit(count)
 	var pos := HAND_CENTER + view.camera.global_basis.x * fan.y + Vector3(offset * fan.x, index * 0.006 - abs(offset) * abs(offset) * 0.01, abs(offset) * abs(offset) * 0.006)
+	pos -= view.camera.global_basis.y * drop()
 	if playable.has(id):
 		pos += view.camera.global_basis.y * PLAYABLE_RISE
-	return Transform3D(facing_camera(pos) * Basis(Vector3.UP, -offset * 0.05), pos)
+	return Transform3D(facing_camera(pos) * Basis(Vector3.UP, -offset * FAN_TURN), pos)
+
+
+## Quanto a mão está abaixo da posição inteira agora (REST_DROP, PEEK_DROP ou 0).
+func drop() -> float:
+	return level_drop(peek, choosing)
+
+
+## A conta do drop (sem cena, para os testes): a escolha na mão vence o mouse, que vence a mão parada.
+static func level_drop(over: bool, choice: bool) -> float:
+	if choice:
+		return 0.0
+	return PEEK_DROP if over else REST_DROP
+
+
+## Há uma escolha sobre as cartas da sua mão (a mão sobe inteira): o mulligan e o fundo do grimório depois dele, ou uma
+## carta da mão entre as que dá para escolher sem a prioridade (descartar, revelar, escolher da mão).
+static func choosing_hand(s: Dictionary) -> bool:
+	var input: Dictionary = s.get("input", {}) if s.get("input") is Dictionary else {}
+	if Txt.of(input.get("opening")) in ["mulligan", "mulligan-bottom"]:
+		return true
+	if bool(input.get("priority", false)):
+		return false
+	var selectable: Array = input.get("selectable", []) if input.get("selectable") is Array else []
+	if selectable.is_empty():
+		return false
+	for raw: Variant in s.get("players", []):
+		if raw is Dictionary and int((raw as Dictionary).get("id", -2)) == int(s.get("you", -1)):
+			for card: Variant in (raw as Dictionary).get("hand", []):
+				if card is Dictionary and selectable.has(int((card as Dictionary).get("id", -1))):
+					return true
+	return false
+
+
+## O mouse em `mouse` (pixels da tela): em cima da mão (com folga, ou abaixo dela, no pé da tela) ou de uma carta dela
+## levantada, a mão sobe; fora, desce. Leva as cartas quando muda.
+func update_peek(mouse: Vector2) -> void:
+	var rect: Rect2 = screen_rect()
+	var over: bool = rect.size.x > 0.0 and mouse.x >= rect.position.x - PEEK_MARGIN and mouse.x <= rect.end.x + PEEK_MARGIN 		and mouse.y >= rect.position.y - PEEK_MARGIN
+	for id: int in order:
+		var node: CardNode = view.card_node(id)
+		over = over or (node != null and node.lifted)
+	set_levels(over, choosing)
+
+
+## Muda o quanto a mão aparece (o mouse em cima, uma escolha na mão) e leva as cartas para o lugar novo.
+func set_levels(over: bool, choice: bool) -> void:
+	if over == peek and choice == choosing:
+		return
+	var before: float = drop()
+	peek = over
+	choosing = choice
+	if is_equal_approx(before, drop()):
+		return
+	for i: int in order.size():
+		var node: CardNode = view.card_node(order[i])
+		if node and not view.dragging(node):
+			node.move_to(transform_at(i, order.size(), order[i]))
 
 
 ## O leque de `count` cartas: x é a distância entre uma carta e a seguinte e y quanto o centro anda para o lado (unidades
@@ -90,7 +162,7 @@ func fan_fit(count: int) -> Vector2:
 	if ppu <= 1.0:
 		return Vector2(spread, 0.0)
 	# As cartas das pontas giram um pouco (e chegam mais perto da câmera): ocupam mais que a largura da carta.
-	var turn: float = (count - 1) / 2.0 * 0.05
+	var turn: float = (count - 1) / 2.0 * FAN_TURN
 	var card_width: float = (CardNode.SIZE.x * cos(turn) + CardNode.SIZE.y * sin(turn)) * 1.08
 	return fit_fan(spread, count, area.position.x / ppu, area.end.x / ppu, center_px / ppu, card_width)
 
@@ -119,11 +191,13 @@ func facing_camera(pos: Vector3) -> Basis:
 	return Basis(y.cross(z), y, z)
 
 
-## As cartas jogáveis da mão (input.actionable com a prioridade) ficam mais altas, e as outras um pouco apagadas.
-func apply_layout(actionable: Array, priority: bool) -> void:
+## As cartas jogáveis da mão (input.actionable com a prioridade) ficam mais altas, e as outras um pouco apagadas; numa
+## escolha sobre as cartas da mão (`choice`, choosing_hand), a mão sobe inteira.
+func apply_layout(actionable: Array, priority: bool, choice: bool = false) -> void:
 	var next: Array = order.filter(func(id: int) -> bool: return priority and actionable.has(id))
-	var changed: bool = next != playable
+	var changed: bool = next != playable or choice != choosing
 	playable = next
+	choosing = choice
 	for i: int in order.size():
 		var node: CardNode = view.card_node(order[i])
 		if node == null:
@@ -164,6 +238,31 @@ func screen_rect() -> Rect2:
 	for point: Vector2 in points:
 		rect = rect.expand(point)
 	return rect
+
+
+## Na sua mão a carta aparece como impressa (card.gdshader `printed`: sem luz, reflexo nem brilho da cena); saindo da
+## mão, volta aos poucos para a luz da mesa enquanto voa.
+static func set_printed(node: CardNode, on: bool, time: float = 0.2) -> void:
+	var material: ShaderMaterial = CardDressing.material_of(node)
+	if material == null or bool(node.get_meta("printed", false)) == on:
+		return
+	node.set_meta("printed", on)
+	var before: Variant = node.get_meta("printed_tween") if node.has_meta("printed_tween") else null
+	if before is Tween and (before as Tween).is_valid():
+		(before as Tween).kill()
+	if not node.is_inside_tree() or time <= 0.0:
+		material.set_shader_parameter("printed", 1.0 if on else 0.0)
+		return
+	var tween: Tween = node.create_tween()
+	node.set_meta("printed_tween", tween)
+	tween.tween_method(func(v: float) -> void: material.set_shader_parameter("printed", v), printed_amount(node), 1.0 if on else 0.0, time)
+
+
+## O quanto a carta aparece como impressa agora (0 com a luz da mesa, 1 na mão).
+static func printed_amount(node: CardNode) -> float:
+	var material: ShaderMaterial = CardDressing.material_of(node)
+	var value: Variant = material.get_shader_parameter("printed") if material else null
+	return float(value) if value != null else 0.0
 
 
 ## Custo e se é jogável, para o selo do custo da carta da mão.

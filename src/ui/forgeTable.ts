@@ -51,6 +51,7 @@ import './gameOptions.css';
 import './decisionPrompt.css';
 import { tablePlayers } from './commanderTable';
 import './commanderTable.css';
+import './usableCard.css';
 import './arenaModals.css';
 import './cardStyle.css';
 import './cardTextFit';
