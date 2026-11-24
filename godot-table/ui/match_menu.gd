@@ -316,7 +316,7 @@ func _build_confirm() -> void:
 ## A pergunta do Conceder; "Voltar ao jogo" é o destaque: na dúvida, nada acontece.
 func _ask_concede() -> void:
 	var t: Dictionary = concede_text(_state)
-	ModalStyle.set_rich(_confirm_title, t["title"], 28)
+	ModalStyle.set_rich(_confirm_title, t["title"], 28, true)
 	_confirm_text.text = t["text"]
 	_confirm_hint.text = t["stay"]
 	_confirm.position = Vector2.ZERO

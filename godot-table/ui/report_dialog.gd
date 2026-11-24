@@ -82,7 +82,7 @@ func _build_form() -> void:
 	_text.add_theme_color_override("font_color", ModalStyle.INK)
 	_text.add_theme_color_override("font_placeholder_color", ModalStyle.FAINT)
 	_text.add_theme_color_override("caret_color", ModalStyle.GOLD_LIGHT)
-	var field := ModalStyle.box(Color(0.03, 0.05, 0.09, 0.9), 10, Color(0.62, 0.76, 1.0, 0.24), 1)
+	var field := ModalStyle.box(Color(0.03, 0.05, 0.09, 0.9), ModalStyle.RADIUS, Color(0.62, 0.76, 1.0, 0.24), 1)
 	field.content_margin_left = 12
 	field.content_margin_right = 12
 	field.content_margin_top = 10

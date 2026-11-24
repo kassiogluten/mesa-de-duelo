@@ -1,4 +1,11 @@
 {
+  "0.247.0": {
+    "Tela inicial e janelas com outro visual, mais leve": [
+      { "img": "0.247.0/tela-inicial.webp", "legenda": "A coluna da tela inicial: Jogar contra o computador em dourado, os outros botões em azul-escuro, todos com a base mais escura, e os campos de formato e deck de cantos quase retos." },
+      { "img": "0.247.0/janela.webp", "legenda": "Uma janela com o filete dourado em cima, o título em branco e os botões novos." },
+      { "img": "0.247.0/relato.webp", "legenda": "Relatar um problema no visual novo: o painel chapado, as escolhas lado a lado e os botões do pé." }
+    ]
+  },
   "0.246.0": {
     "Tela inicial e janelas com visual novo": [
       { "img": "0.246.0/tela-inicial.webp", "legenda": "A coluna da tela inicial: botões com cantos cortados e letra em caixa alta, e os campos de formato e deck no mesmo estilo." },

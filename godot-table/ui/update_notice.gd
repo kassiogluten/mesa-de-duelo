@@ -17,12 +17,12 @@ var _version: String = ""
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	var style := UiKit.inset_panel(Color(0.045, 0.06, 0.1, 0.96), 12.0)
-	style.border = Color(ModalStyle.GOLD, 0.45)
+	var style := ModalStyle.box(ModalStyle.PANEL_FILL, ModalStyle.RADIUS, Color(ModalStyle.GOLD, 0.45), 1)
 	style.content_margin_left = 18
 	style.content_margin_right = 10
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
+	style.shadow_color = Color(0, 0, 0, 0.45)
 	style.shadow_size = 18
 	add_theme_stylebox_override("panel", style)
 	var row := HBoxContainer.new()

@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.247.0] - 2026-11-24
+
+### Mudou
+
+- **Tela inicial e janelas com outro visual, mais leve.** No lugar dos cantos cortados e da letra condensada em caixa alta da versão anterior: painel chapado com um filete dourado em cima, cantos quase retos, títulos em branco e a letra de sempre nos botões. Os botões ganharam uma base um tom mais escura, como uma tecla; com o mouse em cima, o dourado brilha e os outros ganham o filete dourado, e ao apertar o botão afunda. O contorno claro do foco do teclado continua.
+
 ## [0.246.0] - 2026-11-24
 
 ### Mudou

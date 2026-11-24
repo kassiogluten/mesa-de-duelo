@@ -177,7 +177,7 @@ func _input(event: InputEvent) -> void:
 
 func _build() -> void:
 	var stack: Array = _state.get("stack", [])
-	ModalStyle.set_rich(_title, "Pilha · %s" % StackHeader.count_label(stack.size()), 30)
+	ModalStyle.set_rich(_title, "Pilha · %s" % StackHeader.count_label(stack.size()), 30, true)
 	var input: Dictionary = _state.get("input", {}) if _state.get("input") is Dictionary else {}
 	var selectable: Array = input.get("selectableStacks", []) if input.get("selectableStacks") is Array else []
 	var groups: Array = StackText.group(stack, selectable)

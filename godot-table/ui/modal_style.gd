@@ -1,4 +1,6 @@
-# Aparência comum das janelas da mesa (perguntas, sala de espera, conceder): painel, título, botões, selos e textos com os símbolos de mana.
+# Aparência comum das janelas da mesa (perguntas, sala de espera, conceder) na direção "Nítido" (roadmap 150,
+# docs/direcao-visual-mesa-pc.md): painel chapado com o filete dourado em cima, título, botões, selos e textos com os
+# símbolos de mana.
 class_name ModalStyle
 extends RefCounted
 
@@ -19,10 +21,36 @@ const ENTER_TIME := 0.18
 const EXIT_TIME := 0.16
 
 
-## O painel das janelas (o do kit, ui/ui_kit.gd): chapado, filete fino, dois cantos cortados e sombra macia.
-## `_radius` ficou da caixa redonda de antes.
-static func panel_style(_radius: int = 18) -> CutBox:
-	return UiKit.panel()
+## Fundo chapado dos painéis e dos botões secundários, cinza dos desligados e o vinho do perigoso.
+const PANEL_FILL := Color(0.047, 0.063, 0.102, 0.97)
+const SECONDARY_FILL := Color("#1c2436")
+const DANGER_FILL := Color("#b9452f")
+const DISABLED_FILL := Color(0.16, 0.18, 0.23, 0.9)
+const DISABLED_INK := Color(0.74, 0.77, 0.84, 0.6)
+## Cantos quase retos de painéis, botões e campos.
+const RADIUS := 4
+## Espessura do filete dourado no alto do painel e da base mais escura dos botões.
+const TOP_LINE := 3
+const BUTTON_BASE := 3
+
+
+## O painel das janelas: chapado, cantos quase retos, filete dourado em cima e sombra macia.
+## `_radius` ficou do painel arredondado de antes.
+static func panel_style(_radius: int = RADIUS) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PANEL_FILL
+	style.set_corner_radius_all(RADIUS)
+	style.border_color = GOLD
+	style.border_width_top = TOP_LINE
+	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_size = 34
+	style.shadow_offset = Vector2(0, 12)
+	style.content_margin_left = 36
+	style.content_margin_right = 36
+	style.content_margin_top = 28
+	style.content_margin_bottom = 26
+	style.anti_aliasing = true
+	return style
 
 
 ## Caixa simples (selos, faixas, cartões de jogador).
@@ -102,26 +130,27 @@ static func cost_icons(cost: String, px: int) -> HBoxContainer:
 	return row
 
 
-## Título da janela (o do kit): branco, em versalete, no meio, com a barra dourada antes; o "Title" aceita {símbolos}.
-static func title(text: String, size: int = 28) -> HBoxContainer:
-	var holder := HBoxContainer.new()
-	holder.alignment = BoxContainer.ALIGNMENT_CENTER
-	holder.add_theme_constant_override("separation", 12)
+## Título dourado, centrado, com um filete que some nas pontas embaixo.
+static func title(text: String, size: int = 28) -> VBoxContainer:
+	var holder := VBoxContainer.new()
+	holder.add_theme_constant_override("separation", 4)
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var bar := ColorRect.new()
-	bar.color = GOLD
-	bar.custom_minimum_size = Vector2(4, 0)
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	holder.add_child(bar)
-	var heading := rich(text, size, Color.WHITE)
+	var heading := rich(text, size, Color.WHITE, true)
 	heading.name = "Title"
-	# Uma linha só, da largura do texto: o título fica no meio, como o resto da janela, com a barra colada nele.
-	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
-	heading.add_theme_font_override("normal_font", UiKit.title_font())
-	heading.add_theme_font_size_override("normal_font_size", UiKit.caps_size(size))
+	heading.add_theme_font_override("normal_font", HudStyle.bold_font())
 	heading.add_theme_constant_override("outline_size", 0)
 	holder.add_child(heading)
 	return holder
+
+
+## A etiqueta pequena em dourado, em caixa alta e espaçada, acima de um título ("MESA DE DUELO").
+static func eyebrow(text: String, center: bool = true) -> Label:
+	var out := label(13, GOLD, text.to_upper())
+	out.add_theme_font_override("font", HomeStyle.caps_font())
+	out.add_theme_constant_override("outline_size", 0)
+	if center:
+		out.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return out
 
 
 ## Botão da janela: principal (dourado), secundário (azul-escuro), discreto ou perigoso; o desligado fica cinza e legível.
@@ -136,26 +165,82 @@ static func button(text: String, kind: int = Kind.SECONDARY, min_width: float = 
 	return out
 
 
-## Pinta um botão com o kit (ui/ui_kit.gd): dois cantos cortados, versalete, brilho dourado com o mouse em cima.
+## Pinta um botão de um tipo em todos os estados: chapado, cantos quase retos e a base um tom mais escura (o
+## discreto só com o filete). Mouse em cima: clareia, o dourado brilha e os outros ganham o filete dourado. Apertado:
+## escurece e afunda (a base some). Foco do teclado: um contorno claro por fora.
 static func style_button(out: Button, kind: int) -> void:
-	UiKit.style_button(out, kit_kind(kind))
+	out.add_theme_font_override("font", HudStyle.bold_font())
+	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		out.add_theme_stylebox_override(state_name, button_box(kind, state_name))
+	var ink: Color = Color("#1d1405") if kind == Kind.PRIMARY else INK
+	for slot: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+		out.add_theme_color_override(slot, ink)
+	out.add_theme_color_override("font_disabled_color", DISABLED_INK)
 
 
-## O tipo de botão do kit que corresponde a um daqui.
-static func kit_kind(kind: int) -> UiKit.Kind:
+## A caixa de um botão num estado ("normal", "hover", "pressed", "disabled" ou "focus").
+static func button_box(kind: int, state_name: String) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(RADIUS)
+	style.anti_aliasing = true
+	style.content_margin_left = 22
+	style.content_margin_right = 22
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	if state_name == "focus":
+		style.draw_center = false
+		style.border_color = Color(1, 1, 1, 0.85)
+		style.set_border_width_all(2)
+		style.set_expand_margin_all(3)
+		style.set_corner_radius_all(RADIUS + 2)
+		return style
+	var fill: Color = SECONDARY_FILL
 	match kind:
 		Kind.PRIMARY:
-			return UiKit.Kind.PRIMARY
-		Kind.GHOST:
-			return UiKit.Kind.GHOST
+			fill = GOLD
 		Kind.DANGER:
-			return UiKit.Kind.DANGER
-	return UiKit.Kind.SECONDARY
+			fill = DANGER_FILL
+		Kind.GHOST:
+			fill = Color(1, 1, 1, 0.0)
+	style.bg_color = fill
+	if kind == Kind.GHOST:
+		style.border_color = Color(1, 1, 1, 0.16)
+		style.set_border_width_all(1)
+	else:
+		# A base mais escura dá o volume de uma tecla.
+		style.border_color = fill.darkened(0.35)
+		style.border_width_bottom = BUTTON_BASE
+	match state_name:
+		"hover":
+			if kind == Kind.GHOST:
+				style.bg_color = Color(1, 1, 1, 0.05)
+				style.border_color = GOLD_LIGHT
+			elif kind == Kind.SECONDARY:
+				style.bg_color = fill.lightened(0.14)
+				style.border_color = GOLD_LIGHT
+				style.set_border_width_all(1)
+				style.border_width_bottom = BUTTON_BASE
+			else:
+				style.bg_color = fill.lightened(0.14)
+				style.border_color = fill.darkened(0.3)
+				style.shadow_color = Color(GOLD, 0.45)
+				style.shadow_size = 12
+		"pressed":
+			style.bg_color = fill.darkened(0.14) if kind != Kind.GHOST else Color(1, 1, 1, 0.1)
+			if kind != Kind.GHOST:
+				# Afunda: a base some e o texto desce junto.
+				style.border_width_bottom = 0
+				style.content_margin_top += BUTTON_BASE
+		"disabled":
+			style.bg_color = DISABLED_FILL
+			style.set_border_width_all(0)
+			style.shadow_size = 0
+	return style
 
 
 ## Caixa de marcar com o quadrado desenhado em dourado (o do tema padrão some no fundo escuro).
 static func checkbox(text: String, on: bool = false) -> CheckBox:
-	var box_svg := "<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><rect x='1.5' y='1.5' width='19' height='19' rx='5' fill='%s' stroke='%s' stroke-width='2'/>%s</svg>"
+	var box_svg := "<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><rect x='1.5' y='1.5' width='19' height='19' rx='3' fill='%s' stroke='%s' stroke-width='2'/>%s</svg>"
 	var off := Image.new()
 	off.load_svg_from_string(box_svg % ["#0b1220", "#8fa3c8", ""], 1.0)
 	var lit := Image.new()

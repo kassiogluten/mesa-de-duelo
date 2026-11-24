@@ -253,8 +253,8 @@ static func decode_image(bytes: PackedByteArray) -> Texture2D:
 	return ImageTexture.create_from_image(image) if error == OK else null
 
 
-static func _panel_style(margin: int = 20) -> CutBox:
-	var style: CutBox = ModalStyle.panel_style(16)
+static func _panel_style(margin: int = 20) -> StyleBoxFlat:
+	var style: StyleBoxFlat = ModalStyle.panel_style(16)
 	style.shadow_size = 24
 	style.shadow_offset = Vector2(0, 8)
 	style.content_margin_left = margin + 4
