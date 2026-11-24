@@ -1,6 +1,7 @@
 # Enjoo de invocação em 3D (como src/ui/gpu/gpuDizzy.ts): a criatura que chega tonta solta estrelinhas douradas que dão
-# meia volta numa elipse acima dela e se recolhem no selo; enquanto dura, as estrelinhas do selo giram devagar; quando o
-# enjoo passa, elas saem do selo girando e voam para cima com um brilho pequeno.
+# meia volta numa elipse acima dela e se recolhem no selo; enquanto dura, as estrelinhas do selo giram devagar e a arte
+# ondula de leve (fx/sickness_ripple.gd); quando o enjoo passa, elas saem do selo girando e voam para cima com um brilho
+# pequeno, e a ondulação se acalma até parar.
 class_name SicknessFx
 extends Node3D
 
@@ -17,6 +18,9 @@ const AFTER_LANDING := 0.26
 const REVEAL_TIME := 0.25
 ## Lado da estrelinha voando (unidades da mesa).
 const STAR_SIZE := 0.1
+## A ondulação da arte: quanto leva para crescer (depois que as estrelinhas chegam) e para se acalmar (quando o enjoo passa).
+const RIPPLE_IN := 1.2
+const RIPPLE_OUT := 1.6
 
 static var _orbit_material: ShaderMaterial
 static var _orbit_quad: QuadMesh
@@ -24,6 +28,8 @@ static var _orbit_quad: QuadMesh
 var camera: Camera3D
 ## id da carta → Entry (as tontas à mostra).
 var _entries: Dictionary = {}
+## As ondulações se acalmando (o enjoo passou): [{ripple, node, from, start}].
+var _calming: Array = []
 
 
 class Entry:
@@ -31,6 +37,9 @@ class Entry:
 	## O selo (ícone solto) de agora e o giro preso nele (null sem o giro: opção desligada ou efeitos leves).
 	var sprite: WeakRef
 	var orbit: WeakRef
+	## A ondulação da arte (null sem ela: opção desligada, efeitos leves, carta virada para baixo) e a força de agora.
+	var ripple: WeakRef
+	var ripple_on: float = 0.0
 	## Até quando o selo fica escondido (as estrelinhas ainda estão chegando) e quando volta a aparecer.
 	var hidden_until: float = 0.0
 	var phase: float = 0.0
@@ -44,17 +53,22 @@ func keep(ids: Array) -> void:
 			entry.node = weakref(null)
 			entry.sprite = weakref(null)
 			entry.orbit = weakref(null)
+			entry.ripple = weakref(null)
 			entry.phase = randf() * TAU
 			_entries[id] = entry
 	for id: Variant in _entries.keys():
 		if not ids.has(id):
 			_release(_entries[id])
 			_entries.erase(id)
-	set_process(not _entries.is_empty())
+	_update_process()
 
 
 func _ready() -> void:
-	set_process(not _entries.is_empty())
+	_update_process()
+
+
+func _update_process() -> void:
+	set_process(not _entries.is_empty() or not _calming.is_empty())
 
 
 ## A criatura `node` chegou tonta: espera ela pousar e as estrelinhas saem dela até o selo (que fica escondido até elas chegarem).
@@ -82,6 +96,10 @@ func arrive(id: int, node: CardNode, delay: float = 0.0) -> void:
 
 ## O enjoo passou (o turno do dono começou, ou ela ganhou ímpeto): as estrelinhas saem do selo e voam para cima.
 func leave(node: CardNode, delay: float = 0.0) -> void:
+	# A ondulação se acalma junto com a saída das estrelinhas (depois da faixa do turno, se houver).
+	for one: Dictionary in _calming:
+		if (one["node"] as WeakRef).get_ref() == node:
+			one["start"] = _now() + delay
 	if node == null or camera == null:
 		return
 	var from: Vector3 = tag_spot(node, camera)
@@ -114,9 +132,10 @@ func _now() -> float:
 
 # — O giro do selo —
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var looping: bool = AmbientFx.level() > 0
 	var now: float = _now()
+	_calm(now)
 	for id: Variant in _entries:
 		var entry: Entry = _entries[id]
 		var node: CardNode = entry.node.get_ref() as CardNode
@@ -126,6 +145,9 @@ func _process(_delta: float) -> void:
 			entry.node = weakref(node)
 		if node == null:
 			continue
+		# A arte ondula quando as estrelinhas chegam ao selo (cresce devagar); sem efeitos contínuos, nada.
+		var shown: float = clampf((now - entry.hidden_until) / REVEAL_TIME, 0.0, 1.0)
+		_ripple(entry, node, looping, minf(1.0, shown * 2.0), delta)
 		var sprite: Sprite3D = entry.sprite.get_ref() as Sprite3D
 		if sprite == null or sprite.is_queued_for_deletion() or not sprite.is_inside_tree():
 			sprite = tag_sprite(node)
@@ -142,7 +164,6 @@ func _process(_delta: float) -> void:
 			orbit = null
 			entry.orbit = weakref(null)
 		# Escondido enquanto as estrelinhas chegam; depois aparece aos poucos. Com o giro, o ícone parado fica invisível.
-		var shown: float = clampf((now - entry.hidden_until) / REVEAL_TIME, 0.0, 1.0)
 		if orbit:
 			orbit.set_instance_shader_parameter("alpha", shown)
 			sprite.modulate.a = 0.0
@@ -189,6 +210,9 @@ func _release(entry: Entry) -> void:
 	var orbit: MeshInstance3D = entry.orbit.get_ref() as MeshInstance3D
 	if orbit:
 		orbit.queue_free()
+	var ripple: MeshInstance3D = entry.ripple.get_ref() as MeshInstance3D
+	if ripple and not ripple.is_queued_for_deletion():
+		_calming.append({"ripple": weakref(ripple), "node": entry.node, "from": entry.ripple_on, "start": _now()})
 	var sprite: Sprite3D = entry.sprite.get_ref() as Sprite3D
 	if sprite and not sprite.is_queued_for_deletion():
 		sprite.modulate.a = 1.0
@@ -205,6 +229,65 @@ func orbits() -> int:
 
 func tracked() -> Array:
 	return _entries.keys()
+
+
+## Quantas cartas estão com a arte ondulando (contando as que se acalmam).
+func ripples() -> int:
+	var n: int = 0
+	for entry: Entry in _entries.values():
+		if entry.ripple.get_ref() != null:
+			n += 1
+	return n + _calming.size()
+
+
+# — A ondulação da arte —
+
+## Põe, solta ou ajusta a ondulação da tonta: cresce até `goal` em RIPPLE_IN; sem os efeitos contínuos (ou virada para
+## baixo), sai na hora.
+func _ripple(entry: Entry, node: CardNode, looping: bool, goal: float, delta: float) -> void:
+	var ripple: MeshInstance3D = entry.ripple.get_ref() as MeshInstance3D
+	if ripple and (ripple.is_queued_for_deletion() or not ripple.is_inside_tree() or not node.is_ancestor_of(ripple)):
+		ripple = null
+	var wanted: bool = looping and not bool(node.data.get("faceDown", false))
+	if not wanted:
+		if ripple:
+			ripple.queue_free()
+		entry.ripple = weakref(null)
+		entry.ripple_on = 0.0
+		return
+	if ripple == null:
+		ripple = _adopt(node)
+		if ripple == null:
+			ripple = SicknessRipple.attach(node, entry.phase)
+		entry.ripple = weakref(ripple)
+		if ripple == null:
+			return
+	entry.ripple_on = move_toward(entry.ripple_on, goal, delta / RIPPLE_IN)
+	SicknessRipple.set_strength(ripple, _ease_in_out(entry.ripple_on))
+
+
+## A ondulação que ainda se acalmava nesta carta (ela ficou tonta de novo): volta a ser dela, em vez de somar outra.
+func _adopt(node: CardNode) -> MeshInstance3D:
+	for one: Dictionary in _calming:
+		if (one["node"] as WeakRef).get_ref() == node:
+			_calming.erase(one)
+			return (one["ripple"] as WeakRef).get_ref() as MeshInstance3D
+	return null
+
+
+## As que se acalmam: a força cai até zero em RIPPLE_OUT e a folha sai.
+func _calm(now: float) -> void:
+	for one: Dictionary in _calming.duplicate():
+		var ripple: MeshInstance3D = (one["ripple"] as WeakRef).get_ref() as MeshInstance3D
+		var k: float = clampf((now - float(one["start"])) / RIPPLE_OUT, 0.0, 1.0)
+		if ripple == null or ripple.is_queued_for_deletion() or k >= 1.0:
+			if ripple and not ripple.is_queued_for_deletion():
+				ripple.queue_free()
+			_calming.erase(one)
+			continue
+		SicknessRipple.set_strength(ripple, _ease_in_out(float(one["from"])) * (1.0 - _ease_in_out(k)))
+	if _calming.is_empty() and _entries.is_empty():
+		set_process(false)
 
 
 # — Chegar e passar —
@@ -313,3 +396,7 @@ func _play_leave(from: Vector3) -> void:
 
 static func _ease_out(t: float) -> float:
 	return 1.0 - pow(1.0 - t, 3.0)
+
+
+static func _ease_in_out(t: float) -> float:
+	return t * t * (3.0 - 2.0 * t)

@@ -109,6 +109,13 @@ func test_badge_parts_by_key() -> void:
 	_free(table)
 
 
+func _ripple_of(node: CardNode) -> MeshInstance3D:
+	for child: Node in node.find_children("*", "MeshInstance3D", true, false):
+		if child.get_meta("badge", "") == "sickness-ripple" and not child.is_queued_for_deletion():
+			return child as MeshInstance3D
+	return null
+
+
 func test_sick_badge_orbits_only_with_the_option_on() -> void:
 	done = false
 	var was_enabled: bool = AmbientFx.enabled
@@ -127,14 +134,28 @@ func test_sick_badge_orbits_only_with_the_option_on() -> void:
 	check_eq(fx.sickness.orbits(), 1, "o selo gira")
 	var sprite: Sprite3D = SicknessFx.tag_sprite(table.card_node(int(bear["id"])))
 	check(sprite != null and is_zero_approx(sprite.modulate.a), "o ícone parado some atrás do giro")
+	check_eq(fx.sickness.ripples(), 1, "a arte ondula")
+	var node: CardNode = table.card_node(int(bear["id"]))
+	var ripple: MeshInstance3D = _ripple_of(node)
+	check(ripple != null and ripple.get_parent() == SicknessRipple.face_of(node), "a ondulação fica presa na face da carta")
 	AmbientFx.enabled = false
 	await tree.process_frame
 	check_eq(fx.sickness.orbits(), 0, "opção desligada: sem giro")
+	check_eq(fx.sickness.ripples(), 0, "nem ondulação")
 	check(sprite != null and is_equal_approx(sprite.modulate.a, 1.0), "e o ícone parado volta")
+	AmbientFx.enabled = true
+	await tree.process_frame
+	check_eq(fx.sickness.ripples(), 1, "opção de volta: a arte ondula de novo")
 	var well: Dictionary = bear.duplicate()
 	well["sick"] = false
 	table.apply_state(_state([well], {"turn": 5}))
 	check(fx.sickness.tracked().is_empty(), "o enjoo passou: nada a acompanhar")
+	check_eq(fx.sickness.ripples(), 1, "a ondulação se acalma antes de sair")
+	await tree.create_timer(StateFx.AFTER_BANNER + SicknessFx.RIPPLE_OUT + 0.4).timeout
+	await tree.process_frame
+	check_eq(fx.sickness.ripples(), 0, "e depois sai")
+	await tree.process_frame
+	check(_ripple_of(node) == null, "sem a folha na carta")
 	AmbientFx.enabled = was_enabled
 	Fx.quality = was_quality
 	_free(table)
