@@ -44,9 +44,10 @@ func _ready() -> void:
 	# Os efeitos contínuos das permanentes (o material compartilhado) e o ponto de luz das partículas deles.
 	shaders.append(AmbientFx.shared_material())
 	shaders.append(AmbientMotes.draw_mesh().material)
-	# As estrelinhas e os brilhos dos selos e o giro do selo do enjoo (fx/state_badges.gd, fx/sickness_fx.gd).
+	# As estrelinhas e os brilhos dos selos, o giro do selo do enjoo e a arte ondulando (fx/state_badges.gd, fx/sickness_fx.gd).
 	shaders.append(BadgeFx.star_material())
 	shaders.append(SicknessFx.orbit_material())
+	shaders.append(SicknessRipple.material())
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 0.001
 	_kept.append_array(shaders)
