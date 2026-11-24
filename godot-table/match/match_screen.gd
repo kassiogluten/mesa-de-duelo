@@ -187,6 +187,7 @@ func _ready() -> void:
 	_client.client_version = UpdateState.current_version()
 	_client.connected.connect(func() -> void: _awaiting_hello = true)
 	_client.sent.connect(_recorder.sent)
+	_client.sent.connect(_prefetch_decks)
 	_client.message.connect(_on_message)
 	_client.disconnected.connect(func(_code: int, _reason: String, retry: bool) -> void:
 		if _blocked:
@@ -207,6 +208,23 @@ func current_state() -> Dictionary:
 ## O que a janela do relato precisa desta partida: a gravação e o assento (para o servidor juntar o diário dele).
 func report_context() -> Dictionary:
 	return {"from": "partida", "recorder": _recorder, "session": _recorder.session.duplicate()}
+
+
+## O deck que vai para a partida ou para a sala (e o do computador, quando escolhido) começa a baixar as imagens já, na
+## sala e no mulligan, atrás das cartas à mostra: na primeira partida com um deck novo, a mão e o campo vêm do disco.
+func _prefetch_decks(msg: Dictionary) -> void:
+	if not Txt.of(msg.get("type")) in ["start", "host", "join", "room-deck"]:
+		return
+	var decks: Array = [msg.get("you"), msg.get("deck"), msg.get("opponent")]
+	if msg.get("opponents") is Array:
+		decks.append_array(msg["opponents"])
+	for deck: Variant in decks:
+		if deck is Dictionary:
+			var entries: Array = []
+			for section: String in ["commanders", "cards"]:
+				if (deck as Dictionary).get(section) is Array:
+					entries.append_array((deck as Dictionary)[section])
+			_catalog.prefetch(entries)
 
 
 ## O hello do servidor: confere o protocolo e só então pede a partida.

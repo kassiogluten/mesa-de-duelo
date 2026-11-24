@@ -96,7 +96,9 @@ static func new_card(holder_node: Node3D, catalog: CardCatalog, card: Dictionary
 ## Põe a imagem da carta e a troca quando os dados ou a imagem chegarem; solta os sinais quando a carta sai.
 static func _bind_texture(node: CardNode, catalog: CardCatalog, card: Dictionary) -> void:
 	node.image_url = catalog.image_url_for(card)
-	node.set_texture(catalog.texture(node.image_url))
+	var tex: Texture2D = catalog.texture(node.image_url)
+	# Sem a imagem ainda, a carta desenhada (se já está pronta; a de verdade troca quando chegar).
+	node.set_texture(tex if tex != null else catalog.sketch(card))
 	var on_texture: Callable = func(url: String, tex: Texture2D) -> void:
 		if is_instance_valid(node) and url != "" and url == node.image_url:
 			node.set_texture(tex)
