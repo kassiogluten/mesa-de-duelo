@@ -182,7 +182,8 @@ func _ready() -> void:
 	# Opções do menu da partida: valem na hora, sem sair da mesa.
 	_hud.effects_changed.connect(func(level: String) -> void:
 		_fx.automatic = level == "auto"
-		Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2))
+		Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2)
+		_fx.render_scale.reset())
 	_hud.volume_changed.connect(func(volume: float) -> void: _fx.sounds.volume = volume)
 	_question.answered.connect(func(message: Dictionary) -> void: _client.send(message))
 

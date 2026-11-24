@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.249.0] - 2026-11-24
+
+### Mudou
+
+- **Partida mais leve em placa de vídeo integrada.** Com os efeitos no Automático, quando os quadros continuam caindo mesmo com os efeitos já no Leve, a mesa passa a ser desenhada em menos pixels e ampliada sem perder o contorno, um degrau por vez; os botões, os textos e os painéis continuam nítidos. Numa placa integrada, a partida foi de uns 30 para uns 54 quadros por segundo. Com Alto, Médio ou Leve escolhidos, e a cada partida nova, a mesa volta à resolução cheia. O tampo da mesa também ficou mais leve para a placa, com o mesmo visual.
+
 ## [0.247.0] - 2026-11-24
 
 ### Mudou

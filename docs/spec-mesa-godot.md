@@ -212,4 +212,6 @@ Decisões (23/11/2026): **sem instalador e sem assinatura** por enquanto: a mesa
 
 **22/11/2026, fase 3, efeitos** (mesma máquina, `--disable-vsync`, laboratório): limpa-campo com as cinco criaturas queimando em sequência, **1.305 FPS** durante o efeito (média de 1.233 na sessão, contando a abertura); o regulador do automático não precisou baixar.
 
-Pendente: máquina mais fraca e placa integrada; o engasgo da entrada (compilar os shaders antes de a mesa aparecer).
+**24/11/2026, placa integrada** (Intel UHD 770, Alder Lake, janela de 1080p, partida contra o computador jogada pelo `MESA_AUTOJOGAR`): **~29 FPS** com os efeitos no Alto, com ou sem sincronia vertical, em Forward+ e também no Mobile e no OpenGL; ~110 FPS na tela inicial. A placa leva ~32 ms por quadro com só ~200 chamadas de desenho: é a quantidade de pixels da mesa 3D. Desligando uma coisa por vez: tampo procedural ~11 ms (o feltro calculado três vezes por pixel), brilho ~4-5 ms, sombra ~1-4 ms, lâmpada ~2 ms, MSAA e FXAA ~0; a mesa 3D em metade da resolução cai para ~11 ms (87 FPS). Feito: o feltro do tampo vira textura uma vez na abertura (`table/felt_bake.gd`; ~32 → ~27 ms, visual igual) e o regulador do Automático, depois de levar os efeitos ao Leve, baixa a resolução da mesa 3D com FSR em degraus de 85%, 70% e 60% (`fx/render_scale.gd`): **~54 FPS** estáveis nessa placa.
+
+Pendente: o engasgo da entrada (compilar os shaders antes de a mesa aparecer).

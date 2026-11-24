@@ -79,6 +79,10 @@ static func build(table: TableView) -> Camera3D:
 	var felt := ShaderMaterial.new()
 	felt.shader = TOP_SHADER
 	top.material_override = felt
+	# O feltro calculado uma vez numa textura (table/felt_bake.gd); até ela chegar, o tampo calcula a cada pixel.
+	var bake := FeltBake.new()
+	bake.material = felt
+	table.add_child(bake)
 	top.position = Vector3(0, -0.01, 0)
 	top.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	table.add_child(top)

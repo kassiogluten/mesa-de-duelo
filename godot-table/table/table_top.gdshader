@@ -13,42 +13,17 @@ uniform vec3 my_half = vec3(0.2, 2.75, 6.6);
 uniform vec4 pool = vec4(0.0, 1.6, 4.4, 1.4);
 uniform float pool_strength : hint_range(0.0, 1.0) = 0.0;
 uniform vec3 pool_color : source_color = vec3(1.0, 0.86, 0.66);
+// O feltro já calculado (table/felt_bake.gd): R o feltro, G e B a variação para x e para z (+0,5). Enquanto ele não
+// chega (e sem placa de vídeo, nos testes), o tampo calcula o feltro a cada pixel, como a textura foi feita.
+uniform sampler2D felt_map : filter_linear_mipmap, repeat_disable;
+uniform bool felt_baked = false;
 
 float box(vec2 p, vec2 b, float r) {
 	vec2 q = abs(p) - b + r;
 	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
-float hash(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
-float noise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
-}
-
-float fbm(vec2 p) {
-	float v = 0.0;
-	float a = 0.5;
-	for (int i = 0; i < 3; i++) {
-		v += a * noise(p);
-		p = p * 2.03 + vec2(1.7, 9.2);
-		a *= 0.5;
-	}
-	return v;
-}
-
-// O feltro: fibras esticadas em dois sentidos cruzados na diagonal (sem alinhar com a grade do ruído, que daria
-// manchas retangulares) e manchas largas.
-float felt(vec2 p) {
-	vec2 a = mat2(vec2(0.82, 0.57), vec2(-0.57, 0.82)) * p;
-	vec2 b = mat2(vec2(0.57, -0.82), vec2(0.82, 0.57)) * p;
-	float fibers = noise(a * vec2(21.0, 5.5) + 3.1) * 0.5 + noise(b * vec2(21.0, 5.5) + 7.7) * 0.5;
-	return fibers * 0.6 + fbm(p * 0.7) * 0.4;
-}
+#include "res://table/felt.gdshaderinc"
 
 // A trama miúda, só de perto: sarja (fios na diagonal) ondulada por ruído e um pelo fino por cima, de -0,5 a 0,5.
 float weave(vec2 p) {
@@ -65,13 +40,23 @@ void fragment() {
 	float fine = 1.0 - smoothstep(0.004, 0.012, footprint);
 	float r = length(p * vec2(0.085, 0.13));
 	vec3 color = mix(center_color, edge_color, smoothstep(0.1, 1.05, r));
-	float f = felt(p);
+	// Relevo do feltro: a normal segue a variação das fibras (a luz rasante revela a trama).
+	float e = FELT_STEP;
+	float f;
+	float fx;
+	float fz;
+	if (felt_baked) {
+		vec3 baked = texture(felt_map, UV).rgb;
+		f = baked.r;
+		fx = baked.g - 0.5;
+		fz = baked.b - 0.5;
+	} else {
+		f = felt(p);
+		fx = felt(p + vec2(e, 0.0)) - f;
+		fz = felt(p + vec2(0.0, e)) - f;
+	}
 	float w = fine > 0.0 ? weave(p) * fine : 0.0;
 	color *= 0.94 + 0.12 * f + 0.07 * w;
-	// Relevo do feltro: a normal segue a variação das fibras (a luz rasante revela a trama).
-	float e = 0.02;
-	float fx = felt(p + vec2(e, 0.0)) - f;
-	float fz = felt(p + vec2(0.0, e)) - f;
 	// O relevo da trama sai das derivadas da tela (ela só aparece de perto, onde cada fio ocupa vários pixels).
 	vec2 dpx = dFdx(p);
 	vec2 dpy = dFdy(p);

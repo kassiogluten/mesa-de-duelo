@@ -64,6 +64,8 @@ var _combat_number: int = 0
 
 ## Automático (o regulador escolhe) ou fixo pela opção do jogador.
 var automatic: bool = true
+## A resolução da mesa 3D, que o regulador baixa depois de os efeitos chegarem ao Leve (fx/render_scale.gd).
+var render_scale := RenderScale.new()
 ## Sonda para conferir partidas de verdade (MESA_FX_LOG, MESA_FX_PRINTS); null fora disso.
 var _probe: FxProbe
 ## Combate (fx/combat_stage.gd): declarar, bloquear, as trocas de golpes, as mortes despedaçando e o clima.
@@ -75,6 +77,8 @@ func _ready() -> void:
 	var level: String = Txt.of(prefs.get("effects", "auto"))
 	automatic = level == "auto"
 	Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2)
+	render_scale.viewport = get_viewport()
+	render_scale.reset()
 	combat.director = self
 	add_child(combat)
 	if FxProbe.wanted():
@@ -84,14 +88,21 @@ func _ready() -> void:
 		CardTrails.attach(self, table)
 
 
+func _exit_tree() -> void:
+	render_scale.reset()
+
+
 func _process(delta: float) -> void:
-	# Regulador: com os quadros caindo por um tempo, os efeitos ficam mais leves (só no Automático).
+	# Regulador: com os quadros caindo por um tempo, os efeitos ficam mais leves e, já no Leve, a mesa 3D passa a ser
+	# desenhada em menos pixels (só no Automático).
 	if not automatic:
 		return
 	if delta > 1.0 / 45.0:
 		_slow_frames += delta
 		if _slow_frames > 1.5 and Fx.quality > 0:
 			Fx.quality -= 1
+			_slow_frames = 0.0
+		elif _slow_frames > 1.5 and render_scale.lower():
 			_slow_frames = 0.0
 	else:
 		_slow_frames = maxf(0.0, _slow_frames - delta * 0.5)
