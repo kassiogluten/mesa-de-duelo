@@ -117,6 +117,17 @@ static func without_card_ids(text: String) -> String:
 	return re.sub(text, "", true)
 
 
+## A carta está no campo de alguém no estado (lá a redução do próprio custo não conta mais).
+static func _on_field(card: Dictionary, state: Variant) -> bool:
+	if not state is Dictionary or card.get("id") == null:
+		return false
+	for player: Variant in (state as Dictionary).get("players", []):
+		for c: Variant in (player as Dictionary).get("battlefield", []):
+			if c is Dictionary and int((c as Dictionary).get("id", -2)) == int(card["id"]):
+				return true
+	return false
+
+
 ## Os estados da permanente por extenso (ficha, cópia, controle trocado, anexada, atiçada, enjoo…).
 static func _notes(card: Dictionary, ctx: Dictionary, notes: PackedStringArray) -> void:
 	var player: Callable = ctx.get("player_name", func(id: int) -> String: return "Jogador %d" % id)
@@ -154,6 +165,13 @@ static func _notes(card: Dictionary, ctx: Dictionary, notes: PackedStringArray) 
 		var text: String = _state_label(Txt.of(state), card)
 		if text != "":
 			notes.append(text)
+	# O valor que a carta conta ("Mágicas instantâneas ou feitiços no seu cemitério: 4. Custa 4 a menos.").
+	var you: Variant = ctx.get("you")
+	var counted_by: Variant = null
+	if you != null and card.get("controller") != null and int(card["controller"]) != int(you):
+		counted_by = player.call(int(card["controller"]))
+	for seal: Variant in CardCounts.seals(card, counted_by, _on_field(card, ctx.get("state", {}))):
+		notes.append(Txt.of((seal as Dictionary)["label"]))
 	if bool(card.get("sick", false)) and bool(card.get("creature", false)):
 		notes.append("Enjoo de invocação: entrou neste turno e ainda não pode atacar nem usar habilidades com {T}.")
 	if bool(card.get("cantAttack", false)) and bool(card.get("cantBlock", false)):

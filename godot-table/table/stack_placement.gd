@@ -34,6 +34,10 @@ func place(stack: Array, you: int, seen: Dictionary, names: PackedStringArray) -
 		var from: Variant = _origin(source, controller, spell) if fresh else null
 		view.put_card(key, card, "stack", from if from is Transform3D else t, view.sleeve_of(controller), seen, names)
 		var node: CardNode = view.card_node(key)
+		# A mágica na pilha mostra o valor que ela conta (o dano de Combustion Technique), como na mão.
+		var counted: Array = BadgeSpec.count_chips(source, view.badge_context()) if spell else []
+		if not counted.is_empty():
+			node.set_badges({"top_right": counted}, false, false)
 		entries.append({"key": key, "item": item})
 		if from is Transform3D:
 			node.move_to(t, true)

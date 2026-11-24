@@ -24,6 +24,10 @@ const RING := Color("#f2c14e")
 ## "Selecionada" na declaração de ataque e de bloqueio (.tag.block-pending).
 const PENDING_BG := Color("#e9edf5")
 const PENDING_INK := Color("#101b2f")
+## O valor que a carta conta (.fx-seal.count e .devotion de src/ui/permanentEffects.css); verde quando o mínimo já vale.
+const COUNT_INK := Color("#9fd8ff")
+const DEVOTION_INK := Color("#d9c7f0")
+const COUNT_MET := Color("#8fe0a2")
 
 
 ## O que vale para todas as cartas de um estado (o de FieldLayout.context e mais: quem é alvo, comandantes, quantos anexos
@@ -39,8 +43,10 @@ static func context(state: Dictionary) -> Dictionary:
 				if not targets.has(int(id)):
 					targets[int(id)] = int(item.get("controller", -1))
 	var commanders: Dictionary = {}
+	var names: Dictionary = {}
 	for raw: Variant in state.get("players", []):
 		var player: Dictionary = raw
+		names[int(player.get("id", -1))] = Txt.of(player.get("name"))
 		if player.get("commanders") is Array:
 			for c: Variant in player["commanders"]:
 				if c is Dictionary:
@@ -66,6 +72,7 @@ static func context(state: Dictionary) -> Dictionary:
 			attackers[int(id)] = true
 	ctx["targets"] = targets
 	ctx["commanders"] = commanders
+	ctx["names"] = names
 	ctx["attached"] = attached
 	ctx["exiled"] = exiled
 	ctx["walkers"] = walkers
@@ -176,7 +183,8 @@ static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dict
 			pt = {"kind": "loyalty", "value": int(walker["loyalty"]), "after": int(walker["after"]), "lethal": int(walker["after"]) <= 0}
 	elif card.has("classLevel") and card["classLevel"] != null:
 		pt = {"kind": "level", "value": int(card["classLevel"]), "max": int(card.get("classMaxLevel", 0)) if card.get("classMaxLevel") != null else 0}
-	# Canto de cima à direita: cópias no monte, anexos e cartas exiladas por ela.
+	# Canto de cima à direita: o valor que a carta conta, cópias no monte, anexos e cartas exiladas por ela.
+	top_right.append_array(count_chips(card, ctx, true))
 	if copies > 1:
 		top_right.append({"text": "×%d" % copies, "bg": DARK, "fg": INK, "border": Color(GOLD, 0.6)})
 	var attached: int = int((ctx.get("attached", {}) as Dictionary).get(id, 0))
@@ -197,6 +205,29 @@ static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dict
 		pending = {"icon": "shield", "text": "Selecionada", "bg": PENDING_BG, "fg": PENDING_INK, "small": true}
 	return {"corner": corner, "tag": tag, "counters": chips, "keywords": keywords, "pt": pt, "top_right": top_right, "bottom_mid": [],
 		"aim": aim, "pending": pending}
+
+
+## Os selos do valor que a carta conta (Terror Tolariano, as Lições, a devoção): os risquinhos (ou o disco da cor da
+## devoção) e o número, "2/3" quando há um mínimo, verde quando ele já vale. `name` leva a frase inteira do inspetor.
+## `on_field`: no campo, a redução do próprio custo não aparece (a carta já foi conjurada).
+static func count_chips(card: Dictionary, ctx: Dictionary, on_field: bool = false) -> Array:
+	var controller: int = int(card.get("controller", -1)) if card.get("controller") != null else -1
+	var you: int = int(ctx.get("you", -1))
+	var owner: Variant = null
+	if controller >= 0 and controller != you:
+		owner = Txt.of((ctx.get("names", {}) as Dictionary).get(controller, ""))
+		if owner == "":
+			owner = null
+	var out: Array = []
+	for raw: Variant in CardCounts.seals(card, owner, on_field):
+		var seal: Dictionary = raw
+		var devotion: bool = bool(seal["devotion"])
+		var icon: String = "tally"
+		if devotion and not (seal["colors"] as Array).is_empty():
+			icon = "mana_" + "".join(PackedStringArray((seal["colors"] as Array).slice(0, 2).map(func(c: Variant) -> String: return Txt.of(c))))
+		var ink: Color = COUNT_MET if bool(seal["met"]) else (DEVOTION_INK if devotion else COUNT_INK)
+		out.append({"icon": icon, "text": seal["text"], "bg": DARK, "fg": ink, "border": Color(ink, 0.55), "name": seal["label"]})
+	return out
 
 
 ## O selo do comandante na zona de comando, colado embaixo dele: a coroa e a taxa ("+2", "+4"); sem taxa, só a coroa. Lá a

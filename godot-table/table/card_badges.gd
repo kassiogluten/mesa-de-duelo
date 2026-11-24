@@ -449,6 +449,43 @@ static func cost_chip(cost: String, playable: bool, delta: int, card_size: Vecto
 	return root
 
 
+## Os selos do valor que a carta conta na carta da mão (BadgeSpec.count_chips), deitados nela: uma coluna saindo pela
+## borda da esquerda, abaixo do custo, como .hcard > .count-seals da mesa do navegador.
+static func hand_counts(chips: Array, card_size: Vector2) -> Node3D:
+	var root := Node3D.new()
+	var h: float = card_size.x * 0.13
+	var px_h: int = 96
+	var px_per: float = px_h / h
+	var y: float = -card_size.y / 2.0 + card_size.y * 0.26
+	for raw: Variant in chips:
+		var chip: Dictionary = raw
+		var text: String = Txt.of(chip.get("text", ""))
+		var size: int = _font_size(px_h)
+		var pad: float = px_h * 0.3
+		var icon_w: float = px_h * 0.62 + 3.0
+		var w_px: int = int(ceilf(pad * 2.0 + icon_w + _text_width(text, size)))
+		var w: float = w_px / px_per
+		var bg := Sprite3D.new()
+		bg.texture = CardIcons.chip_texture(w_px, px_h, chip.get("bg", BadgeSpec.DARK), chip.get("border", Color(1, 1, 1, 0.2)), Txt.of(chip.get("icon", "")), chip.get("fg", Color.WHITE))
+		bg.pixel_size = 1.0 / px_per
+		var x: float = -card_size.x / 2.0 - card_size.x * 0.04 + w / 2.0
+		_lay_flat(bg, Vector3(x, 0.0, y), PRIORITY_BG)
+		root.add_child(bg)
+		var label := Label3D.new()
+		label.text = text
+		label.font = font()
+		label.font_size = size
+		label.outline_size = 0
+		label.modulate = chip.get("fg", Color.WHITE)
+		label.pixel_size = 1.0 / px_per
+		var text_x: float = x - w / 2.0 + (pad + icon_w + _text_width(text, size) / 2.0) / px_per
+		_lay_flat(label, Vector3(text_x, 0.002, y), PRIORITY_TEXT)
+		root.add_child(label)
+		y += h * 1.12
+	root.position = Vector3(0, 0.006, 0)
+	return root
+
+
 static func _lay_flat(node: GeometryInstance3D, pos: Vector3, priority: int) -> void:
 	node.rotation_degrees = Vector3(-90, 0, 0)
 	node.position = pos

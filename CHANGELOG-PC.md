@@ -2,6 +2,16 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.245.0] - 2026-11-24
+
+### Novo
+
+- **Números do que a carta conta.** A carta que depende de uma contagem ganha um selo com o número: o Terror Tolariano mostra na mão quantas mágicas instantâneas e feitiços há no seu cemitério (e quanto ele fica mais barato), a Combustion Technique as Lições, o Tarmogoyf os tipos de carta nos cemitérios, e os deuses de Theros a devoção, com o disco da cor e o mínimo ("3/5"), que fica verde quando já vale. O selo aparece na carta da mão, da pilha, do campo e da zona de comando, só quando o número muda o que a carta faz (o desconto do próprio Terror Tolariano some depois que ele entra no campo), e a carta vista de perto explica o número por extenso.
+
+### Corrigido
+
+- **Mágica do oponente à vista na pilha.** Quando o computador (ou outro jogador) conjurava uma remoção e você passava a prioridade sozinho, a mágica resolvia sem aparecer na pilha e a criatura sumia sem o efeito de sair do campo. Agora a mesa mostra a mágica na pilha, com a mira no alvo, por pouco mais de um segundo, e só então ela resolve e a criatura racha e queima (ou é exilada). Vale também para as habilidades e os gatilhos com alvo, como a criatura que destrói outra ao entrar. As suas mágicas passam mais rápido, e com muitas jogadas seguidas a mesa encurta a espera para não ficar atrás do jogo.
+
 ## [0.244.0] - 2026-11-24
 
 ### Novo

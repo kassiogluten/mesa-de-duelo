@@ -351,7 +351,9 @@ func _place_command(player: Dictionary, frame: Dictionary, sleeve: Color, seen: 
 		if bool(card.get("commander", false)) or (_ctx.get("commanders", {}) as Dictionary).has(id):
 			# O selo não encolhe com a carta: fica do tamanho dos selos do campo ali (FieldPlacement), um pouco maior.
 			var boost: float = (1.0 + maxf(0.0, -spot.z) * 0.07) * 1.1 / scale
-			node.set_badges({"bottom_mid": [BadgeSpec.command_seal(BadgeSpec.commander_tax(player, id))]}, false, false, boost)
+			# Com o valor que ele conta (Ghalta custando menos), em cima à direita.
+			node.set_badges({"bottom_mid": [BadgeSpec.command_seal(BadgeSpec.commander_tax(player, id))], "top_right": BadgeSpec.count_chips(card, _ctx)},
+				false, false, boost)
 
 
 ## A janela mudou de tamanho: o seu comandante volta para junto do retrato.

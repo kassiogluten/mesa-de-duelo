@@ -23,6 +23,8 @@ const ICONS := {
 	# Mira de quem é alvo de algo na pilha: aro e cruz.
 	"aim": '<circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>'
 		+ '<path d="M12 1.5v6M12 16.5v6M1.5 12h6M16.5 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	# O valor que a carta conta (Terror Tolariano, Lições, poder total): os risquinhos de contagem.
+	"tally": '<path d="M5 4h2v16H5zm4 0h2v16H9zm4 0h2v16h-2zm4 0h2v16h-2zM2.6 16.4 20.4 6.6l1 1.8-17.8 9.8z" fill="currentColor"/>',
 	# Marcadores.
 	"P1P1": '<path d="M12 3 3 13h5v8h8v-8h5z" fill="currentColor"/>',
 	"M1M1": '<path d="M12 21 3 11h5V3h8v8h5z" fill="currentColor"/>',
@@ -73,12 +75,26 @@ static var _cache: Dictionary = {}
 
 ## O ícone na cor dada, quadrado de `px` pixels.
 static func icon(key: String, color: Color, px: int = 64) -> Texture2D:
-	var body: String = ICONS.get(key, ICONS["disc"])
+	var body: String = icon_body(key)
 	return svg_texture("icon:%s:%s:%d" % [key, color.to_html(), px], '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 24 24">%s</svg>' % [px, px, body.replace("currentColor", "#" + color.to_html(false))])
 
 
 static func has_icon(key: String) -> bool:
-	return ICONS.has(key)
+	return ICONS.has(key) or key.begins_with("mana_")
+
+
+## O desenho de um ícone (viewBox 24, currentColor); "mana_U" é o disco de mana da devoção (de uma cor, com o símbolo;
+## de duas, meio a meio). Desconhecido: o disco.
+static func icon_body(key: String) -> String:
+	if key.begins_with("mana_"):
+		var colors: String = key.substr(5)
+		var a: String = colors.left(1)
+		var fill_a: String = MANA_COLORS.get(a, GENERIC_COLOR)
+		if colors.length() > 1:
+			var fill_b: String = MANA_COLORS.get(colors.substr(1, 1), GENERIC_COLOR)
+			return '<path d="M12 1a11 11 0 0 0 0 22z" fill="%s"/><path d="M12 1a11 11 0 0 1 0 22z" fill="%s"/>' % [fill_a, fill_b]
+		return '<circle cx="12" cy="12" r="11" fill="%s"/><g transform="translate(4.8 4.8) scale(.6)" fill="#1d1b16">%s</g>' % [fill_a, MANA_GLYPHS.get(a, "")]
+	return ICONS.get(key, ICONS["disc"])
 
 
 ## Selo: pílula (ou retângulo de cantos `radius`) com fundo, borda e, à esquerda, um ícone. Medidas em pixels.
@@ -98,8 +114,8 @@ static func chip_texture(width: int, height: int, bg: Color, border: Color, icon
 		var size: float = height * 0.62
 		var pad: float = (height - size) / 2.0
 		var scale: float = size / 24.0
-		var icon_body: String = (ICONS.get(icon_key, ICONS["disc"]) as String).replace("currentColor", "#" + icon_color.to_html(false))
-		body += '<g transform="translate(%.2f %.2f) scale(%.4f)">%s</g>' % [pad + (r * 0.25 if r >= height / 2.0 - 0.1 else 0.0), pad, scale, icon_body]
+		var drawn: String = icon_body(icon_key).replace("currentColor", "#" + icon_color.to_html(false))
+		body += '<g transform="translate(%.2f %.2f) scale(%.4f)">%s</g>' % [pad + (r * 0.25 if r >= height / 2.0 - 0.1 else 0.0), pad, scale, drawn]
 	return svg_texture(key, '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d">%s</svg>' % [width, height, body])
 
 

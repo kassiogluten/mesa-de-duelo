@@ -43,6 +43,8 @@ var _payment: PaymentCard
 var _hovered: CardNode
 var _finale_done: bool = false
 var _state: Dictionary = {}
+## A fila dos estados (match/state_queue.gd): a pilha não passa rápido demais.
+var _queue := StateQueue.new()
 ## MESA_AUTOJOGAR=1: joga sozinho (terrenos, depois mágicas, senão OK), só para testar e tirar prints da mesa cheia.
 var _autoplay: bool = OS.get_environment("MESA_AUTOJOGAR") == "1"
 var _autoplay_wait: float = 0.0
@@ -55,6 +57,8 @@ var _panel_probe: AttackProbe
 func _ready() -> void:
 	_catalog = CardCatalog.new()
 	add_child(_catalog)
+	_queue.show = _show_state
+	add_child(_queue)
 	_table = TableView.new()
 	_table.catalog = _catalog
 	add_child(_table)
@@ -364,19 +368,7 @@ func _on_message(msg: Dictionary) -> void:
 			_room.visible = false
 			if _state.is_empty():
 				_restore_pass_level(msg)
-			_state = msg
-			_interaction.blocks.sync(msg)
-			_fx.before_state(msg)
-			_drag.before_state(msg)
-			_table.apply_state(msg)
-			_stack.apply_state(msg)
-			_play_finale(msg)
-			_hud.apply_state(msg, _interaction.blocker_name())
-			_payment.apply_state(msg)
-			_zones.apply_state(msg)
-			_question.show_question(msg.get("question", {}) if msg.get("question") is Dictionary else {})
-			_interaction.apply_state(msg)
-			_probe_click.call_deferred()
+			_queue.receive(msg, _state.is_empty())
 		"error":
 			# O servidor recusou esta mesa por estar desatualizada: a tela de atualizar, como no hello.
 			if Txt.of(msg.get("reason")) == "outdated" and not _blocked:
@@ -405,6 +397,23 @@ func _on_message(msg: Dictionary) -> void:
 
 ## Alguém apontou uma carta (o "Apontar" do inspetor): o contorno dela pulsa três vezes na cor do verso de quem apontou,
 ## com "Fulano apontou" em cima; se a carta não está à vista na mesa, um aviso diz qual é.
+## Põe um estado na mesa (a fila chama, na ordem e no tempo dela).
+func _show_state(msg: Dictionary) -> void:
+	_state = msg
+	_interaction.blocks.sync(msg)
+	_fx.before_state(msg)
+	_drag.before_state(msg)
+	_table.apply_state(msg)
+	_stack.apply_state(msg)
+	_play_finale(msg)
+	_hud.apply_state(msg, _interaction.blocker_name())
+	_payment.apply_state(msg)
+	_zones.apply_state(msg)
+	_question.show_question(msg.get("question", {}) if msg.get("question") is Dictionary else {})
+	_interaction.apply_state(msg)
+	_probe_click.call_deferred()
+
+
 func _show_point(player: int, card_id: int) -> void:
 	if player < 0 or card_id < 0 or _state.is_empty():
 		return

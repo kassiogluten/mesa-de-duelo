@@ -15,7 +15,7 @@ export const GOLDEN_DIR = join(ROOT, 'godot-table', 'tests', 'golden');
 const FIXTURES = join(ROOT, 'godot-table', 'tests', 'fixtures');
 const TESTS = ['tests/forgeText.test.mjs', 'tests/short-instruction.test.mjs', 'tests/forge-request.test.mjs', 'tests/table-parts.test.mjs',
   'tests/phase-hud.test.mjs', 'tests/opponent-stops.test.mjs', 'tests/choice-screens.test.mjs', 'tests/wait-alert.test.mjs', 'tests/event-text.test.mjs',
-  'tests/history-log.test.mjs', 'tests/board-sweep.test.mjs', 'tests/decks.test.mjs', 'tests/companion.test.mjs', 'tests/conta-merge.test.mjs'];
+  'tests/history-log.test.mjs', 'tests/board-sweep.test.mjs', 'tests/decks.test.mjs', 'tests/companion.test.mjs', 'tests/conta-merge.test.mjs', 'tests/card-counts.test.mjs'];
 
 /** Listas coladas de verdade para o leitor de listas de Meus decks: os jeitos de exportar de cada site e alguns decks prontos. */
 const DECK_LISTS = [

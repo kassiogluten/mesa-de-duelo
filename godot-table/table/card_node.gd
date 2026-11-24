@@ -48,6 +48,8 @@ var _under: WeakRef
 var _extras_hidden: bool = false
 var _badges := CardBadges.new()
 var _cost: Node3D
+## Os selos do valor que a carta conta, na carta da mão.
+var _counts: Node3D
 var _cost_key: String = ""
 var _depth: float = THICKNESS
 var _tween: Tween
@@ -141,14 +143,21 @@ func set_badges(spec: Dictionary, tapped: bool, face_down: bool, boost: float = 
 
 ## O selo de custo da carta da mão: `cost` como "{2}{G}" ("" apaga). Jogável, a borda acende; `delta` < 0 (mais barata que
 ## o impresso) fica verde e > 0 (mais cara) vermelha, como na mesa do navegador.
-func set_hand_info(cost: String, playable: bool, delta: int = 0) -> void:
-	var key: String = "%s|%s|%d" % [cost, str(playable), delta]
+## `counts`: os selos do valor que a carta conta (BadgeSpec.count_chips), na borda da esquerda.
+func set_hand_info(cost: String, playable: bool, delta: int = 0, counts: Array = []) -> void:
+	var key: String = "%s|%s|%d|%s" % [cost, str(playable), delta, var_to_str(counts)]
 	if key == _cost_key:
 		return
 	_cost_key = key
 	if _cost:
 		_cost.queue_free()
 		_cost = null
+	if _counts:
+		_counts.queue_free()
+		_counts = null
+	if not counts.is_empty():
+		_counts = CardBadges.hand_counts(counts, SIZE)
+		_visual.add_child(_counts)
 	if cost == "":
 		return
 	_cost = CardBadges.cost_chip(cost, playable, delta, SIZE)

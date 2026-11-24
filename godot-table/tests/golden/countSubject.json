@@ -1,0 +1,385 @@
+[
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "all",
+    "types": [
+     "Elf"
+    ],
+    "qualities": []
+   }
+  ],
+  "out": "Elfos no campo, de todos os jogadores"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "opponents",
+    "types": [
+     "Creature"
+    ],
+    "qualities": [],
+    "value": 1,
+    "uses": [
+     {
+      "use": "pt",
+      "power": "+1",
+      "toughness": "+1"
+     }
+    ]
+   },
+   "Ana"
+  ],
+  "out": "criaturas que os oponentes de Ana controlam"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "opponents",
+    "types": [
+     "Creature"
+    ],
+    "qualities": [],
+    "value": 1,
+    "uses": [
+     {
+      "use": "pt",
+      "power": "+1",
+      "toughness": "+1"
+     }
+    ]
+   },
+   null
+  ],
+  "out": "criaturas que seus oponentes controlam"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "qualities": [
+     "non:Land"
+    ],
+    "types": [
+     "Permanent"
+    ]
+   }
+  ],
+  "out": "permanentes não terreno que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "qualities": [
+     "other",
+     "untapped"
+    ],
+    "types": [
+     "Creature"
+    ]
+   }
+  ],
+  "out": "outras criaturas desviradas que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "qualities": [
+     "with:Flying",
+     "powerGE4"
+    ],
+    "types": [
+     "Creature"
+    ]
+   }
+  ],
+  "out": "criaturas com voar com poder 4 ou mais que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "qualities": [],
+    "types": [
+     "Forest",
+     "Island"
+    ]
+   }
+  ],
+  "out": "Florestas ou Ilhas que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "qualities": [],
+    "types": [
+     "Kor"
+    ]
+   }
+  ],
+  "out": "permanentes do tipo Kor que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "types": [
+     "Creature"
+    ],
+    "qualities": [],
+    "measure": "greatestPower"
+   }
+  ],
+  "out": "maior poder entre as criaturas que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "types": [
+     "Creature"
+    ],
+    "qualities": [],
+    "measure": "power",
+    "value": 7,
+    "uses": [
+     {
+      "use": "costLess",
+      "amount": 7
+     }
+    ]
+   },
+   null
+  ],
+  "out": "poder total das criaturas que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "battlefield",
+    "whose": "you",
+    "types": [
+     "Creature"
+    ],
+    "qualities": [],
+    "value": 2,
+    "entering": 3,
+    "uses": [
+     {
+      "use": "pt",
+      "power": "+3",
+      "toughness": "+3"
+     }
+    ]
+   },
+   null
+  ],
+  "out": "criaturas que você controla"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "graveyard",
+    "whose": "all",
+    "types": [
+     "Card"
+    ],
+    "qualities": [],
+    "measure": "cardTypes",
+    "value": 2,
+    "uses": [
+     {
+      "use": "pt",
+      "power": "2",
+      "toughness": "3"
+     }
+    ]
+   },
+   null
+  ],
+  "out": "tipos de carta entre as cartas em todos os cemitérios"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "graveyard",
+    "whose": "all",
+    "types": [
+     "Creature"
+    ],
+    "qualities": []
+   }
+  ],
+  "out": "cartas de criatura em todos os cemitérios"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "graveyard",
+    "whose": "you",
+    "types": [
+     "Lesson"
+    ],
+    "qualities": [],
+    "value": 2,
+    "uses": [
+     {
+      "use": "threshold",
+      "min": 3
+     }
+    ]
+   },
+   null
+  ],
+  "out": "Lições no seu cemitério"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "graveyard",
+    "whose": "you",
+    "types": [
+     "Lesson"
+    ],
+    "qualities": [],
+    "value": 3,
+    "uses": [
+     {
+      "use": "damage",
+      "amount": 5,
+      "plus": 2
+     }
+    ]
+   },
+   "Ana"
+  ],
+  "out": "Lições no cemitério de Ana"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "graveyard",
+    "whose": "you",
+    "types": [
+     "Lesson"
+    ],
+    "qualities": [],
+    "value": 3,
+    "uses": [
+     {
+      "use": "damage",
+      "amount": 5,
+      "plus": 2
+     }
+    ]
+   },
+   null
+  ],
+  "out": "Lições no seu cemitério"
+ },
+ {
+  "args": [
+   {
+    "of": "cards",
+    "zone": "graveyard",
+    "whose": "you",
+    "types": [
+     "Lesson"
+    ],
+    "qualities": [],
+    "value": 4,
+    "uses": [
+     {
+      "use": "threshold",
+      "min": 3
+     }
+    ]
+   },
+   null
+  ],
+  "out": "Lições no seu cemitério"
+ },
+ {
+  "args": [
+   {
+    "of": "devotion",
+    "colors": [
+     "B"
+    ],
+    "value": 1,
+    "entering": 3,
+    "uses": [
+     {
+      "use": "lifeLoss",
+      "amount": 3
+     }
+    ]
+   },
+   null
+  ],
+  "out": "devoção ao preto"
+ },
+ {
+  "args": [
+   {
+    "of": "hand",
+    "whose": "you",
+    "value": 5,
+    "uses": [
+     {
+      "use": "threshold",
+      "min": 7
+     }
+    ]
+   },
+   null
+  ],
+  "out": "cartas na sua mão"
+ },
+ {
+  "args": [
+   {
+    "of": "life",
+    "value": 20,
+    "uses": [
+     {
+      "use": "pt",
+      "power": "20",
+      "toughness": "20"
+     }
+    ]
+   },
+   null
+  ],
+  "out": "seus pontos de vida"
+ }
+]

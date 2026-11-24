@@ -273,4 +273,4 @@ func hand_info(node: CardNode, card: Dictionary) -> void:
 	var cast: Variant = card.get("castCost")
 	var cost: String = Txt.of((cast as Dictionary).get("cost")) if cast is Dictionary else Txt.of(card.get("manaCost"))
 	var delta: int = int((cast as Dictionary).get("delta", 0)) if cast is Dictionary else 0
-	node.set_hand_info(cost, playable.has(node.card_id), delta)
+	node.set_hand_info(cost, playable.has(node.card_id), delta, BadgeSpec.count_chips(card, view.badge_context()))

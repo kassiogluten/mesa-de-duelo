@@ -1,4 +1,15 @@
 {
+  "0.245.0": {
+    "Números do que a carta conta": [
+      { "img": "0.245.0/contagens-mao.webp", "legenda": "Na mão, o Terror Tolariano mostra 4 mágicas instantâneas e feitiços no cemitério (e custa {2}{U}), e a Combustion Technique as 2 Lições." },
+      { "img": "0.245.0/contagens-campo.webp", "legenda": "No campo, o Tarmogoyf mostra os 3 tipos de carta nos cemitérios, e Thassa a devoção ao azul contra o mínimo para ser criatura (3/5)." },
+      { "img": "0.245.0/contagens-inspetor.webp", "legenda": "Vista de perto, a carta explica o número: as mágicas instantâneas e os feitiços no seu cemitério e quanto ela fica mais barata." }
+    ],
+    "Mágica do oponente à vista na pilha": [
+      { "img": "0.245.0/remocao-na-pilha.webp", "legenda": "O Homicídio do computador aparece na pilha, com a mira no Urso Cinzento que ele vai destruir, mesmo com você passando a prioridade sozinho." },
+      { "img": "0.245.0/remocao-resolvendo.webp", "legenda": "Só depois ele resolve, e o urso racha e queima antes de ir para o cemitério." }
+    ]
+  },
   "0.244.0": {
     "Botão de atualizar na tela inicial": [
       { "img": "0.244.0/botao-atualizar.webp", "legenda": "Com uma versão nova à espera, o botão dourado ao lado da versão atualiza a mesa." },

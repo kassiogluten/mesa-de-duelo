@@ -19,6 +19,7 @@ export const RECORDED = {
   'src/ui/historyLog.ts': ['historyTurns', 'listNames'],
   'src/decks.ts': ['parseDeckList'],
   'src/conta/merge.ts': ['deckFingerprint', 'planFirstLogin'],
+  'src/ui/cardCounts.ts': ['countLabel', 'countSubject'],
 };
 
 /**
