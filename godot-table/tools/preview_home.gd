@@ -1,5 +1,5 @@
 # Prints da tela inicial com as artes de verdade (pelo catálogo das cartas), em 1920×1080, 2560×1080 e 1366×768, para conferir o visual.
-# npm run godot -- --resolution 1920x1080 --position 0,0 --script res://tools/preview_home.gd -- <pasta> [tamanhos] [commander] [opcoes]
+# npm run godot -- --resolution 1920x1080 --position 0,0 --script res://tools/preview_home.gd -- <pasta> [tamanhos] [commander] [opcoes] [procurar|atualizar]
 # tamanhos: "1920x1080,2560x1080,1366x768" (o padrão). Cada tamanho é desenhado num viewport à parte, com a mesma conta do
 # canvas_items/expand do projeto (a janela maximizada não muda de tamanho).
 extends SceneTree
@@ -17,11 +17,13 @@ func _initialize() -> void:
 	var sizes: PackedStringArray = (args[1] if args.size() > 1 and args[1].contains("x") else SIZES).split(",")
 	var commander: bool = args.has("commander")
 	var options: bool = args.has("opcoes")
+	# procurar / atualizar: a versão no canto com o botão Procurar atualização, ou com uma versão nova à espera.
+	var badge: String = "atualizar" if args.has("atualizar") else ("procurar" if args.has("procurar") else "")
 	# Sem Meus decks nem a partida guardada do jogador: só os prontos e uma sala de exemplo para o Voltar à partida.
 	DeckLibrary.path = "user://preview-home-decks.json"
 	SavedSession.path = "user://preview-home-partida.json"
 	SavedSession.save("K7QM", "t", true, "standard")
-	var tag: String = ("-commander" if commander else "") + ("-opcoes" if options else "")
+	var tag: String = ("-commander" if commander else "") + ("-opcoes" if options else "") + ("-" + badge if badge != "" else "")
 	for size_text: String in sizes:
 		var parts: PackedStringArray = size_text.split("x")
 		var pixels := Vector2i(int(parts[0]), int(parts[1]))
@@ -35,9 +37,12 @@ func _initialize() -> void:
 		viewport.msaa_2d = Viewport.MSAA_4X
 		root.add_child(viewport)
 		var menu := MenuScreen.new()
-		menu.version_text = "Versão de desenvolvimento"
+		menu.version_text = "Versão de desenvolvimento" if badge == "" else "Versão 0.243.0"
 		viewport.add_child(menu)
 		await process_frame
+		if badge != "":
+			menu.version_badge.updater = true
+			menu.version_badge.set_update({"version": "0.244.0", "reinstall": false, "download": ""} if badge == "atualizar" else {})
 		if commander:
 			menu._mode.select(1)
 			menu._fill_decks()

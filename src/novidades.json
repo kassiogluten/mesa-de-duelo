@@ -1,4 +1,10 @@
 {
+  "0.244.0": {
+    "Botão de atualizar na tela inicial": [
+      { "img": "0.244.0/botao-atualizar.webp", "legenda": "Com uma versão nova à espera, o botão dourado ao lado da versão atualiza a mesa." },
+      { "img": "0.244.0/procurar-atualizacao.webp", "legenda": "Sem versão nova, o botão confere na hora se saiu alguma." }
+    ]
+  },
   "0.243.0": {
     "Texto inteiro nas cartas de Arte e texto": [
       { "img": "0.243.0/encaixe-antes.webp", "legenda": "Antes: com letra fixa, nomes longos terminavam em reticências e o fim das regras sumia esmaecido, atrás do poder e resistência." },

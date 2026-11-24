@@ -19,6 +19,8 @@ const MODES := [
 ]
 
 var version_text: String = ""
+## A versão no canto de baixo, com o botão de atualizar (main.gd liga os botões à conferência de versão).
+var version_badge: VersionBadge
 var _mode: OptionButton
 var _theirs: OptionButton
 var _start: Button
@@ -36,7 +38,6 @@ var _cover: HomeCover
 var _strip: DeckStrip
 var _column: HomeColumn
 var _options: HomeOptions
-var _version: Label
 ## A conferência dos decks de Meus decks (criada só quando um deles é o escolhido).
 var _checker: DeckCheck
 ## O endereço da arte da capa à mostra e o de cada ladrilho, para encaixar a arte quando ela chega.
@@ -100,15 +101,16 @@ func _ready() -> void:
 	# Novidades no canto de cima, à esquerda: o mesmo painel do navegador, com o ponto da versão ainda não vista.
 	add_child(NewsButton.new())
 
-	_version = ModalStyle.label(15, Color(1, 1, 1, 0.35), version_text)
-	_version.add_theme_constant_override("outline_size", 0)
-	_version.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_version.offset_left = -400
-	_version.offset_top = -40
-	_version.offset_right = -24
-	_version.offset_bottom = -14
-	_version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(_version)
+	# A versão no canto de baixo, com o botão de atualizar (Atualizar para X, ou Procurar atualização).
+	version_badge = VersionBadge.new()
+	version_badge.name = "Version"
+	version_badge.version_text = version_text
+	version_badge.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	version_badge.offset_left = -900
+	version_badge.offset_top = -56
+	version_badge.offset_right = -24
+	version_badge.offset_bottom = -14
+	add_child(version_badge)
 	resized.connect(_layout)
 	_layout()
 

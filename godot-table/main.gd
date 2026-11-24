@@ -90,7 +90,12 @@ func _build_overlay() -> void:
 	add_child(_updates)
 	_updates.available.connect(func(version: String, reinstall: bool, download: String) -> void:
 		_update_notice.set_update(version, reinstall, download)
-		_update_notice.show_if_pending(_screen is MenuScreen))
+		_update_notice.show_if_pending(_screen is MenuScreen)
+		if _screen is MenuScreen:
+			(_screen as MenuScreen).version_badge.set_update(UpdateCheck.pending))
+	_updates.checked.connect(func(result: String) -> void:
+		if _screen is MenuScreen:
+			(_screen as MenuScreen).version_badge.show_result(result))
 
 
 func _show_menu() -> void:
@@ -103,6 +108,10 @@ func _show_menu() -> void:
 	menu.report.connect(func() -> void: _report.open({"from": "inicio", "recorder": MatchRecorder.last, "session": MatchRecorder.last.session if MatchRecorder.last else {}}))
 	menu.my_reports.connect(_my_reports.open)
 	_swap(menu)
+	# O botão ao lado da versão: atualizar (reinicia e baixa na abertura), baixar no site ou procurar agora.
+	menu.version_badge.update_pressed.connect(func() -> void: UpdateCheck.relaunch(get_tree()))
+	menu.version_badge.download_pressed.connect(func(url: String) -> void: OS.shell_open(url))
+	menu.version_badge.check_pressed.connect(func() -> void: _updates.check_now(true))
 	_updates.check_now()
 
 

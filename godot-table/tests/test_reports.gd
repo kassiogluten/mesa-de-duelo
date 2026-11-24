@@ -201,6 +201,56 @@ func test_update_check_evaluates_the_manifest() -> void:
 	check_eq(UpdateCheck.evaluate({"version": "1.1.0", "minBoot": 2}, "1.0.0", state, 1, "4.7.2").get("reinstall"), true, "boot novo: instalar de novo")
 
 
+func test_update_check_says_the_result() -> void:
+	UpdateCheck.pending = {}
+	var check := UpdateCheck.new()
+	check.current = "1.0.0"
+	var results: Array = []
+	check.checked.connect(func(result: String) -> void: results.append(result))
+	check.apply_manifest({"version": "1.0.0"})
+	check_eq(results, ["em_dia"], "mesma versão: em dia")
+	check.apply_manifest({"version": "1.1.0"})
+	check_eq(results.back(), "nova", "versão nova")
+	check_eq(UpdateCheck.pending.get("version"), "1.1.0", "guardada para o botão")
+	check.apply_manifest({"version": "1.1.0"})
+	check_eq(results.back(), "nova", "procurar de novo: continua nova")
+	check.free()
+	UpdateCheck.pending = {}
+
+
+func test_version_badge_switches_between_check_and_update() -> void:
+	UpdateCheck.pending = {}
+	var tree: SceneTree = Engine.get_main_loop()
+	var badge := VersionBadge.new()
+	badge.updater = true
+	badge.version_text = "Versão 1.0.0"
+	tree.root.add_child(badge)
+	var button: Button = badge.get_node("Update")
+	check_eq(button.text, "Procurar atualização", "sem versão nova: procurar")
+	var asked: Array = []
+	badge.check_pressed.connect(func() -> void: asked.append("procurar"))
+	badge.update_pressed.connect(func() -> void: asked.append("atualizar"))
+	badge.download_pressed.connect(func(url: String) -> void: asked.append(url))
+	button.pressed.emit()
+	check_eq(button.text, "Procurando…", "procurando")
+	check(button.disabled, "não procura duas vezes")
+	badge.show_result("em_dia")
+	check_eq(button.text, "Procurar atualização", "volta ao procurar")
+	badge.set_update({"version": "1.1.0+abcd1234", "reinstall": false, "download": ""})
+	check_eq(button.text, "Atualizar para 1.1.0", "versão nova: atualizar, só com o número")
+	button.pressed.emit()
+	badge.set_update({"version": "2.0.0", "reinstall": true, "download": "https://exemplo/baixar"})
+	check_eq(button.text, "Baixar a versão 2.0.0 no site", "outro motor: baixar no site")
+	button.pressed.emit()
+	check_eq(asked, ["procurar", "atualizar", "https://exemplo/baixar"], "cada botão pede o seu")
+	badge.free()
+	var dev := VersionBadge.new()
+	dev.updater = false
+	tree.root.add_child(dev)
+	check(not (dev.get_node("Update") as Button).visible, "rodando do projeto: só a versão")
+	dev.free()
+
+
 func test_protocol_check() -> void:
 	check(not ForgeClient.needs_update({"type": "hello"}), "servidor antigo, sem versão: segue")
 	check(not ForgeClient.needs_update({"protocolVersion": ForgeClient.SUPPORTED_PROTOCOL}), "a mesma versão: segue")

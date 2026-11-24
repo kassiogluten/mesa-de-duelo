@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.244.0] - 2026-11-24
+
+### Novo
+
+- **Botão de atualizar na tela inicial.** Ao lado da versão, no canto de baixo da tela inicial, aparece "Atualizar para" e o número da versão nova assim que ela sai: a mesa fecha, abre de novo e já entra atualizada. O botão continua lá mesmo depois de fechar o aviso com "Depois". Sem versão nova, o botão vira "Procurar atualização", que confere na hora e diz se a mesa está em dia.
+
 ## [0.243.0] - 2026-11-23
 
 ### Novo

@@ -664,3 +664,16 @@ Pedido em 23/11/2026. Levantamento do log detalhado que o Arena grava no PC de q
 - [ ] **Aviso de jogada ruim.** Antes de confirmar, avisar quando a jogada não faz nada útil (mágica sem alvo que valha, habilidade sem efeito), com "jogar mesmo assim".
 - [ ] **Clique só depois da animação.** Não liberar os botões de ação enquanto a mesa ainda está mostrando os passos da jogada anterior (o Arena segura pelo `pendingMessageCount`).
 
+
+## 150. Mesa no PC: telas de configuração, modais e menus com cara de jogo
+
+Pedido em 24/11/2026. Na mesa no PC (`godot-table/`), as telas fora da mesa 3D ainda parecem de navegador: painéis retangulares translúcidos com cantos arredondados, botões em pílula, listas e formulários como num site (`ui/hud_style.gd`, `ui/modal_style.gd`, `menu/home_style.gd`). A mesa em si já tem peso, luz e efeitos; as telas em volta dela precisam falar a mesma língua, com aparência de jogo (como o menu de um card game no PC), sem perder a leitura nem os atalhos de teclado.
+
+- [ ] Antes de tudo, buscar skills que ajudem no redesenho da interface: instalar o buscador com `npx skills add https://github.com/vercel-labs/skills --skill find-skills` e procurar com ele skills de design de interface de jogo, temas e UI em Godot, sistemas de design e direção de arte; instalar as que servirem e anotar aqui quais foram e para quê.
+- [ ] Definir a direção visual antes de mexer: molduras (metal, pedra, couro, pergaminho ou só ornamento), textura e profundidade dos painéis, tipografia de títulos, paleta e como cada tela entra e sai. Montar 2 ou 3 propostas lado a lado num print e escolher uma.
+- [ ] Kit comum de peças em Godot (tema `Theme` e cenas reaproveitáveis): moldura de painel, botão principal e secundário com estados (parado, mouse em cima, apertado, desligado), abas, caixa de seleção, deslizante, campo de texto, lista com rolagem e cabeçalho de tela, para todas as telas usarem as mesmas peças.
+- [ ] Menus: tela inicial, Jogar online, salas (navegador de salas, criar sala, sala de espera) e decks (lista, detalhe, importar), com fundo de cena (mesa ou arte desfocada com luz e partículas leves) em vez de cor chapada, e transições entre as telas.
+- [ ] Telas de configuração: Opções (som, qualidade, Cartas da mesa, teclado), conta e relatos, organizadas como as opções de um jogo (abas laterais, valor com setas ou deslizante, pré-visualização ao lado quando ajudar).
+- [ ] Modais da partida: perguntas, escolha de cartas, menu da partida, zona aberta, resultado, desfazer e avisos, na mesma moldura, com entrada e saída animadas e som de abrir, confirmar e cancelar.
+- [ ] Sons de interface (passar o mouse, clicar, abrir e fechar) ligados ao volume de efeitos.
+- [ ] Conferir em 1280×720 e 1920×1080 e no tamanho de letra maior, e comparar as telas antes e depois em prints para a página Novidades em imagens.

@@ -4,6 +4,8 @@ extends Node
 
 ## Saiu versão nova. `reinstall`: ela precisa ser baixada no site (outro motor ou outro boot), e `download` diz onde.
 signal available(version: String, reinstall: bool, download: String)
+## Terminou uma conferência: "nova" (há versão nova, avisada agora ou antes), "em_dia" ou "falhou" (sem resposta do servidor).
+signal checked(result: String)
 
 const UpdateState := preload("res://boot/update_state.gd")
 const Boot := preload("res://boot/boot.gd")
@@ -33,9 +35,10 @@ func _ready() -> void:
 	_timer.start()
 
 
-## Confere agora (na volta à tela inicial), se a última conferência não foi há menos de um minuto.
-func check_now() -> void:
-	if current == "" or _busy or Time.get_ticks_msec() - _last_check_ms < int(MIN_GAP_S * 1000.0):
+## Confere agora (na volta à tela inicial), se a última conferência não foi há menos de um minuto; `force` (o botão
+## Procurar atualização) confere mesmo assim.
+func check_now(force: bool = false) -> void:
+	if current == "" or _busy or (not force and Time.get_ticks_msec() - _last_check_ms < int(MIN_GAP_S * 1000.0)):
 		return
 	_busy = true
 	_last_check_ms = Time.get_ticks_msec()
@@ -49,24 +52,28 @@ func check_now() -> void:
 		if check == null:
 			return
 		check._busy = false
-		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
-			return
-		var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+		var parsed: Variant = JSON.parse_string(body.get_string_from_utf8()) if result == HTTPRequest.RESULT_SUCCESS and code == 200 else null
 		if parsed is Dictionary:
-			check.apply_manifest(parsed))
+			check.apply_manifest(parsed)
+		else:
+			check.checked.emit("falhou"))
 	if http.request(manifest_url, ["Cache-Control: no-cache"]) != OK:
 		http.queue_free()
 		_busy = false
+		checked.emit("falhou")
 
 
 ## Lê o manifesto e avisa uma vez por versão.
 func apply_manifest(manifest: Dictionary) -> void:
 	var found: Dictionary = evaluate(manifest, current, UpdateState.load_state(), Boot.BOOT_VERSION, ReportPayload.engine_version())
-	if found.is_empty() or Txt.of(pending.get("version")) == found["version"]:
+	if found.is_empty():
+		checked.emit("nova" if not pending.is_empty() else "em_dia")
 		return
-	pending = found
-	ClientLog.add("Versão nova disponível: %s." % found["version"])
-	available.emit(found["version"], found["reinstall"], found["download"])
+	if Txt.of(pending.get("version")) != found["version"]:
+		pending = found
+		ClientLog.add("Versão nova disponível: %s." % found["version"])
+		available.emit(found["version"], found["reinstall"], found["download"])
+	checked.emit("nova")
 
 
 ## A versão nova que vale avisar, ou {}: diferente da atual e não marcada como quebrada. `reinstall` quando o pacote pede
