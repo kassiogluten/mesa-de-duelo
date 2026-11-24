@@ -69,6 +69,8 @@ func _build_scene() -> void:
 ## Aplica um estado: cria as cartas novas, move as que mudaram e apaga as que saíram.
 func apply_state(state: Dictionary) -> void:
 	_state = state
+	if not catalog.sketch_ready.is_connected(on_sketch_ready):
+		catalog.sketch_ready.connect(on_sketch_ready)
 	_ctx = BadgeSpec.context(state)
 	var you: int = int(state.get("you", 0))
 	var players: Array = state.get("players", [])
@@ -217,13 +219,21 @@ func card_data(id: int) -> Dictionary:
 
 
 func refresh_textures() -> void:
-	for node: CardNode in _cards.values():
-		_update_texture(node)
+	for key: Variant in _cards:
+		_update_texture(_cards[key], Txt.of(_zones.get(key, "")))
 
 
 func on_texture_ready(url: String, tex: Texture2D) -> void:
 	for node: CardNode in _cards.values():
 		if node.image_url == url:
+			node.set_texture(tex)
+			node.set_meta(&"sketch", "")
+
+
+## A carta desenhada ficou pronta: vai para as cartas que a esperam e ainda não têm a imagem de verdade.
+func on_sketch_ready(key: String, tex: Texture2D) -> void:
+	for node: CardNode in _cards.values():
+		if Txt.of(node.get_meta(&"sketch", "")) == key:
 			node.set_texture(tex)
 
 
@@ -345,7 +355,7 @@ func put_card(key: Variant, card: Dictionary, zone: String, t: Transform3D, slee
 	if name != "":
 		names.append(name)
 	node.set_data(card, sleeve, catalog.label(name) if name != "" else "", zone == "battlefield")
-	_update_texture(node)
+	_update_texture(node, zone)
 	node.set_contact_shadow(zone == "battlefield" or zone == "library")
 	if zone != "hand":
 		node.set_lifted(false)
@@ -362,12 +372,31 @@ func _spawn_from(card: Dictionary, zone: String, t: Transform3D) -> Transform3D:
 	return t
 
 
-func _update_texture(node: CardNode) -> void:
-	var url: String = catalog.image_url_for(node.data) if not node.data.is_empty() and not bool(node.data.get("faceDown", false)) else ""
-	if url == node.image_url:
+## A imagem da carta: a de verdade (a mão, o campo e a pilha baixam antes do resto); enquanto ela não chega, a carta
+## desenhada com os dados (meta "sketch": a chave dela, "" com a imagem de verdade).
+func _update_texture(node: CardNode, zone: String) -> void:
+	var shown: bool = not node.data.is_empty() and not bool(node.data.get("faceDown", false))
+	var url: String = catalog.image_url_for(node.data) if shown else ""
+	var waiting: bool = shown and Txt.of(node.get_meta(&"sketch", "-")) != ""
+	if url == node.image_url and not waiting:
 		return
 	node.image_url = url
-	node.set_texture(catalog.texture(url))
+	var priority: int = ImageStore.TABLE if zone in ["hand", "battlefield", "stack"] else ImageStore.OTHER
+	var tex: Texture2D = catalog.texture(url, priority)
+	if tex != null or not shown:
+		node.set_texture(tex)
+		node.set_meta(&"sketch", "" if tex != null else "-")
+		return
+	# A imagem já está no disco (ou na memória): chega em instantes, sem passar pela carta desenhada.
+	if catalog.arriving_soon(url):
+		return
+	var key: String = catalog.sketch_key(node.data)
+	if Txt.of(node.get_meta(&"sketch", "")) == key:
+		return
+	node.set_meta(&"sketch", key)
+	var drawn: Texture2D = catalog.sketch(node.data)
+	if drawn != null:
+		node.set_texture(drawn)
 
 
 func _count_label(key: String, count: int, pos: Vector3, seen: Dictionary, show: bool) -> void:

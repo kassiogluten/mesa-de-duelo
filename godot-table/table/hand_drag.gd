@@ -215,7 +215,9 @@ func _begin() -> void:
 	table.add_child(_ghost)
 	_ghost.set_data(_source.data, table.sleeve_of(_you()), "", false)
 	_ghost.image_url = _source.image_url
-	_ghost.set_texture(table.catalog.texture(_source.image_url) if table.catalog else null)
+	var tex: Texture2D = table.catalog.texture(_source.image_url) if table.catalog else null
+	# Sem a imagem ainda, a carta desenhada (a mesma que estava na mão).
+	_ghost.set_texture(tex if tex != null or table.catalog == null else table.catalog.sketch(_source.data))
 	_unpickable(_ghost)
 	# Começa onde está o desenho da carta (levantada pelo mouse, se estava).
 	var start: Transform3D = _source.transform

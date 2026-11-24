@@ -1,4 +1,4 @@
-# O pé da coluna da tela inicial: Opções (efeitos, som e os efeitos contínuos numa janelinha), Relatar um problema e
+# O pé da coluna da tela inicial: Opções (efeitos, som, os efeitos contínuos e a aparência das cartas numa janelinha), Relatar um problema e
 # Meus relatos, como links discretos.
 class_name HomeOptions
 extends HBoxContainer
@@ -10,6 +10,8 @@ signal effects_changed(level: String)
 
 const LEVELS: Array = [["auto", "Efeitos: automático"], ["alto", "Efeitos: alto"], ["medio", "Efeitos: médio"], ["leve", "Efeitos: leve"]]
 const POPOVER_W := 360.0
+## A explicação de "Cartas da mesa" (a do navegador em src/ui/tableShell.ts, com o padrão desligado daqui).
+const OWN_ART_HINT := "Ligado, os terrenos básicos e as staples (Sol Ring, Command Tower e outras) usam a arte feita para a mesa. Desligado, os terrenos usam a série Nyx e as staples, a imagem normal da carta. A arte escolhida no deck continua valendo."
 
 var _toggle: Button
 var _popover: PanelContainer
@@ -27,7 +29,7 @@ func _ready() -> void:
 	_toggle.add_theme_color_override("icon_normal_color", HomeStyle.DIM)
 	_toggle.add_theme_color_override("icon_hover_color", HudStyle.GOLD_SOFT)
 	_toggle.add_theme_color_override("icon_pressed_color", HudStyle.GOLD)
-	_toggle.tooltip_text = "Efeitos, som e os efeitos contínuos nas permanentes."
+	_toggle.tooltip_text = "Efeitos, som, os efeitos contínuos nas permanentes e as cartas da mesa."
 	_toggle.pressed.connect(toggle)
 	add_child(_toggle)
 	add_child(_dot())
@@ -141,7 +143,25 @@ func _options_body() -> VBoxContainer:
 	ambient.tooltip_text = "Voar, vínculo com a vida, indestrutível e outras qualidades aparecem de leve nas cartas com a mesa parada."
 	ambient.toggled.connect(func(on: bool) -> void: AmbientFx.set_enabled(on))
 	body.add_child(ambient)
+	body.add_child(_appearance())
 	return body
+
+
+## Aparência: "Cartas da mesa" (cards/default_art.gd), desligada de começo, com a explicação embaixo.
+func _appearance() -> VBoxContainer:
+	var group := VBoxContainer.new()
+	group.name = "Appearance"
+	group.add_theme_constant_override("separation", 6)
+	group.add_child(ModalStyle.label(14, HomeStyle.DIM, "Aparência"))
+	var own: CheckBox = ModalStyle.checkbox("Cartas da mesa", DefaultArt.own_art_enabled())
+	own.name = "OwnArt"
+	own.size_flags_horizontal = Control.SIZE_FILL
+	own.toggled.connect(func(on: bool) -> void: DefaultArt.set_own_art_enabled(on))
+	group.add_child(own)
+	var hint: Label = ModalStyle.wrap(13, Color(ModalStyle.INK, 0.62), OWN_ART_HINT, POPOVER_W - 40.0, false)
+	hint.name = "OwnArtHint"
+	group.add_child(hint)
+	return group
 
 
 func _unhandled_input(event: InputEvent) -> void:
