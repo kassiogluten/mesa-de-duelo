@@ -8,8 +8,8 @@ description: Lista de conferência para fechar uma mudança da Mesa de Duelo ant
 Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entregar. As regras completas estão no `CLAUDE.md`; aqui fica só o caminho.
 
 ## 1. Novidade pendente (sem número de versão)
-- Não mexa no `CHANGELOG.md`, `src/novidades.json`, `src/lab-cenarios.json` nem no `version` do `package.json`: o número só sai no `/cp` (`npm run publicar-versao`), e é isso que evita duas worktrees com a mesma versão.
-- Escreva em `novidades-pendentes/<nome-da-mudanca>/novidade.md` (formato no `README.md` de lá). A mudança já tem pasta? Acrescente nela.
+- Não mexa no `CHANGELOG.md`, `CHANGELOG-PC.md`, `src/novidades.json`, `src/lab-cenarios.json` nem no `version` do `package.json`: o número só sai no `/cp` (`npm run publicar-versao`), e é isso que evita duas worktrees com a mesma versão.
+- Escreva em `novidades-pendentes/<nome-da-mudanca>/` (formato no `README.md` de lá), um arquivo por mesa: `novidade.md` para o que muda na mesa do navegador, `novidade-pc.md` para o que muda só na mesa no PC; item que vale para as duas vai nos dois, com o mesmo título. Cada mesa só mostra os seus. A mudança já tem pasta? Acrescente nela.
 - Itens em `### Novo` / `### Mudou` / `### Corrigido`, começando por `**Título.**`, em português para o jogador, sem "ponte", sem nomes de código.
 - Algo deixa de funcionar como antes (versão X)? Diga ao entregar, para o `/cp` publicar com `--x`.
 
@@ -17,7 +17,7 @@ Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entre
 - Para cada item novo, um print recortado no detalhe, salvo na pasta da mudança:
   `npm run dev` ligado e `npm run print -- tests/fixtures/<página>.html[?query] "<seletor>" novidades-pendentes/<pasta>/<nome>.webp [--setup "<js com window.fixture>"] [--viewport 1366x768]`
 - Confira a imagem (Read no arquivo) antes de registrar.
-- Registre no `imagens.json` da pasta: título exato do item (sem o ponto) → `[{ "img": "<nome>.webp", "legenda": "..." }]`.
+- Registre no `imagens.json` da pasta (um só para as duas mesas): título exato do item (sem o ponto) → `[{ "img": "<nome>.webp", "legenda": "..." }]`.
 
 ## 3. Cenário do Laboratório (só correções de regra ou carta)
 - No `cenarios.json` da pasta da mudança (uma lista, no estilo de `src/lab-cenarios.json`): `nome`, `item`, `conferir`, `cenario` (o formato de "Copiar cenário": `active`, `phase`, `players[2]` com `life`, `poison`, `hand`, `library`, `graveyard`, `exile`, `battlefield`). **Sem `versao`**: ela entra na publicação.

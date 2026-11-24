@@ -29,7 +29,7 @@ O job **Mesa** do GitHub Actions (`.github/workflows/mesa.yml`) já roda `tsc`, 
 
 - [x] GitHub Actions com o typecheck, `npm test` e `npm run build` em cada push e PR.
 - [ ] Um segundo job com `mvn test` do servidor, guardando o Forge compilado (`~/.m2`) no cache do Actions para não recompilar a cada vez.
-- [ ] Conferir num teste que o `version` do `package.json` é igual ao do topo do `CHANGELOG.md`, como pede o `CLAUDE.md` (hoje só a revisão pega).
+- [ ] Conferir num teste que o `version` do `package.json` é igual ao mais novo dos topos do `CHANGELOG.md` e do `CHANGELOG-PC.md`, como pede o `CLAUDE.md` (hoje só a revisão pega).
 
 ### S34. Partidas de teste que falham de vez em quando · Correção · M
 

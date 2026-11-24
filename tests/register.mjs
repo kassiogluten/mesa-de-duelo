@@ -2,7 +2,7 @@
 // `npm test` liga com `--import ./tests/register.mjs`; num teste é só `await import('../src/ui/x.ts')`.
 // - imports sem extensão ('./cardtext') viram '.ts';
 // - TypeScript é convertido com o `typescript` do projeto;
-// - CSS vira módulo vazio, `?raw` vira o texto do arquivo, JSON vira `export default`;
+// - CSS vira módulo vazio, `?raw` vira o texto do arquivo, JSON vira `export default` (e cada chave do topo, um export);
 // - `import.meta.env` existe (BASE_URL '/', DEV false) e `virtual:pwa-register` é um módulo vazio;
 // - `import.meta.glob(..., { eager: true })` lê os arquivos do disco (`?raw` vira texto, `?url` o endereço, JSON o objeto).
 import { registerHooks } from 'node:module';
@@ -26,6 +26,13 @@ globalThis.__testGlob = (file, pattern, { eager, query, import: name } = {}) => 
   return out;
 };
 const CODE = /\.[cm]?[jt]sx?$/;
+
+/** Um JSON como o Vite o importa: o objeto em `export default` e cada chave do topo também como export com o nome dela. */
+function jsonModule(text) {
+  const data = JSON.parse(text);
+  const keys = data && typeof data === 'object' && !Array.isArray(data) ? Object.keys(data).filter(k => k !== 'default') : [];
+  return `const json = ${text};\nexport default json;\n${keys.map((k, i) => `const k${i} = json[${JSON.stringify(k)}];\nexport { k${i} as ${JSON.stringify(k)} };`).join('\n')}`;
+}
 
 // Módulo falso num teste: `const { mock } = await import('./register.mjs'); mock('../src/scryfall.ts', 'export const x = 1;', import.meta.url)`
 // antes de importar o código; todo import que chegar nesse arquivo recebe o falso.
@@ -55,7 +62,7 @@ registerHooks({
     const file = fileURLToPath(url.split('?')[0]);
     if (url.endsWith('?raw')) return { format: 'module', source: `export default ${JSON.stringify(readFileSync(file, 'utf8'))};`, shortCircuit: true };
     if (file.endsWith('.css')) return { format: 'module', source: 'export default "";', shortCircuit: true };
-    if (file.endsWith('.json') && context.importAttributes?.type !== 'json') return { format: 'module', source: `export default ${readFileSync(file, 'utf8')};`, shortCircuit: true };
+    if (file.endsWith('.json') && context.importAttributes?.type !== 'json') return { format: 'module', source: jsonModule(readFileSync(file, 'utf8')), shortCircuit: true };
     if (file.endsWith('.ts')) {
       const out = ts.transpileModule(readFileSync(file, 'utf8'), { fileName: file, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
       return { format: 'module', source: ENV + GLOB(file) + out.outputText, shortCircuit: true };

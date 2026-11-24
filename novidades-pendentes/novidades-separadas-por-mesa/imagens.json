@@ -1,0 +1,11 @@
+{
+  "Novidades só da mesa do navegador": [
+    { "img": "painel-navegador.webp", "legenda": "O painel Novidades do navegador com a próxima versão: só os itens da mesa do navegador, sem o selo \"Mesa no PC\"." },
+    { "img": "abas-navegador.webp", "legenda": "A página Novidades em imagens com as duas abas, aberta na aba Navegador." },
+    { "img": "abas-mesa-no-pc.webp", "legenda": "A mesma página na aba Mesa no PC, com os prints só da mesa no PC." }
+  ],
+  "Novidades só da mesa no PC": [
+    { "img": "painel-mesa-no-pc.webp", "legenda": "O painel Novidades da mesa no PC: só o que muda nela, sem selo em cada item." },
+    { "img": "abas-mesa-no-pc.webp", "legenda": "O \"ver em imagens\" do painel abre a página Novidades em imagens já na aba Mesa no PC." }
+  ]
+}

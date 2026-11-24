@@ -54,10 +54,16 @@ test('"3 Island" e "3x Island" põem várias cópias; o resto é o nome', () => 
 });
 
 test('cada cenário pronto aponta para uma correção do CHANGELOG (ou fica para investigar) e volta do editor igual', async () => {
-  // As correções que ainda não ganharam número contam como a seção "Próxima" (novidades-pendentes/).
-  const { PENDING_CHANGELOG } = await import('../src/pendingNews.ts');
-  const changelog = PENDING_CHANGELOG + '\n' + (await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8')) + '\n' + (await readFile(new URL('../docs/changelog-antigo.md', import.meta.url), 'utf8'));
-  const sections = new Map(changelog.split(/^## /m).slice(1).map(sec => [sec.slice(1, sec.indexOf(']')), sec]));
+  // As correções que ainda não ganharam número contam como a seção "Próxima" (novidades-pendentes/). Vale um item de
+  // qualquer das duas mesas: CHANGELOG.md (navegador) ou CHANGELOG-PC.md (mesa no PC), e o mesmo nas pendentes.
+  const { PENDING_CHANGELOG, PENDING_CHANGELOG_PC } = await import('../src/pendingNews.ts');
+  const read = async path => readFile(new URL(path, import.meta.url), 'utf8');
+  const changelogs = [PENDING_CHANGELOG, PENDING_CHANGELOG_PC, await read('../CHANGELOG.md'), await read('../CHANGELOG-PC.md'), await read('../docs/changelog-antigo.md')];
+  const sections = new Map();
+  for (const sec of changelogs.flatMap(md => md.split(/^## /m).slice(1))) {
+    const version = sec.slice(1, sec.indexOf(']'));
+    sections.set(version, `${sections.get(version) ?? ''}\n${sec}`);
+  }
   assert.ok(lab.READY_SCENARIOS.length > 0);
   const names = new Set();
   for (const r of lab.READY_SCENARIOS) {

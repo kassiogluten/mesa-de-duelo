@@ -1,4 +1,4 @@
-# Testes das Novidades da mesa no PC: o /novidades.json (o mesmo fixture que tests/newsFeed.test.mjs confere), a cópia guardada, o ponto de versão não vista e o painel com o selo.
+# Testes das Novidades da mesa no PC: o /novidades.json (o mesmo fixture que tests/newsFeed.test.mjs confere), a cópia guardada, o ponto de versão não vista e o painel.
 extends "res://tests/test_case.gd"
 
 const FIXTURE := "res://tests/fixtures/novidades.json"
@@ -13,7 +13,7 @@ static func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
 
-func test_parse_keeps_versions_groups_and_the_badge() -> void:
+func test_parse_keeps_versions_groups_and_items() -> void:
 	var feed: Dictionary = _fixture()
 	check_eq(Txt.of(feed.get("version")), "0.239.0", "a versão mais nova com número")
 	var releases: Array = feed["releases"]
@@ -22,9 +22,7 @@ func test_parse_keeps_versions_groups_and_the_badge() -> void:
 	check_eq(release["date"], "24/11/2026", "a data")
 	check(bool(release["visual"]), "a versão com prints")
 	var items: Array = ((release["groups"] as Array)[0] as Dictionary)["items"]
-	check_eq((items[1] as Dictionary)["title"], "Zip da mesa no PC", "o título")
-	check(bool((items[1] as Dictionary)["pc"]), "o item só da mesa no PC")
-	check(not bool((items[0] as Dictionary)["pc"]), "o item das duas mesas")
+	check_eq(items[1], {"title": "Zip da mesa no PC", "text": "Baixe em `/baixar` e extraia onde quiser."}, "o título e o texto")
 	check_eq(((releases[2] as Dictionary)["groups"] as Array).size(), 1, "item sem grupo e parágrafo solto num grupo sem nome")
 
 
@@ -37,7 +35,7 @@ func test_parse_drops_what_is_not_in_the_format() -> void:
 	]})
 	var release: Dictionary = (feed["releases"] as Array)[0]
 	check_eq(release["title"], "Versão 1.0.0", "título que faltava")
-	check_eq(((release["groups"] as Array)[0] as Dictionary)["items"], [{"title": "Certo", "text": "Sim.", "pc": true}], "só o item com texto")
+	check_eq(((release["groups"] as Array)[0] as Dictionary)["items"], [{"title": "Certo", "text": "Sim."}], "só o item com texto (o selo antigo, pc, fica de fora)")
 
 
 func test_markdown_becomes_bbcode_with_the_brackets_escaped() -> void:
@@ -63,10 +61,12 @@ func test_cache_keeps_the_last_copy_for_offline() -> void:
 	check_eq(NewsFeed.header(PackedStringArray(["Content-Type: application/json", "ETag: \"x1\""]), "etag"), "\"x1\"", "o cabeçalho sem diferença de maiúsculas")
 
 
-func test_dot_until_the_panel_opens_and_the_panel_shows_the_badge() -> void:
+func test_dot_until_the_panel_opens_and_the_panel_links_the_pc_tab() -> void:
 	done = false
 	check(NewsFeed.has_unseen(_fixture(), "0.238.0"), "versão nova: ponto")
 	check(not NewsFeed.has_unseen(_fixture(), "0.239.0"), "a mesma versão: sem ponto")
+	check(not NewsFeed.has_unseen(_fixture(), "0.242.1"), "vista uma versão mais nova (do painel com as duas mesas): sem ponto")
+	check(NewsFeed.has_unseen(_fixture(), "x"), "vista fora do formato: ponto")
 	check(not NewsFeed.has_unseen({}, ""), "sem novidades: sem ponto")
 	var seen_before: String = NewsFeed.seen()
 	Prefs.save(NewsFeed.SEEN_KEY, "0.238.0")
@@ -87,13 +87,12 @@ func test_dot_until_the_panel_opens_and_the_panel_shows_the_badge() -> void:
 	await _tree().process_frame
 	check(not button.has_dot(), "abriu: o ponto some")
 	check_eq(NewsFeed.seen(), "0.239.0", "a versão fica vista")
-	check_eq(panel.find_children("PcBadge", "", true, false).size(), 2, "o selo nos dois itens só da mesa no PC")
 	var more: Button = panel.find_child("More", true, false)
 	check(not more.visible, "três versões cabem numa página")
 	var links: Array = panel.find_children("*", "LinkButton", true, false)
 	check_eq(links.size(), 1, "ver em imagens só na versão com prints")
 	(links[0] as LinkButton).pressed.emit()
-	check(opened.size() == 1 and Txt.of(opened[0]).ends_with("/novidades#v0.239.0"), "abre a versão na página Novidades em imagens")
+	check(opened.size() == 1 and Txt.of(opened[0]).ends_with("/novidades?mesa=pc#v0.239.0"), "abre a versão na aba da mesa no PC da página Novidades em imagens: %s" % [opened])
 	screen.queue_free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_CACHE))
 	NewsFeed.cache_path = path
@@ -105,7 +104,7 @@ func test_panel_pages_five_versions_at_a_time() -> void:
 	done = false
 	var releases: Array = []
 	for i: int in 12:
-		releases.append({"version": "0.%d.0" % (100 - i), "title": "Versão 0.%d.0" % (100 - i), "date": "", "visual": false, "groups": [{"name": "Novo", "items": [{"title": "Item %d" % i, "text": "Texto.", "pc": false}]}]})
+		releases.append({"version": "0.%d.0" % (100 - i), "title": "Versão 0.%d.0" % (100 - i), "date": "", "visual": false, "groups": [{"name": "Novo", "items": [{"title": "Item %d" % i, "text": "Texto."}]}]})
 	var panel := NewsPanel.new()
 	_tree().root.add_child(panel)
 	panel.show_feed({"version": "0.100.0", "releases": releases})

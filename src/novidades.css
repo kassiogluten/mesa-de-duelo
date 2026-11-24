@@ -1,4 +1,4 @@
-/* Novidades em imagens (novidades.html): cada item do CHANGELOG com o print de como ficou na mesa. */
+/* Novidades em imagens (novidades.html): cada item das novidades de cada mesa com o print de como ficou. */
 body { overflow-y: auto; }
 /* Duas classes a mais que .shared-shell-header.home-top, que zera o padding: sem isso a marca encostava na borda. */
 .shared-shell-header.home-top.vis-top { padding-inline: 16px; }
@@ -10,6 +10,15 @@ body { overflow-y: auto; }
 .vis { width: min(1180px, 100%); margin: 0 auto; padding: 24px 16px 64px; }
 .vis h1 { margin: 8px 0 6px; font: 800 32px/1.15 var(--display); color: var(--gold-light); }
 .vis-lead { margin: 0 0 18px; color: var(--muted); max-width: 70ch; line-height: 1.5; }
+/* Uma aba para cada mesa: Navegador e Mesa no PC. */
+.vis-tabs { display: flex; gap: 4px; width: fit-content; max-width: 100%; margin: 14px 0 14px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
+.vis-tab {
+  padding: 8px 18px; border: 0; border-radius: 999px; background: transparent; color: var(--muted);
+  font: 600 15px var(--body); cursor: pointer; white-space: nowrap;
+}
+.vis-tab:hover { color: var(--ink); }
+.vis-tab[aria-selected='true'] { background: #f2b54c22; color: var(--gold); }
+.vis-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .vis-empty { color: var(--muted); }
 .vis-rel { scroll-margin-top: 16px; }
 .vis-rel h2:focus { outline: none; }

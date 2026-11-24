@@ -103,17 +103,61 @@ test('a mesma imagem em dois itens da mesma pasta vai uma vez só, com o mesmo n
   } finally { rmSync(root, { recursive: true }); }
 });
 
-test('o item só da mesa no PC ([Mesa no PC] depois do título) sai igual, com os prints pelo mesmo título', () => {
+// As duas mesas: novidade.md vai para o CHANGELOG.md (navegador), novidade-pc.md para o CHANGELOG-PC.md (mesa no PC).
+const PC_LOG = '# Novidades da mesa no PC\n\nIntro do PC.\n\n## [0.10.1] - 2025-12-30\n\n### Mudou\n\n- **Pilha.** Maior.\n';
+
+test('cada mesa recebe só os seus itens: pasta só do navegador, só do PC, das duas e com a marca antiga', () => {
   const root = project({
-    'pc/novidade.md': '### Novo\n\n- **Novidades na mesa no PC.** [Mesa no PC] O painel abre na tela inicial.\n',
-    'pc/imagens.json': JSON.stringify({ 'Novidades na mesa no PC': [{ img: 'painel.webp', legenda: 'O painel.' }] }),
-    'pc/painel.webp': 'p',
+    'nav/novidade.md': '### Novo\n\n- **Abas.** Duas abas.\n',
+    'pc/novidade-pc.md': '### Mudou\n\n- **Setas.** De energia.\n',
+    'pc/imagens.json': JSON.stringify({ Setas: [{ img: 'setas.webp', legenda: 'As setas.' }] }),
+    'pc/setas.webp': 's',
+    'duas/novidade.md': '### Corrigido\n\n- **Fichas com arte.** Agora com arte.\n',
+    'duas/novidade-pc.md': '### Corrigido\n\n- **Fichas com arte.** Agora com arte.\n',
+    'duas/imagens.json': JSON.stringify({ 'Fichas com arte': [{ img: 'fichas.webp', legenda: 'As fichas.' }] }),
+    'duas/fichas.webp': 'f',
+    'duas/cenarios.json': `[\n  {\n    "nome": "Fichas",\n    "item": "Fichas com arte",\n    "conferir": "Crie.",\n    "cenario": ${JSON.stringify(scenario)}\n  }\n]\n`,
+    'velha/novidade.md': '### Novo\n\n- **Carta à vista.** [Mesa no PC] Ao pagar.\n- **Lista.** No navegador.\n',
+    'velha/imagens.json': JSON.stringify({ 'Carta à vista': [{ img: 'carta.webp', legenda: 'A carta.' }] }),
+    'velha/carta.webp': 'c',
   });
   try {
+    writeFileSync(join(root, 'CHANGELOG-PC.md'), PC_LOG);
     run(root);
-    assert.ok(read(root, 'CHANGELOG.md').includes('- **Novidades na mesa no PC.** [Mesa no PC] O painel abre na tela inicial.\n'));
-    assert.deepEqual(JSON.parse(read(root, 'src/novidades.json'))['0.11.0']['Novidades na mesa no PC'], [{ img: '0.11.0/painel.webp', legenda: 'O painel.' }]);
+    const browser = read(root, 'CHANGELOG.md'), pc = read(root, 'CHANGELOG-PC.md');
+    assert.ok(browser.includes('Intro.\n\n## [0.11.0] - 2026-02-03\n\n### Novo\n\n- **Abas.** Duas abas.\n- **Lista.** No navegador.\n\n### Corrigido\n\n- **Fichas com arte.** Agora com arte.\n\n## [0.10.2]'), browser);
+    assert.ok(pc.includes('Intro do PC.\n\n## [0.11.0] - 2026-02-03\n\n### Novo\n\n- **Carta à vista.** Ao pagar.\n\n### Mudou\n\n- **Setas.** De energia.\n\n### Corrigido\n\n- **Fichas com arte.** Agora com arte.\n\n## [0.10.1]'), pc);
+    assert.ok(!browser.includes('Setas') && !browser.includes('Carta à vista') && !pc.includes('[Mesa no PC]') && !pc.includes('Abas'));
+    // Os prints e o cenário continuam pelo título, de qualquer das duas mesas.
+    const visuals = JSON.parse(read(root, 'src/novidades.json'))['0.11.0'];
+    assert.deepEqual(Object.keys(visuals).sort(), ['Carta à vista', 'Fichas com arte', 'Setas']);
+    assert.equal(read(root, 'public/novidades/0.11.0/setas.webp'), 's');
+    assert.deepEqual(JSON.parse(read(root, 'src/lab-cenarios.json')).map(s => [s.nome, s.versao]), [['Fichas', '0.11.0'], ['Velho', undefined]]);
   } finally { rmSync(root, { recursive: true }); }
+});
+
+test('versão só da mesa no PC: o CHANGELOG.md fica como está, e a seguinte conta a partir dela', () => {
+  const root = project({ 'pc/novidade-pc.md': '### Novo\n\n- **Painel no PC.** Abre.\n' });
+  try {
+    run(root);
+    assert.equal(read(root, 'CHANGELOG.md'), '# Novidades\n\nIntro.\n\n## [0.10.2] - 2026-01-01\n\n### Novo\n\n- **Antigo.** Texto.\n');
+    // Sem CHANGELOG-PC.md, ele nasce com a abertura e a versão.
+    assert.match(read(root, 'CHANGELOG-PC.md'), /^# Novidades da mesa no PC\n\n.+\n\n## \[0\.11\.0\] - 2026-02-03\n\n### Novo\n\n- \*\*Painel no PC\.\*\* Abre\.\n$/);
+    assert.equal(JSON.parse(read(root, 'package.json')).version, '0.11.0');
+    // A seguinte, só do navegador, vem depois da 0.11.0 (o topo mais novo dos dois arquivos), e não da 0.10.2.
+    mkdirSync(join(root, 'novidades-pendentes/fix'), { recursive: true });
+    writeFileSync(join(root, 'novidades-pendentes/fix/novidade.md'), '### Corrigido\n\n- **Conserto.** Certo.\n');
+    run(root);
+    assert.ok(read(root, 'CHANGELOG.md').includes('Intro.\n\n## [0.11.1] - 2026-02-03\n\n### Corrigido\n\n- **Conserto.** Certo.\n\n## [0.10.2]'));
+    assert.ok(!read(root, 'CHANGELOG-PC.md').includes('0.11.1'));
+  } finally { rmSync(root, { recursive: true }); }
+});
+
+test('pasta sem novidade.md nem novidade-pc.md, ou com print de um título que não está em nenhum dos dois, não publica', () => {
+  const empty = project({ 'x/imagens.json': '{}' });
+  try { assert.throws(() => run(empty), /sem novidade\.md \(mesa do navegador\) nem novidade-pc\.md/); } finally { rmSync(empty, { recursive: true }); }
+  const wrong = project({ 'x/novidade-pc.md': '### Novo\n\n- **A.** B.\n', 'x/imagens.json': JSON.stringify({ C: [{ img: 'c.webp', legenda: 'C.' }] }), 'x/c.webp': 'c' });
+  try { assert.throws(() => run(wrong), /"C" não é um item do novidade\.md nem do novidade-pc\.md/); } finally { rmSync(wrong, { recursive: true }); }
 });
 
 test('só correções sobem o Z; --x sobe o X; --dry não grava nada', () => {
