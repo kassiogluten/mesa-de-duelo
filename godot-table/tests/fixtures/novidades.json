@@ -12,8 +12,7 @@
           "items": [
             {
               "title": "Novidades na mesa no PC",
-              "text": "O botão **Novidades** abre o painel.",
-              "pc": true
+              "text": "O botão **Novidades** abre o painel."
             }
           ]
         }
@@ -29,14 +28,12 @@
           "name": "Novo",
           "items": [
             {
-              "title": "Selo nas novidades",
-              "text": "Os itens só da mesa no PC ganham um selo.",
-              "pc": false
+              "title": "Setas de energia",
+              "text": "As setas viraram feixes."
             },
             {
               "title": "Zip da mesa no PC",
-              "text": "Baixe em `/baixar` e extraia onde quiser.",
-              "pc": true
+              "text": "Baixe em `/baixar` e extraia onde quiser."
             }
           ]
         },
@@ -45,8 +42,7 @@
           "items": [
             {
               "title": "Choque no alvo certo",
-              "text": "Agora acerta.",
-              "pc": false
+              "text": "Agora acerta."
             }
           ]
         }
@@ -63,13 +59,11 @@
           "items": [
             {
               "title": "Item sem grupo",
-              "text": "Texto.",
-              "pc": false
+              "text": "Texto."
             },
             {
               "title": "",
-              "text": "Com \"reduzir movimento\" ligado, nada se move.",
-              "pc": false
+              "text": "Com \"reduzir movimento\" ligado, nada se move."
             }
           ]
         }

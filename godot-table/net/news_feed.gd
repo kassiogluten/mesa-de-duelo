@@ -1,4 +1,4 @@
-# Novidades da mesa no PC: o /novidades.json do site (as versões do CHANGELOG, com o selo "Mesa no PC"), guardado em user:// para abrir sem internet.
+# Novidades da mesa no PC: o /novidades.json do site (as versões do CHANGELOG-PC.md, só com o que muda na mesa no PC), guardado em user:// para abrir sem internet.
 class_name NewsFeed
 extends Node
 
@@ -78,12 +78,25 @@ static func seen() -> String:
 	return Txt.of(Prefs.load_all().get(SEEN_KEY))
 
 
+## Só uma versão mais nova que a vista acende o ponto (a vista pode ser de antes, quando o painel tinha as novidades das duas mesas).
 static func has_unseen(data: Dictionary, seen_version: String) -> bool:
 	var version: String = Txt.of(data.get("version"))
-	return version != "" and version != seen_version
+	return version != "" and _newer(version, seen_version)
 
 
-## O /novidades.json conferido: {version, releases: [{version, title, date, visual, groups: [{name, items: [{title, text, pc}]}]}]}.
+## X.Y.Z `a` depois de `b` (um `b` fora do formato conta como nenhum).
+static func _newer(a: String, b: String) -> bool:
+	var x: PackedStringArray = a.split(".")
+	var y: PackedStringArray = b.split(".")
+	if y.size() != 3 or x.size() != 3:
+		return a != b
+	for i: int in 3:
+		if x[i].to_int() != y[i].to_int():
+			return x[i].to_int() > y[i].to_int()
+	return false
+
+
+## O /novidades.json conferido: {version, releases: [{version, title, date, visual, groups: [{name, items: [{title, text}]}]}]}.
 ## O que não tem o formato fica de fora; {} quando não há nenhuma versão.
 static func parse(data: Variant) -> Dictionary:
 	if not data is Dictionary or not (data as Dictionary).get("releases") is Array:
@@ -104,7 +117,7 @@ static func parse(data: Variant) -> Dictionary:
 					continue
 				var item: Dictionary = i
 				if Txt.of(item.get("title")) != "" or Txt.of(item.get("text")) != "":
-					items.append({"title": Txt.of(item.get("title")), "text": Txt.of(item.get("text")), "pc": item.get("pc") == true})
+					items.append({"title": Txt.of(item.get("title")), "text": Txt.of(item.get("text"))})
 			if not items.is_empty():
 				groups.append({"name": Txt.of((g as Dictionary).get("name")), "items": items})
 		var version: String = Txt.of(release["version"])
@@ -159,6 +172,6 @@ static func to_bbcode(text: String) -> String:
 	return code.sub(out, "[code]$1[/code]", true)
 
 
-## A página Novidades em imagens do site, na versão dada (vazio: o começo).
+## A página Novidades em imagens do site, na aba da mesa no PC e na versão dada (vazio: o começo).
 static func visual_url(version: String = "") -> String:
-	return GameConfig.site_url("/novidades" + ("#v" + version.uri_encode() if version != "" else ""))
+	return GameConfig.site_url("/novidades?mesa=pc" + ("#v" + version.uri_encode() if version != "" else ""))

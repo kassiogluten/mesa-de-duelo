@@ -1,13 +1,11 @@
-// Selo "Mesa no PC" dos itens das novidades e o arquivo de novidades (/novidades.json) que a mesa no PC lê do site.
+// Novidades de cada mesa (CHANGELOG.md, do navegador, e CHANGELOG-PC.md, da mesa no PC) e o /novidades.json que a mesa no PC lê do site.
 
 /**
- * Item que vale só para a mesa no PC: a marca logo depois do título em negrito, no `novidade.md` e no CHANGELOG.md
- * (`- **Título.** [Mesa no PC] O que muda.`). Fica depois do título para o título (e o `imagens.json`) não mudar; o
- * painel Novidades, a página Novidades em imagens e a mesa no PC trocam a marca pelo selo.
+ * Marca antiga de item só da mesa no PC (`- **Título.** [Mesa no PC] O que muda.`), de quando as duas mesas tinham um
+ * CHANGELOG só. Hoje o item da mesa no PC vai no `novidade-pc.md` da pasta pendente e sai no CHANGELOG-PC.md; um item
+ * com a marca dentro do `novidade.md` (de uma worktree antiga) ainda é aceito e vai para a mesa no PC, sem ela.
  */
 export const PC_TAG = '[Mesa no PC]';
-/** O texto do selo. */
-export const PC_LABEL = 'Mesa no PC';
 
 /** Versão das novidades ainda sem número (novidades-pendentes/), mostrada como "Próxima versão". */
 export const PENDING = 'Próxima';
@@ -36,19 +34,57 @@ export function mergeGroups(mds: string[]): { text: string; groups: string[] } {
   return { groups, text: groups.map(g => `### ${g}\n\n${lines.get(g)!.join('\n')}\n`).join('\n') };
 }
 
-/** Um item: título em negrito (vazio num parágrafo solto), o texto com o pouco de Markdown do CHANGELOG e o selo. */
-export interface FeedItem { title: string; text: string; pc: boolean }
+/**
+ * Um `novidade.md` dividido entre as mesas: os itens com a marca antiga `[Mesa no PC]` vão para `pc` (sem ela, no mesmo
+ * grupo), o resto fica em `browser`. Os dois no formato do `novidade.md` (grupos `### `).
+ */
+export function splitPcTagged(md: string): { browser: string; pc: string } {
+  const browser: string[] = [], pc: string[] = [];
+  for (const raw of md.split('\n')) {
+    const line = raw.trimEnd();
+    if (line.startsWith('### ')) { browser.push('', line, ''); pc.push('', line, ''); continue; }
+    const item = /^(- \*\*.+?\*\*)\s*(.*)$/.exec(line);
+    const tagged = item ? takePcTag(item[2]!) : null;
+    if (item && tagged?.pc) pc.push(`${item[1]} ${tagged.text}`);
+    else browser.push(line);
+  }
+  return { browser: browser.join('\n'), pc: pc.join('\n') };
+}
+
+/** O que uma pasta pendente tem para cada mesa: o `novidade.md` (navegador) e o `novidade-pc.md` (mesa no PC). */
+export interface PendingTexts { browser?: string | null; pc?: string | null }
+
+/**
+ * As pastas pendentes juntas, uma seção para cada mesa (o `{ text, groups }` de mergeGroups): o `novidade.md` vai para
+ * o navegador, o `novidade-pc.md` para a mesa no PC, e um item do `novidade.md` com a marca antiga, para a mesa no PC.
+ */
+export function mergePending(folders: PendingTexts[]): { browser: ReturnType<typeof mergeGroups>; pc: ReturnType<typeof mergeGroups> } {
+  const browser: string[] = [], pc: string[] = [];
+  for (const f of folders) {
+    if (f.browser) { const split = splitPcTagged(f.browser); browser.push(split.browser); pc.push(split.pc); }
+    if (f.pc) pc.push(f.pc);
+  }
+  return { browser: mergeGroups(browser), pc: mergeGroups(pc) };
+}
+
+/** Os títulos dos itens (`- **Título.**`, sem o ponto) de um trecho de CHANGELOG ou de um `novidade.md`. */
+export const itemTitles = (md: string) => new Set([...md.matchAll(/^- \*\*(.+?)\.?\*\*/gm)].map(m => m[1]!));
+
+/** Um item: título em negrito (vazio num parágrafo solto) e o texto com o pouco de Markdown do CHANGELOG. */
+export interface FeedItem { title: string; text: string }
 export interface FeedGroup { name: string; items: FeedItem[] }
-/** `visual`: a versão tem prints na página Novidades em imagens (/novidades#v<versão>). */
+/** `visual`: algum item da versão tem prints na página Novidades em imagens (/novidades?mesa=pc#v<versão>). */
 export interface FeedRelease { version: string; title: string; date: string; visual: boolean; groups: FeedGroup[] }
 /** O /novidades.json: `version` é a mais nova com número (a do ponto de "não vista"); as versões vêm da mais nova à mais antiga. */
 export interface NewsFeed { version: string; releases: FeedRelease[] }
+/** Os prints de src/novidades.json: versão → título do item → figuras (aqui só importa se há alguma). */
+export type Visuals = Record<string, Record<string, readonly unknown[]>>;
 
 /**
  * As versões de um CHANGELOG (`## [X.Y.Z] - AAAA-MM-DD`, grupos `### `, itens `- **Título.** texto`) no formato do
- * /novidades.json. `visual`: as versões com prints (as chaves de src/novidades.json, e "Próxima" com pendentes).
+ * /novidades.json. `visuals`: os prints de cada versão (src/novidades.json, e "Próxima" com os das pendentes).
  */
-export function buildNewsFeed(md: string, visual: ReadonlySet<string> = new Set()): NewsFeed {
+export function buildNewsFeed(md: string, visuals: Visuals = {}): NewsFeed {
   const releases: FeedRelease[] = [];
   let release: FeedRelease | null = null;
   let group: FeedGroup | null = null;
@@ -59,7 +95,7 @@ export function buildNewsFeed(md: string, visual: ReadonlySet<string> = new Set(
       const version = head[1]!;
       release = {
         version, title: version === PENDING ? 'Próxima versão' : `Versão ${version}`,
-        date: head[2] ? `${head[4]}/${head[3]}/${head[2]}` : '', visual: visual.has(version), groups: [],
+        date: head[2] ? `${head[4]}/${head[3]}/${head[2]}` : '', visual: false, groups: [],
       };
       releases.push(release);
       group = null;
@@ -70,8 +106,9 @@ export function buildNewsFeed(md: string, visual: ReadonlySet<string> = new Set(
     if (!group) { group = { name: '', items: [] }; release.groups.push(group); }
     const body = line.startsWith('- ') ? line.slice(2) : line;
     const titled = line.startsWith('- ') ? /^\*\*(.+?)\.?\*\*\s*(.*)$/.exec(body) : null;
-    const { text, pc } = takePcTag(titled ? titled[2]! : body);
-    group.items.push({ title: titled?.[1] ?? '', text, pc });
+    const title = titled?.[1] ?? '';
+    group.items.push({ title, text: titled ? titled[2]! : body });
+    if (title && visuals[release.version]?.[title]?.length) release.visual = true;
   }
   return { version: releases.find(r => r.version !== PENDING)?.version ?? '', releases };
 }

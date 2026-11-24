@@ -1,3 +1,0 @@
-### Mudou
-
-- **Pilha mais calma.** [Mesa no PC] A carta do topo da pilha troca as chamas de luz, os raios girando, o ar tremendo e as luzes correndo pela borda por um contorno fino num degradê de três tons da cor dela (dourado nos gatilhos), que dá uma volta a cada 10 segundos, com um brilho curto junto da borda. Quando dá para responder a uma mágica do oponente, o contorno gira duas vezes mais rápido e brilha um pouco mais. As cartas de baixo ficam sem brilho, as partículas que sobem são poucas e pequenas, e a onda ao chegar e ao resolver continua. No painel da pilha, a moldura fica fixa e só acende, respirando devagar, quando dá para responder.

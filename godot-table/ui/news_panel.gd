@@ -1,4 +1,4 @@
-# Janela Novidades da tela inicial: as versões do CHANGELOG (o mesmo painel do navegador), da mais nova à mais antiga, com o selo "Mesa no PC".
+# Janela Novidades da tela inicial: as versões do CHANGELOG-PC.md (só o que muda na mesa no PC), da mais nova à mais antiga.
 class_name NewsPanel
 extends MenuModal
 
@@ -125,18 +125,11 @@ func _item(item: Dictionary) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	var title: String = Txt.of(item.get("title"))
-	var pc: bool = bool(item.get("pc", false))
-	if title != "" or pc:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		if pc:
-			row.add_child(badge())
-		if title != "":
-			var title_label := ModalStyle.wrap(17, ModalStyle.INK, title, 0.0, false)
-			title_label.add_theme_font_override("font", HudStyle.bold_font())
-			title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.add_child(title_label)
-		box.add_child(row)
+	if title != "":
+		var title_label := ModalStyle.wrap(17, ModalStyle.INK, title, 0.0, false)
+		title_label.add_theme_font_override("font", HudStyle.bold_font())
+		title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(title_label)
 	var text: String = Txt.of(item.get("text"))
 	if text != "":
 		var rich := RichTextLabel.new()
@@ -154,21 +147,3 @@ func _item(item: Dictionary) -> VBoxContainer:
 		box.add_child(rich)
 	return box
 
-
-## O selo "Mesa no PC" (o mesmo azul do selo do navegador).
-static func badge() -> PanelContainer:
-	var pill := PanelContainer.new()
-	pill.name = "PcBadge"
-	var style := ModalStyle.box(Color(ModalStyle.BLUE, 0.14), 99, Color(ModalStyle.BLUE, 0.5), 1)
-	style.content_margin_left = 9
-	style.content_margin_right = 9
-	style.content_margin_top = 1
-	style.content_margin_bottom = 1
-	pill.add_theme_stylebox_override("panel", style)
-	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var label := ModalStyle.label(12, ModalStyle.BLUE, "Mesa no PC")
-	label.add_theme_font_override("font", HudStyle.bold_font())
-	label.add_theme_constant_override("outline_size", 0)
-	pill.add_child(label)
-	return pill

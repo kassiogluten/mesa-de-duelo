@@ -1,24 +1,25 @@
-// Monta o /novidades.json que a mesa no PC lê do site: as versões do CHANGELOG.md (e as pendentes, como "Próxima versão"),
-// com o selo "Mesa no PC" e quais versões têm prints. O vite.config.ts grava no build e serve no `npm run dev`.
+// Monta o /novidades.json que a mesa no PC lê do site: as versões do CHANGELOG-PC.md (e as pendentes da mesa no PC, como
+// "Próxima versão") e quais versões têm prints. O vite.config.ts grava no build e serve no `npm run dev`.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { PENDING, buildNewsFeed, mergeGroups } from '../src/newsFeed.ts';
+import { PENDING, buildNewsFeed, mergePending } from '../src/newsFeed.ts';
 
-/** O feed da pasta `root` (o projeto): CHANGELOG.md, src/novidades.json e novidades-pendentes/<pasta>/. */
+/** O feed da pasta `root` (o projeto): CHANGELOG-PC.md, src/novidades.json e novidades-pendentes/<pasta>/. */
 export function readNewsFeed(root) {
   const read = path => readFileSync(join(root, path), 'utf8');
-  const visual = new Set(Object.keys(JSON.parse(read('src/novidades.json'))));
+  const optional = path => existsSync(join(root, path)) ? read(path) : null;
+  const visuals = JSON.parse(read('src/novidades.json'));
   // As pendentes só existem fora da main (o pre-push recusa): no `npm run dev` de uma branch, como no painel do navegador.
   const pendingDir = join(root, 'novidades-pendentes');
-  const folders = existsSync(pendingDir)
-    ? readdirSync(pendingDir, { withFileTypes: true }).filter(e => e.isDirectory() && existsSync(join(pendingDir, e.name, 'novidade.md'))).map(e => e.name).sort()
-    : [];
+  const folders = existsSync(pendingDir) ? readdirSync(pendingDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort() : [];
   let pending = '';
   try {
-    if (folders.length) pending = `## [${PENDING}]\n\n${mergeGroups(folders.map(f => read(`novidades-pendentes/${f}/novidade.md`))).text}\n`;
+    // Os novidade-pc.md, e os itens com a marca antiga [Mesa no PC] dos novidade.md.
+    const { pc } = mergePending(folders.map(f => ({ browser: optional(`novidades-pendentes/${f}/novidade.md`), pc: optional(`novidades-pendentes/${f}/novidade-pc.md`) })));
+    if (pc.groups.length) pending = `## [${PENDING}]\n\n${pc.text}\n`;
   } catch { /* um novidade.md mal escrito: o teste das novidades é que avisa */ }
-  if (folders.some(f => existsSync(join(pendingDir, f, 'imagens.json')))) visual.add(PENDING);
-  // Separadas: o título e a abertura do CHANGELOG.md não podem entrar na seção das pendentes.
-  const feed = buildNewsFeed(read('CHANGELOG.md'), visual);
-  return { ...feed, releases: [...buildNewsFeed(pending, visual).releases, ...feed.releases] };
+  visuals[PENDING] = Object.assign({}, ...folders.map(f => JSON.parse(optional(`novidades-pendentes/${f}/imagens.json`) ?? '{}')));
+  // Separadas: o título e a abertura do CHANGELOG-PC.md não podem entrar na seção das pendentes.
+  const feed = buildNewsFeed(optional('CHANGELOG-PC.md') ?? '', visuals);
+  return { ...feed, releases: [...buildNewsFeed(pending, visuals).releases, ...feed.releases] };
 }
