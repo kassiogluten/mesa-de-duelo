@@ -37,6 +37,8 @@ var _inspector: CardInspector
 var _drag: HandDrag
 var _interaction: TableInteraction
 var _help: ShortcutsHelp
+## A carta que se está pagando, grande acima da caixa de ação (ui/payment_card.gd).
+var _payment: PaymentCard
 ## A carta sob o mouse (a que o clique direito e o "I" abrem no inspetor).
 var _hovered: CardNode
 var _finale_done: bool = false
@@ -121,6 +123,17 @@ func _ready() -> void:
 	layer.add_child(attack_panel)
 	layer.move_child(attack_panel, _hud.get_index() + 1)
 	_interaction.use_attack_panel(attack_panel)
+	# A carta que se está pagando: acima da caixa de ação, longe do painel da pilha, embaixo das perguntas e do inspetor.
+	_payment = PaymentCard.new()
+	_payment.catalog = _catalog
+	_payment.table = _table
+	_payment.anchor = _hud.action_rect
+	_payment.avoid = _stack_rects
+	_payment.stack_collapsed = func() -> bool: return _stack.collapsed
+	layer.add_child(_payment)
+	layer.move_child(_payment, _hud.get_index() + 1)
+	_payment.inspect.connect(func(card: Dictionary, url: String) -> void: _inspector.open(card, _inspect_context(), url))
+	_catalog.texture_ready.connect(_payment.on_texture_ready)
 	if OS.get_environment("MESA_TESTE_PAINEL") == "1":
 		_panel_probe = AttackProbe.new()
 		_panel_probe.screen = self
@@ -146,7 +159,10 @@ func _ready() -> void:
 	_hud.portrait_slot = _table.portrait_slot
 	_hud.player_count = _table.player_count
 	_hud.hand_rect = _table.hand_rect
-	_hud.table_point = func(key: Variant) -> Vector2: return ManaPoolFx.project(_table, key)
+	# A mana gasta voa até a carta que se está pagando, quando ela está à vista junto da caixa de ação.
+	_hud.table_point = func(key: Variant) -> Vector2:
+		var shown: Vector2 = _payment.point_of(key)
+		return shown if shown.x >= 0.0 else ManaPoolFx.project(_table, key)
 	_table.hand_area = _hud.hand_area
 	_table.card_clicked.connect(func(node: CardNode) -> void:
 		_inspector.hide_preview(true)
@@ -338,6 +354,7 @@ func _on_message(msg: Dictionary) -> void:
 			_stack.apply_state(msg)
 			_play_finale(msg)
 			_hud.apply_state(msg, _interaction.blocker_name())
+			_payment.apply_state(msg)
 			_zones.apply_state(msg)
 			_question.show_question(msg.get("question", {}) if msg.get("question") is Dictionary else {})
 			_interaction.apply_state(msg)
@@ -500,6 +517,16 @@ func _on_card_hovered(node: CardNode, on: bool) -> void:
 		_inspector.show_preview(node.data, _inspect_context(), node.image_url)
 	elif not on:
 		_inspector.hide_preview()
+
+
+## O que a carta do pagamento não pode cobrir: o painel da pilha (a coluna inteira; recolhida, só a pílula do alto).
+func _stack_rects() -> Array:
+	if not _stack.visible:
+		return []
+	if _stack.collapsed:
+		return [_stack.header().get_global_rect().merge(_stack.layer_rect(0))]
+	var view: Vector2 = _stack.get_viewport_rect().size
+	return [Rect2(view.x - StackPanel.MARGIN_RIGHT - StackPanel.WIDTH, 0.0, StackPanel.WIDTH + StackPanel.MARGIN_RIGHT, view.y)]
 
 
 ## Para o inspetor montar os textos: nomes em português, dos jogadores e das outras cartas da mesa.

@@ -13,13 +13,17 @@ const BLOCKING := Color(0.4, 0.72, 1.0)
 const UNTAPPABLE := Color(0.3, 0.55, 1.0)
 const MANA_ONLY := Color(0.45, 0.75, 1.0)
 const FOCUS := Color(1.0, 0.95, 0.75)
+## A permanente (ou a carta da mão) de onde vem a habilidade que se está pagando (PaymentCard.source_id).
+const SOURCE := Color(1.0, 0.86, 0.5)
 
 ## Força do brilho de cada estado e com o mouse em cima.
 const STRENGTH := {
 	"selected": 1.35, "target": 0.85, "attacking": 1.1, "untappable": 1.0, "actionable": 0.55, "mana": 0.4, "blocking": 0.7,
+	"source": 1.2,
 }
 const HOVER_STRENGTH := {
 	"selected": 1.6, "target": 1.65, "attacking": 1.35, "untappable": 1.3, "actionable": 1.05, "mana": 0.8, "blocking": 0.95,
+	"source": 1.4,
 }
 ## Quanto a carta selecionada (ou o alvo sob o mouse) sai do lugar: no campo vem para a câmera; na mão sobe na tela.
 const FIELD_RAISE := Vector3(0, 0.1, 0)
@@ -52,7 +56,7 @@ static func role_of(id: int, stack_id: int, roles: Dictionary) -> String:
 	if id < 0:
 		return ""
 	for pair: Array in [["selected", "selected"], ["selectable", "target"], ["attacking", "attacking"], ["untappable", "untappable"],
-			["mana_only", "mana"], ["actionable", "actionable"], ["blocking", "blocking"]]:
+			["mana_only", "mana"], ["actionable", "actionable"], ["blocking", "blocking"], ["source", "source"]]:
 		if (roles.get(pair[0], []) as Array).has(id):
 			return pair[1]
 	return ""
@@ -67,6 +71,7 @@ static func color_of(role: String) -> Color:
 		"actionable": return ACTIONABLE
 		"mana": return MANA_ONLY
 		"blocking": return BLOCKING
+		"source": return SOURCE
 	return Color.BLACK
 
 
