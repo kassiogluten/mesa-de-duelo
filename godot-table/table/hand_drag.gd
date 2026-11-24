@@ -199,7 +199,7 @@ func _drag_pose(mouse: Vector2) -> Transform3D:
 	var field_y: float = camera.unproject_position(table.seat_center(_you())).y
 	var top: float = hand.position.y if hand.size.y > 0 else camera.get_viewport().get_visible_rect().size.y * 0.75
 	_rise = clampf((top - mouse.y) / maxf(1.0, top - field_y), 0.0, 1.0)
-	var depth: float = camera.global_position.distance_to(TableView.HAND_CENTER) * 0.92
+	var depth: float = camera.global_position.distance_to(table.hand_center()) * 0.92
 	var near: Vector3 = camera.project_position(mouse, depth)
 	var hit: Variant = Plane(Vector3.UP, TABLE_HEIGHT).intersects_ray(camera.project_ray_origin(mouse), camera.project_ray_normal(mouse))
 	var far: Vector3 = hit if hit is Vector3 else near
@@ -207,7 +207,9 @@ func _drag_pose(mouse: Vector2) -> Transform3D:
 	var tilt: Vector3 = HandMotion.drag_tilt(_velocity, _rise)
 	var standing: Quaternion = table.hand_basis(near).get_rotation_quaternion()
 	var basis := Basis(standing.slerp(Quaternion.IDENTITY, lay)) * Basis(Vector3.RIGHT, tilt.x) * Basis(Vector3.BACK, tilt.y)
-	return Transform3D(basis.scaled(Vector3.ONE * tilt.z), near.lerp(far, lay))
+	# Perto da mão, do tamanho das cartas dela (que encolhem para perto da câmera com o zoom); deitada no campo, a de sempre.
+	var size: float = tilt.z * lerpf(table.near_scale(), 1.0, lay)
+	return Transform3D(basis.scaled(Vector3.ONE * size), near.lerp(far, lay))
 
 
 func _begin() -> void:

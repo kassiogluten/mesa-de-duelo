@@ -1,5 +1,5 @@
-# Barra do alto da partida: Desfazer (com o pedido e a votação), votação para pular a vez de quem caiu ou demora,
-# o nível de passar automaticamente (os quatro da mesa do navegador, src/ui/passLevel.ts), "Passando até o fim do turno"
+# Barra do alto da partida: a vista da mesa (ui/view_picker.gd), Desfazer (com o pedido e a votação), votação para
+# pular a vez de quem caiu ou demora, o nível de passar automaticamente (os quatro da mesa do navegador, src/ui/passLevel.ts), "Passando até o fim do turno"
 # e os selos da partida (src/ui/matchBar.ts): placar da melhor de três ("Jogo 2 · 1 × 0"), quem caiu e quem só assiste.
 class_name MatchBar
 extends VBoxContainer
@@ -16,6 +16,8 @@ const LEVELS := [
 	["afeta", "Só quando me afeta", "Passa tudo, menos as suas fases principais, até algo mirar você ou suas permanentes, ou até você ser atacado."],
 ]
 
+## A vista da mesa (zoom e ângulo): vale também para quem só assiste.
+var view_picker: ViewPicker
 var _undo: Button
 var _level: PassLevelPicker
 var _passing: Button
@@ -33,6 +35,8 @@ func _ready() -> void:
 	_chips = HBoxContainer.new()
 	_chips.add_theme_constant_override("separation", 8)
 	row.add_child(_chips)
+	view_picker = ViewPicker.new()
+	row.add_child(view_picker)
 	_undo = _small("Desfazer")
 	_undo.pressed.connect(func() -> void: action.emit({"type": "undo-request"}))
 	row.add_child(_undo)

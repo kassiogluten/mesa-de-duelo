@@ -17,8 +17,6 @@ const LIFT_SCALE := 1.45
 const THICKNESS := 0.011
 const CORNER := 0.035
 
-static var _edge_mesh: ArrayMesh
-static var _shadow_material: StandardMaterial3D
 
 ## Id da carta no estado (negativo nas cartas escondidas: grimório, mão do oponente).
 var card_id: int = 0
@@ -91,7 +89,7 @@ func _init() -> void:
 	# A espessura: a borda lateral (na cor do verso) e a face de baixo, que mostra o verso quando a carta está virada para baixo.
 	_edge_material.roughness = 0.7
 	_edge = MeshInstance3D.new()
-	_edge.mesh = _edge_shape()
+	_edge.mesh = CardMeshes.edge()
 	_edge.material_override = _edge_material
 	_visual.add_child(_edge)
 	_bottom = MeshInstance3D.new()
@@ -104,7 +102,7 @@ func _init() -> void:
 	var quad := PlaneMesh.new()
 	quad.size = SIZE * 1.22
 	_shadow.mesh = quad
-	_shadow.material_override = _shadow_mat()
+	_shadow.material_override = CardMeshes.shadow_material()
 	_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_shadow.visible = false
 	_visual.add_child(_shadow)
@@ -306,6 +304,17 @@ func move_to(target: Transform3D, arc: bool = false, under: CardNode = null) -> 
 		_rest_shadow()
 		return
 	_fly(PaperPhysics.plan(transform, target, arc, card_id, MOVE_TIME), under)
+
+
+## Acompanha um lugar que anda junto com a câmera (a mão, a pilha, o seu comandante, enquanto a vista muda): vai
+## direto, sem voo. A carta que está voando termina o voo e só no fim da mudança (`done`) segue para o lugar novo.
+func follow(target: Transform3D, done: bool = false) -> void:
+	if _flight != null or not _placed:
+		if done or not _placed:
+			move_to(target)
+		return
+	_target = target
+	transform = target
 
 
 ## Uma carta nova num monte (moída, destruída, exilada): cai rente do alto do monte, nivelada, e assenta sobre `under`;
@@ -510,61 +519,6 @@ func _hide_extras() -> void:
 	var tween := create_tween()
 	tween.tween_interval(0.12)
 	tween.tween_callback(func() -> void: _edge.visible = false)
-
-
-## A borda lateral: um anel de cantos arredondados do tamanho da carta, de y = 0 a y = −THICKNESS (o mesmo para todas).
-static func _edge_shape() -> ArrayMesh:
-	if _edge_mesh:
-		return _edge_mesh
-	var outline: PackedVector2Array = []
-	var half: Vector2 = SIZE / 2.0 - Vector2(CORNER, CORNER)
-	var corners: Array[Vector2] = [Vector2(half.x, half.y), Vector2(-half.x, half.y), Vector2(-half.x, -half.y), Vector2(half.x, -half.y)]
-	for c: int in 4:
-		for step: int in 7:
-			var angle: float = c * PI / 2.0 + step * (PI / 2.0) / 6.0
-			outline.append(corners[c] + Vector2(cos(angle), sin(angle)) * CORNER)
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i: int in outline.size():
-		var a: Vector2 = outline[i]
-		var b: Vector2 = outline[(i + 1) % outline.size()]
-		var normal := Vector3(b.y - a.y, 0, -(b.x - a.x)).normalized()
-		# A normal aponta para fora do anel.
-		if normal.dot(Vector3(a.x + b.x, 0, a.y + b.y)) < 0:
-			normal = -normal
-		var top_a := Vector3(a.x, -0.0005, a.y)
-		var top_b := Vector3(b.x, -0.0005, b.y)
-		var low_a := Vector3(a.x, -THICKNESS, a.y)
-		var low_b := Vector3(b.x, -THICKNESS, b.y)
-		for v: Vector3 in [top_a, low_a, low_b, top_a, low_b, top_b]:
-			st.set_normal(normal)
-			st.add_vertex(v)
-	_edge_mesh = st.commit()
-	return _edge_mesh
-
-
-## Material da sombra de contato: um retângulo de cantos redondos com a borda bem esfumada.
-static func _shadow_mat() -> StandardMaterial3D:
-	if _shadow_material:
-		return _shadow_material
-	var w: int = 96
-	var h: int = 128
-	var image := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var inner := Vector2(w, h) / 2.0 / 1.22
-	for y: int in h:
-		for x: int in w:
-			var p := Vector2(absf(x + 0.5 - w / 2.0), absf(y + 0.5 - h / 2.0))
-			var q: Vector2 = p - (inner - Vector2(6, 6))
-			var d: float = Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - 6.0
-			var a: float = clampf(1.0 - (d + 4.0) / 13.0, 0.0, 1.0)
-			image.set_pixel(x, y, Color(0, 0, 0, a * a * 0.6))
-	image.generate_mipmaps()
-	_shadow_material = StandardMaterial3D.new()
-	_shadow_material.albedo_texture = ImageTexture.create_from_image(image)
-	_shadow_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_shadow_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_shadow_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return _shadow_material
 
 
 func _set_hover(on: bool) -> void:

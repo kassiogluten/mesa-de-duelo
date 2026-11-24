@@ -9,6 +9,8 @@ signal player_clicked(player_id: int)
 signal leave_pressed
 ## "Relatar um problema", do menu da partida ou da tela do resultado.
 signal report_pressed
+## "Atalhos de teclado", do menu da partida.
+signal shortcuts_pressed
 ## Tocou num monte do assento ou no dano de comandante: abrir a janela de zona ("graveyard", "exile", "command", "damage", "hand").
 signal zone_requested(player_id: int, zone: String)
 ## O jogador trocou o nível de passar (para guardar).
@@ -85,6 +87,7 @@ func _ready() -> void:
 	_menu.action.connect(func(message: Dictionary) -> void: action.emit(message))
 	_menu.leave_pressed.connect(func() -> void: leave_pressed.emit())
 	_menu.report_pressed.connect(func() -> void: report_pressed.emit())
+	_menu.shortcuts_pressed.connect(func() -> void: shortcuts_pressed.emit())
 	_menu.pass_level_changed.connect(func(level: String) -> void: pass_level_changed.emit(level))
 	_menu.effects_changed.connect(func(level: String) -> void: effects_changed.emit(level))
 	_menu.volume_changed.connect(func(volume: float) -> void: volume_changed.emit(volume))
@@ -346,13 +349,44 @@ func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: 
 		var width: float = clampf(hand.position.x - MY_COLUMN_LEFT - HAND_GAP, 200.0, 520.0) if hand.has_area() else 260.0
 		seat.place(MY_PORTRAIT, MY_SIDE, width)
 	else:
-		# O leque da mão do oponente fica à direita do retrato: os selos vão para a esquerda (duelo) ou para baixo do
-		# nome (Commander, onde a mão começa logo ao lado do retrato).
-		var slot: Vector2 = portrait_slot.call(id)
-		var center: Vector2 = slot if slot.x >= 0 else Vector2(get_viewport_rect().size.x / 2.0, 77)
-		seat.place(center, 100.0 if crowded else 130.0, 300.0 if crowded else 460.0, "below" if crowded else "left")
+		_place_opponent(seat, id, crowded)
 	var translate: Callable = func(name: String) -> String: return catalog.label(name) if catalog else name
 	seat.apply(player, state, selectable, active, translate)
+
+
+## O retrato de um oponente no lugar dele na mesa (TableView.portrait_slot). O leque da mão do oponente fica à direita
+## do retrato: os selos vão para a esquerda (duelo) ou para baixo do nome (Commander, onde a mão começa logo ao lado do
+## retrato). Com a vista aproximada ou girada, o retrato não sai da tela: fica na borda.
+func _place_opponent(seat: SeatPanel, id: int, crowded: bool) -> void:
+	var side: float = 100.0 if crowded else 130.0
+	var view: Vector2 = get_viewport_rect().size
+	var slot: Vector2 = portrait_slot.call(id)
+	# (-1, -1) é "a mesa não sabe": o meio de cima. Com zoom, o lugar dele pode cair fora da tela (x negativo).
+	var center: Vector2 = Vector2(view.x / 2.0, 77) if slot == Vector2(-1, -1) else slot
+	center = clamp_portrait(center, side, view)
+	seat.place(center, side, 300.0 if crowded else 460.0, "below" if crowded else "left")
+
+
+## O centro do retrato de um oponente dentro da tela (com a margem) e na metade de cima dela.
+static func clamp_portrait(center: Vector2, side: float, view: Vector2) -> Vector2:
+	var margin: float = side / 2.0 + 10.0
+	# Em cima, o retrato pode encostar na borda (na vista padrão do duelo ele já fica quase lá).
+	var top: float = side / 2.0
+	return Vector2(clampf(center.x, margin, maxf(margin, view.x - margin)), clampf(center.y, top, maxf(top, view.y * 0.45)))
+
+
+## A vista da mesa que o botão da barra do alto mostra e muda (table/table_camera.gd).
+func set_view_rig(rig: TableCamera) -> void:
+	_bar.view_picker.rig = rig
+
+
+## A vista da mesa andou (zoom, ângulo): os retratos dos oponentes acompanham o lugar deles na mesa.
+func follow_view() -> void:
+	var crowded: bool = int(player_count.call()) > 2
+	for id: Variant in _seats:
+		var seat: SeatPanel = _seats[id]
+		if not seat.mine:
+			_place_opponent(seat, int(id), crowded)
 
 
 ## Atalhos para o estilo comum (outras telas chamam por aqui): ui/hud_style.gd.

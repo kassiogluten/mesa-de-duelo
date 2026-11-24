@@ -57,6 +57,21 @@ static func cast_shadow(node: Node3D, on: bool) -> void:
 		(child as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
+## A vista andou: as cartas da pilha no vão do painel vão com ela, direto (CardNode.follow). Sem painel, a pilha fica
+## no tampo e não anda.
+func follow_view(done: bool) -> void:
+	if view.stack_slot.call(0).size.y <= 0.0:
+		return
+	var stack: Array = view.current_state().get("stack", [])
+	for i: int in stack.size():
+		var item: Dictionary = stack[i]
+		var source: Dictionary = item.get("source", {}) if item.get("source") is Dictionary else {}
+		var spell: bool = Txt.of(item.get("kind", "spell")) == "spell" and source.has("id")
+		var node: CardNode = view.card_node(int(source["id"]) if spell else "stack:%d" % int(item["id"]))
+		if node:
+			node.follow(transform_at(i, stack.size()), done)
+
+
 ## O lugar da camada `depth` da pilha: no vão do painel, ou (sem painel) o monte inclinado no tampo, à direita.
 func transform_at(depth: int, count: int) -> Transform3D:
 	var rect: Rect2 = view.stack_slot.call(depth)
@@ -65,7 +80,8 @@ func transform_at(depth: int, count: int) -> Transform3D:
 		return Transform3D(Basis(Vector3.RIGHT, deg_to_rad(28.0)), Vector3(4.6 + d * 0.18, 0.9 + d * 0.05, -0.2 + d * 0.25))
 	# As camadas além da terceira ficam exatamente atrás dela (o painel mostra até três por trás do topo).
 	var camera: Camera3D = view.camera
-	var distance: float = STACK_DEPTH + 0.12 * depth
+	# Com o zoom, a pilha chega mais perto da câmera junto com a mão (TableView.near_scale): não entra no tampo.
+	var distance: float = (STACK_DEPTH + 0.12 * depth) * view.near_scale()
 	var pos: Vector3 = camera.project_position(rect.get_center(), distance)
 	var view_h: float = camera.get_viewport().get_visible_rect().size.y
 	var pixels_per_unit: float = view_h / (2.0 * distance * tan(deg_to_rad(camera.fov) / 2.0))
@@ -83,5 +99,5 @@ func _origin(source: Dictionary, controller: int, spell: bool) -> Variant:
 	if frame.is_empty():
 		return null
 	var scale: float = frame["scale"]
-	var at: Vector3 = HandPlacement.HAND_CENTER if int(frame["side"]) > 0 else frame["hand"]
+	var at: Vector3 = view.hand_center() if int(frame["side"]) > 0 else frame["hand"]
 	return Transform3D(Basis(Vector3.FORWARD, PI).scaled(Vector3(scale, scale, scale)), at + Vector3(0, 0.1, 0))

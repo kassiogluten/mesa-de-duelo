@@ -16,6 +16,11 @@ const FIELD_Y := FieldPlacement.FIELD_Y
 
 var catalog: CardCatalog
 var camera: Camera3D
+## A vista que o jogador escolhe (zoom e ângulo): o suporte da câmera (table/table_camera.gd).
+var view_rig: TableCamera
+## A vista está andando: as cartas que acompanham a câmera vão direto para o lugar (CardNode.follow), sem voo.
+var _following: bool = false
+var _follow_done: bool = false
 
 ## chave (id da carta, ou texto nas escondidas) → CardNode
 var _cards: Dictionary = {}
@@ -59,6 +64,9 @@ func _ready() -> void:
 func _build_scene() -> void:
 	# Câmera, luzes, ambiente, pós-processamento e o tampo: table/table_environment.gd.
 	camera = TableEnvironment.build(self)
+	view_rig = camera.get_parent() as TableCamera
+	if view_rig:
+		view_rig.moved.connect(_follow_view)
 
 	_arrows = Arrows.new()
 	add_child(_arrows)
@@ -112,7 +120,11 @@ func portrait_slot(player_id: int) -> Vector2:
 	var frame: Dictionary = _frames.get(player_id, {})
 	if frame.is_empty() or int(frame["side"]) > 0:
 		return Vector2(-1, -1)
-	return camera.unproject_position(frame["portrait"])
+	# Com zoom ou ângulo, o retrato acompanha o lugar dele, mas nunca sobe acima de onde fica na vista padrão (lá em
+	# cima ficam o menu e a barra): projetar o ponto levado pela vista é ver de onde a câmera de sempre o via.
+	var now: Vector2 = camera.unproject_position(frame["portrait"])
+	var usual: Vector2 = camera.unproject_position(view_offset() * (frame["portrait"] as Vector3))
+	return Vector2(now.x, maxf(now.y, usual.y))
 
 
 ## Quantos jogadores há na mesa (para o HUD escolher o tamanho dos retratos).
@@ -173,6 +185,45 @@ func detach(id: Variant) -> CardNode:
 	return node
 
 
+## O quanto a vista escolhida (zoom e ângulo) leva a câmera do lugar de sempre: o que acompanha a câmera (a mão, a carta
+## arrastada) é posto como na vista padrão e levado por isto.
+func view_offset() -> Transform3D:
+	return view_rig.transform if view_rig else Transform3D.IDENTITY
+
+
+## Como view_offset, para o que fica perto da câmera (a mão, a carta arrastada, a pilha no painel): na vista com zoom,
+## também encolhe em direção ao olho (TableCamera.near_scale), para não entrar no tampo; na tela, nada muda.
+func near_offset() -> Transform3D:
+	var s: float = near_scale()
+	return view_offset() * Transform3D(Basis.from_scale(Vector3.ONE * s), CAMERA_POS * (1.0 - s))
+
+
+## Quanto o que fica perto da câmera encolhe na vista de agora (1 sem zoom).
+func near_scale() -> float:
+	return view_rig.near_scale() if view_rig else 1.0
+
+
+## O centro do leque da sua mão na vista de agora.
+func hand_center() -> Vector3:
+	return near_offset() * HAND_CENTER
+
+
+## Onde fica o olho da câmera na vista escolhida (sem os tremores e aproximações dos efeitos).
+func eye() -> Vector3:
+	return view_offset() * CAMERA_POS
+
+
+## A vista andou: a mão, a pilha no painel e o seu comandante (junto do retrato) vão com ela, direto, sem voo; no fim
+## (`done`), as que estavam voando seguem para o lugar novo.
+func _follow_view(done: bool) -> void:
+	_following = true
+	_follow_done = done
+	_hand.follow_view(done)
+	_stack.follow_view(done)
+	_replace_my_command()
+	_following = false
+
+
 ## Onde fica, na mesa, uma carta ("player:<id>" para o retrato do jogador); null se não está à mostra.
 func anchor(key: Variant) -> Variant:
 	return _anchor(key)
@@ -182,7 +233,7 @@ func anchor(key: Variant) -> Variant:
 func zone_position(player_id: int, zone: String) -> Vector3:
 	var frame: Dictionary = _frames.get(player_id, SeatLayout.mine())
 	if zone == "hand" and int(frame["side"]) > 0:
-		return HAND_CENTER
+		return hand_center()
 	return frame.get(zone, frame["library"])
 
 
@@ -409,7 +460,10 @@ func put_card(key: Variant, card: Dictionary, zone: String, t: Transform3D, slee
 	HandPlacement.set_printed(node, zone == "hand" and key is int)
 	var moved_zone: bool = _zones.get(key, zone) != zone
 	_zones[key] = zone
-	node.move_to(t, moved_zone or fresh)
+	if _following and not fresh and not moved_zone:
+		node.follow(t, _follow_done)
+	else:
+		node.move_to(t, moved_zone or fresh)
 
 
 func _spawn_from(card: Dictionary, zone: String, t: Transform3D) -> Transform3D:

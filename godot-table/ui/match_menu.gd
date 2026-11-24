@@ -12,6 +12,8 @@ signal action(message: Dictionary)
 signal leave_pressed
 ## Relatar um problema (a janela do relato abre por cima de tudo, em main.gd).
 signal report_pressed
+## Mostrar a lista dos atalhos de teclado (a mesma do "?").
+signal shortcuts_pressed
 signal effects_changed(level: String)
 signal volume_changed(volume: float)
 signal pass_level_changed(level: String)
@@ -133,6 +135,13 @@ func _build_panel() -> void:
 		pass_level_changed.emit(level))
 	column.add_child(_pass)
 	column.add_child(_divider())
+	# Os atalhos de teclado (a câmera, passar, desfazer…): a mesma lista do "?".
+	var keys := _item("Atalhos de teclado  ·  ?", HudIcons.KEYBOARD, Color(1, 1, 1, 0.9))
+	keys.name = "Shortcuts"
+	keys.pressed.connect(func() -> void:
+		set_open(false)
+		shortcuts_pressed.emit())
+	column.add_child(keys)
 	_concede = _item("Conceder", HudIcons.FLAG, Color("#ff8a70"))
 	_concede.pressed.connect(func() -> void:
 		set_open(false)

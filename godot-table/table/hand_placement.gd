@@ -81,15 +81,19 @@ func _searched_draw(player_id: int) -> bool:
 
 
 ## Leque da sua mão, de frente para a câmera, na base da tela (mais baixa ou mais alta, pelo drop); a carta jogável fica um
-## pouco mais alta que as outras.
+## pouco mais alta que as outras. O leque é montado como na vista padrão e levado pela vista escolhida (zoom e ângulo):
+## na tela, a mão fica no mesmo lugar em qualquer vista.
 func transform_at(index: int, count: int, id: int) -> Transform3D:
 	var offset: float = index - (count - 1) / 2.0
 	var fan: Vector2 = fan_fit(count)
-	var pos := HAND_CENTER + view.camera.global_basis.x * fan.y + Vector3(offset * fan.x, index * 0.006 - abs(offset) * abs(offset) * 0.01, abs(offset) * abs(offset) * 0.006)
-	pos -= view.camera.global_basis.y * drop()
+	var home: Basis = TableCamera.HOME.basis
+	var pos := HAND_CENTER + home.x * fan.y + Vector3(offset * fan.x, index * 0.006 - abs(offset) * abs(offset) * 0.01, abs(offset) * abs(offset) * 0.006)
+	pos -= home.y * drop()
 	if playable.has(id):
-		pos += view.camera.global_basis.y * PLAYABLE_RISE
-	return Transform3D(facing_camera(pos) * Basis(Vector3.UP, -offset * FAN_TURN), pos)
+		pos += home.y * PLAYABLE_RISE
+	pos = view.near_offset() * pos
+	var s: float = view.near_scale()
+	return Transform3D((facing_camera(pos) * Basis(Vector3.UP, -offset * FAN_TURN)).scaled(Vector3(s, s, s)), pos)
 
 
 ## Quanto a mão está abaixo da posição inteira agora (REST_DROP, PEEK_DROP ou 0).
@@ -157,8 +161,9 @@ func fan_fit(count: int) -> Vector2:
 	var area: Rect2 = view.hand_area.call()
 	if area.size.x <= 0.0 or count <= 0 or view.camera == null:
 		return Vector2(spread, 0.0)
-	var center_px: float = view.camera.unproject_position(HAND_CENTER).x
-	var ppu: float = absf(view.camera.unproject_position(HAND_CENTER + view.camera.global_basis.x).x - center_px)
+	var offset: Transform3D = view.near_offset()
+	var center_px: float = view.camera.unproject_position(offset * HAND_CENTER).x
+	var ppu: float = absf(view.camera.unproject_position(offset * (HAND_CENTER + TableCamera.HOME.basis.x)).x - center_px)
 	if ppu <= 1.0:
 		return Vector2(spread, 0.0)
 	# As cartas das pontas giram um pouco (e chegam mais perto da câmera): ocupam mais que a largura da carta.
@@ -183,10 +188,11 @@ static func fit_fan(spread: float, count: int, left: float, right: float, center
 	return Vector2(fitted, target - center)
 
 
-## Uma carta de pé de frente para a câmera: a face (+Y) olha para ela e o alto da carta (-Z) aponta para cima na tela.
+## Uma carta de pé de frente para a câmera (a da vista escolhida, sem os tremores dos efeitos): a face (+Y) olha para
+## ela e o alto da carta (-Z) aponta para cima na tela.
 func facing_camera(pos: Vector3) -> Basis:
-	var y: Vector3 = (TableView.CAMERA_POS - pos).normalized()
-	var up: Vector3 = view.camera.global_basis.y
+	var y: Vector3 = (view.eye() - pos).normalized()
+	var up: Vector3 = view.view_offset().basis * TableCamera.HOME.basis.y
 	var z: Vector3 = -(up - y * up.dot(y)).normalized()
 	return Basis(y.cross(z), y, z)
 
@@ -206,6 +212,14 @@ func apply_layout(actionable: Array, priority: bool, choice: bool = false) -> vo
 			node.move_to(transform_at(i, order.size(), order[i]))
 		node.set_dim(UNPLAYABLE_DIM if not playable.is_empty() and not playable.has(order[i]) else 0.0)
 		hand_info(node, node.data)
+
+
+## A vista andou: as cartas da sua mão vão com ela, direto (CardNode.follow); a arrastada fica com o mouse.
+func follow_view(done: bool) -> void:
+	for i: int in order.size():
+		var node: CardNode = view.card_node(order[i])
+		if node and not view.dragging(node) and view.zone_of(order[i]) == "hand":
+			node.follow(transform_at(i, order.size(), order[i]), done)
 
 
 ## Muda a ordem da sua mão (a que o jogador arrumou arrastando; o servidor não sabe dela) e leva as cartas para o lugar.

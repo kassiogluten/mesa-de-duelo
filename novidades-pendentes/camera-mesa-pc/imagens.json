@@ -1,0 +1,11 @@
+{
+  "Zoom e ângulo da câmera na partida": [
+    { "img": "vista-botao.webp", "legenda": "O botão da câmera na barra do alto, aberto: os quatro ângulos (o de agora marcado), o zoom com − e + e a volta à vista padrão, cada um com a sua tecla." },
+    { "img": "vista-de-cima.webp", "legenda": "A vista de cima: a mesa vista mais do alto, com a mão, a pilha e a seta do alvo no mesmo lugar." },
+    { "img": "vista-esquerda.webp", "legenda": "A vista pela esquerda: a mesa girada um pouco, com a mão parada na base da tela." },
+    { "img": "vista-zoom.webp", "legenda": "O zoom todo puxando para o campo do oponente: a mão e a pilha continuam à vista, e o retrato dele fica na borda da tela." }
+  ],
+  "Atalhos de teclado no menu da partida": [
+    { "img": "atalhos.webp", "legenda": "A lista dos atalhos de teclado, com os da câmera: + e − para o zoom, V para o ângulo e 0 para a vista padrão." }
+  ]
+}

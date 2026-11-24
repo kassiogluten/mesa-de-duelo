@@ -194,9 +194,10 @@ static func pillar(parent: Node3D, pos: Vector3, color: Color, height: float = 6
 static func focus(camera: Camera3D, target: Vector3, amount: float = 0.12, duration: float = 0.9) -> void:
 	if camera == null or quality == 0:
 		return
-	# Volta para o lugar de sempre da câmera, não para onde ela estava: dois focos seguidos não a deixam torta.
+	# Volta para o lugar de sempre da câmera dentro da vista escolhida (TableCamera), não para onde ela estava: dois
+	# focos seguidos não a deixam torta. O lance vai para as coordenadas da vista.
 	var home: Vector3 = TableView.CAMERA_POS
-	var near: Vector3 = home.lerp(target, amount)
+	var near: Vector3 = home.lerp(TableCamera.local_point(camera, target), amount)
 	var tween := camera.create_tween()
 	tween.tween_property(camera, "position", near, duration * 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(duration * 0.25)

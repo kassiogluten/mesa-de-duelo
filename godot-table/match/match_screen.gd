@@ -168,6 +168,8 @@ func _ready() -> void:
 		var shown: Vector2 = _payment.point_of(key)
 		return shown if shown.x >= 0.0 else ManaPoolFx.project(_table, key)
 	_table.hand_area = _hud.hand_area
+	ViewControls.attach(_table, _hud)
+	_hud.shortcuts_pressed.connect(func() -> void: _help.visible = true)
 	_table.card_clicked.connect(func(node: CardNode) -> void:
 		_inspector.hide_preview(true)
 		# A carta da pilha que não é uma escolha agora abre a pilha em tela cheia.
@@ -325,6 +327,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif is_instance_valid(_hovered) and not _drag.active():
 			_inspector.open(_hovered.data, _inspect_context(), _hovered.image_url)
 			get_viewport().set_input_as_handled()
+		return
+	# A roda do mouse e as teclas da câmera (+, −, V, 0): match/view_controls.gd.
+	if ViewControls.handle(_table.view_rig, event):
+		get_viewport().set_input_as_handled()
 		return
 	var action: String = KeyMap.action(event)
 	if action == "":

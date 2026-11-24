@@ -361,9 +361,10 @@ static func dolly(camera: Camera3D, target: Vector3, amount: float, duration: fl
 		var cam: Camera3D = ref.get_ref() as Camera3D
 		if cam == null:
 			return
+		# O lugar de sempre dentro da vista escolhida (TableCamera); o lance, nas coordenadas da vista.
 		var home: Vector3 = TableView.CAMERA_POS
 		var tween := cam.create_tween()
-		tween.tween_property(cam, "position", home.lerp(target, amount), duration * 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(cam, "position", home.lerp(TableCamera.local_point(cam, target), amount), duration * 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_interval(duration * 0.3)
 		tween.tween_property(cam, "position", home, duration * 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT))
 

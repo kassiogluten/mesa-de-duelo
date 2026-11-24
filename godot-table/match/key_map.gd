@@ -11,14 +11,25 @@ const SHORTCUTS: Array = [
 	["Z", "undo", "Pede para desfazer a última jogada."],
 	["F", "control", "Controle total: para em toda etapa. De novo, volta ao jeito de passar de antes."],
 	["I", "inspect", "Abre a carta sob o mouse de perto (o clique direito também)."],
+	["+  −", "zoom_in", "Aproxima e afasta a mesa (a roda do mouse também, na direção do mouse)."],
+	["V", "view_next", "Troca o ângulo da câmera: padrão, pela esquerda, pela direita, de cima (Shift+V volta)."],
+	["0", "view_reset", "Volta à vista padrão (sem zoom, ângulo padrão)."],
 	["?", "help", "Mostra ou esconde esta lista."],
 ]
 
 
 ## A ação de uma tecla apertada ("" se não é atalho): primary, confirm, cancel, cycle, cycle_back, undo, control,
-## inspect ou help. Com Ctrl, Alt ou Meta, nada (os atalhos do sistema ficam livres); repetição da tecla segurada, nada.
+## inspect, help, zoom_in, zoom_out, view_next, view_prev ou view_reset. Com Ctrl, Alt ou Meta, nada (os atalhos do
+## sistema ficam livres); repetição da tecla segurada, nada, menos no zoom (segurar o + continua aproximando).
 static func action_for(keycode: int, unicode: int, shift: bool, modifiers: bool, echo: bool = false) -> String:
-	if modifiers or echo:
+	if modifiers:
+		return ""
+	# O + e o − pelo caractere (no teclado ABNT o + é Shift+=) ou pelo teclado numérico; o = sozinho também aproxima.
+	if unicode == 43 or unicode == 61 or keycode == KEY_KP_ADD or keycode == KEY_PLUS:
+		return "zoom_in"
+	if unicode == 45 or keycode == KEY_KP_SUBTRACT or keycode == KEY_MINUS:
+		return "zoom_out"
+	if echo:
 		return ""
 	if unicode == 63 or keycode == KEY_QUESTION or keycode == KEY_F1 or (keycode == KEY_SLASH and shift):
 		return "help"
@@ -37,6 +48,10 @@ static func action_for(keycode: int, unicode: int, shift: bool, modifiers: bool,
 			return "control"
 		KEY_I:
 			return "inspect"
+		KEY_V:
+			return "view_prev" if shift else "view_next"
+		KEY_0, KEY_KP_0:
+			return "view_reset"
 	return ""
 
 

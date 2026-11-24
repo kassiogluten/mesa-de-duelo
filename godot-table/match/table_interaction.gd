@@ -449,7 +449,7 @@ func _target_source(s: Dictionary) -> Variant:
 		var key: Variant = int((top["source"] as Dictionary)["id"]) if top.get("source") is Dictionary and Txt.of(top.get("kind", "spell")) == "spell" else "stack:%d" % int(top["id"])
 		if table.card_node(key) != null:
 			return key
-	return HandPlacement.HAND_CENTER
+	return table.hand_center()
 
 
 ## Os alvos válidos agora, com o lugar de cada um na tela: [{key, screen}].

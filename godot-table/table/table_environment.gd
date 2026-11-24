@@ -29,10 +29,15 @@ var _pool_strength: float = 0.0
 ## Monta a cena em volta da mesa (filhos diretos dela, nesta ordem: o sol é o primeiro DirectionalLight3D e a lâmpada o
 ## primeiro OmniLight3D, que o clima procura) e devolve a câmera.
 static func build(table: TableView) -> Camera3D:
+	# A câmera fica dentro do suporte da vista que o jogador escolhe (table/table_camera.gd), no lugar de sempre.
+	var rig := TableCamera.new()
+	rig.name = "Vista"
+	table.add_child(rig)
 	var camera := Camera3D.new()
 	camera.fov = 42.0
-	table.add_child(camera)
+	rig.add_child(camera)
 	camera.look_at_from_position(TableView.CAMERA_POS, TableView.CAMERA_LOOK)
+	rig.camera = camera
 
 	var key_light := DirectionalLight3D.new()
 	# Quase de cima: a sombra da mão (perto da câmera) cai atrás dela, e a das cartas no ar ainda aparece embaixo delas.
