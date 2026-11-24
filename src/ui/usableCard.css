@@ -1,0 +1,41 @@
+/* Carta que dá para usar agora (mão, campo, anexos, exílio, cemitério, zona de comando, companheiro): a borda azul firme
+   (o box-shadow de 2px de cada zona) e um halo curto colado nela que respira devagar, igual à mesa no PC. O halo é o
+   ::before do cartão, por baixo da face, e só a opacidade anima: a placa de vídeo cuida, sem repintar a mesa. Com o
+   mouse em cima, acende um pouco mais e a carta sobe. Na mão, as que não dá para jogar ficam um pouco mais escuras. */
+:is(.hcard.playable, .bfc.actionable, .slot > .att.actionable, .slot > .exu.actionable, .pile.actionable, .exile-card.playable,
+  .exile-card.suspend-ready, .command-card.playable, .zone-view .q-face.actionable, .emblem.companion.playable)::before {
+  content: ''; position: absolute; inset: 0; border-radius: 4.8% / 3.4%; pointer-events: none;
+  box-shadow: 0 0 9px 2px rgb(89 181 255 / .5); opacity: .6;
+}
+.pile.actionable::before { border-radius: 6% / 4.5%; }
+.emblem.companion.playable { position: relative; }
+.emblem.companion.playable::before { border-radius: 50%; }
+@media (prefers-reduced-motion: no-preference) {
+  :is(.hcard.playable, .bfc.actionable, .slot > .att.actionable, .slot > .exu.actionable, .pile.actionable, .exile-card.playable,
+    .exile-card.suspend-ready, .command-card.playable, .zone-view .q-face.actionable, .emblem.companion.playable)::before {
+    animation: usable-breathe 1.7s ease-in-out infinite alternate;
+  }
+}
+/* Um ciclo inteiro (acende e apaga) a cada 3,4 s. */
+@keyframes usable-breathe { from { opacity: .6; } to { opacity: 1; } }
+/* Efeitos no degrau 1 em diante (data-fx-calm, permanentEffects.css): o halo fica parado, aceso. */
+[data-fx-calm] :is(.hcard.playable, .bfc.actionable, .slot > .att.actionable, .slot > .exu.actionable, .pile.actionable, .exile-card.playable,
+  .exile-card.suspend-ready, .command-card.playable, .zone-view .q-face.actionable, .emblem.companion.playable)::before { animation: none; opacity: .85; }
+
+/* Mouse em cima: a borda clareia, o halo acende e abre um pouco e a carta sobe (a da mão e a do exílio já sobem). */
+:is(.hcard.playable, .bfc.actionable, .slot > .att.actionable, .slot > .exu.actionable, .pile.actionable, .exile-card.playable,
+  .exile-card.suspend-ready, .command-card.playable, .zone-view .q-face.actionable, .emblem.companion.playable):is(:hover, :focus-visible) {
+  --glow: var(--azul-9fd3ff, #9fd3ff);
+}
+:is(.hcard.playable, .bfc.actionable, .slot > .att.actionable, .slot > .exu.actionable, .pile.actionable, .exile-card.playable,
+  .exile-card.suspend-ready, .command-card.playable, .zone-view .q-face.actionable, .emblem.companion.playable):is(:hover, :focus-visible)::before {
+  animation: none; opacity: 1; box-shadow: 0 0 14px 3px rgb(89 181 255 / .6);
+}
+.bfc.actionable { transition: transform .25s ease, filter .2s, translate .15s ease; }
+.slot > :is(.att, .exu).actionable, .pile.actionable, .command-card.playable { transition: translate .15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .bfc.actionable:hover, .slot > :is(.att, .exu).actionable:hover, .pile.actionable:hover, .command-card.playable:hover { translate: 0 -3px; }
+}
+
+/* Na mão, com alguma carta jogável, as outras ficam ~8% mais escuras. */
+.hand:has(.hcard.playable) .hcard:not(.playable, .hidden-card) > .face { filter: brightness(.92); }

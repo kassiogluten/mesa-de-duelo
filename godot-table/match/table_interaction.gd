@@ -342,7 +342,7 @@ func refresh() -> void:
 	var choosing: bool = (not bool(input.get("priority", false)) and not (roles["selectable"] as Array).is_empty()) or blocks.pending() or attacks.pending()
 	table.highlight_roles(roles, choosing)
 	table.highlights.set_focus(_focus if _focus is int or (_focus is String and table.card_node(_focus) != null) else null)
-	table.apply_hand_layout(input.get("actionable", []), bool(input.get("priority", false)))
+	table.apply_hand_layout(input.get("actionable", []), bool(input.get("priority", false)), HandPlacement.choosing_hand(s))
 	_fixed_arrows = DecisionRoles.fixed_arrows(s)
 	table.set_target_marks(DecisionRoles.target_marks(s))
 	if attack_panel != null:

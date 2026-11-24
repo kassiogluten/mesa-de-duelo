@@ -250,10 +250,16 @@ func hand_basis(pos: Vector3) -> Basis:
 	return _hand.facing_camera(pos)
 
 
-## As cartas jogáveis da mão (input.actionable com a prioridade) ficam mais altas, e as outras um pouco apagadas.
+## As cartas jogáveis da mão (input.actionable com a prioridade) ficam mais altas, e as outras um pouco apagadas; numa
+## escolha sobre as cartas da mão (`choice`, HandPlacement.choosing_hand) a mão sobe inteira.
 ## Chame depois de highlight(), que acende as cartas pelo prompt.
-func apply_hand_layout(actionable: Array, priority: bool) -> void:
-	_hand.apply_layout(actionable, priority)
+func apply_hand_layout(actionable: Array, priority: bool, choice: bool = false) -> void:
+	_hand.apply_layout(actionable, priority, choice)
+
+
+## O mouse em `mouse` (pixels): em cima da sua mão, ela sobe até as cartas ficarem quase inteiras; fora, desce.
+func update_hand_peek(mouse: Vector2) -> void:
+	_hand.update_peek(mouse)
 
 
 ## Muda a ordem da sua mão (a que o jogador arrumou arrastando; o servidor não sabe dela) e leva as cartas para o lugar.
@@ -387,6 +393,8 @@ func put_card(key: Variant, card: Dictionary, zone: String, t: Transform3D, slee
 	if zone != "hand":
 		node.set_lifted(false)
 		node.set_hand_info("", false)
+	# A sua mão aparece como a carta impressa, sem a luz da cena (os versos da mão do oponente, não).
+	HandPlacement.set_printed(node, zone == "hand" and key is int)
 	var moved_zone: bool = _zones.get(key, zone) != zone
 	_zones[key] = zone
 	node.move_to(t, moved_zone or fresh)

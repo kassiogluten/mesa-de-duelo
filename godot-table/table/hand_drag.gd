@@ -155,6 +155,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	# A mão sobe com o mouse em cima dela e desce quando ele sai (HandPlacement.update_peek).
+	if table != null and table.camera != null:
+		table.update_hand_peek(_mouse)
 	if not _awaiting.is_empty():
 		_awaiting["left"] = float(_awaiting["left"]) - delta
 		if float(_awaiting["left"]) <= 0.0:
@@ -180,9 +183,13 @@ func _process(delta: float) -> void:
 	_ghost.transform = Transform3D(Basis(turn).scaled(Vector3.ONE * size), current.origin.lerp(goal.origin, follow))
 	var over_field: bool = not inside_hand(table.hand_rect(), mouse)
 	var playable: bool = can_drag(_state(), _source.card_id)
-	# Sobre o campo, a carta jogável acende: soltar ali joga.
-	_ghost.set_glow(Color(0.3, 0.75, 1.0), 1.25 if over_field and playable else (0.55 if playable else 0.0))
+	# Sobre o campo, a carta jogável acende mais (a borda azul de "pode usar"): soltar ali joga.
+	_ghost.set_glow(TableHighlights.ACTIONABLE, 1.0 if over_field and playable else (0.7 if playable else 0.0))
 	_ghost.set_dim(0.35 if over_field and not playable else 0.0)
+	# Perto da mão, a carta impressa como as da mão; deitando no campo, com a luz da mesa.
+	var material: ShaderMaterial = CardDressing.material_of(_ghost)
+	if material:
+		material.set_shader_parameter("printed", 1.0 - ease(_rise, -1.6))
 
 
 ## A pose da carta arrastada sob o mouse: de pé de frente para a câmera perto da mão, deitada sobre o tampo no campo.
@@ -222,6 +229,8 @@ func _begin() -> void:
 	if _source.lifted:
 		start = start * Transform3D(Basis.from_scale(Vector3.ONE * CardNode.LIFT_SCALE), CardNode.LIFT)
 	_ghost.transform = start
+	HandPlacement.set_printed(_ghost, true, 0.0)
+	CardDressing.material_of(_ghost).set_shader_parameter("glow_style", 1)
 	_source.visible = false
 	_velocity = Vector2.ZERO
 	_last_mouse = _mouse
@@ -291,6 +300,9 @@ func _fly_back(ghost: CardNode, source: CardNode) -> void:
 	ghost.set_glow(Color.BLACK, 0.0)
 	var tween := ghost.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_property(ghost, "transform", home, RETURN_TIME)
+	var material: ShaderMaterial = CardDressing.material_of(ghost)
+	if material:
+		tween.parallel().tween_method(func(v: float) -> void: material.set_shader_parameter("printed", v), HandPlacement.printed_amount(ghost), 1.0, RETURN_TIME)
 	tween.tween_callback(func() -> void:
 		if is_instance_valid(source):
 			source.transform = home

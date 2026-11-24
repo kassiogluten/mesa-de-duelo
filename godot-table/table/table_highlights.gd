@@ -1,6 +1,7 @@
-# Os estados de destaque das cartas da mesa, iguais em toda zona: pode usar (brilho suave), alvo válido (âmbar que
-# respira), selecionada (contorno dourado e a carta sobe), atacando (vermelho), terreno virado para mana (azul); o resto
-# escurece quando há uma escolha. O mouse sobre uma carta que responde acende mais e troca o cursor. Parte da TableView.
+# Os estados de destaque das cartas da mesa, iguais em toda zona: pode usar (borda azul e halo curto que respira), alvo
+# válido (âmbar que respira), selecionada (contorno dourado e a carta sobe), atacando (vermelho), terreno virado para mana
+# (azul); o resto escurece quando há uma escolha. O mouse sobre uma carta que responde acende mais, sobe um pouco e troca
+# o cursor. Parte da TableView.
 class_name TableHighlights
 extends RefCounted
 
@@ -18,14 +19,15 @@ const SOURCE := Color(1.0, 0.86, 0.5)
 
 ## Força do brilho de cada estado e com o mouse em cima.
 const STRENGTH := {
-	"selected": 1.35, "target": 0.85, "attacking": 1.1, "untappable": 1.0, "actionable": 0.55, "mana": 0.4, "blocking": 0.7,
+	"selected": 1.35, "target": 0.85, "attacking": 1.1, "untappable": 1.0, "actionable": 0.7, "mana": 0.5, "blocking": 0.7,
 	"source": 1.2,
 }
 const HOVER_STRENGTH := {
-	"selected": 1.6, "target": 1.65, "attacking": 1.35, "untappable": 1.3, "actionable": 1.05, "mana": 0.8, "blocking": 0.95,
+	"selected": 1.6, "target": 1.65, "attacking": 1.35, "untappable": 1.3, "actionable": 0.88, "mana": 0.75, "blocking": 0.95,
 	"source": 1.4,
 }
-## Quanto a carta selecionada (ou o alvo sob o mouse) sai do lugar: no campo vem para a câmera; na mão sobe na tela.
+## Quanto a carta selecionada (ou o alvo e a que dá para usar, sob o mouse) sai do lugar: no campo vem para a câmera; na
+## mão sobe na tela (a da mão sob o mouse cresce com o CardNode.set_lifted).
 const FIELD_RAISE := Vector3(0, 0.1, 0)
 const FIELD_HOVER_RAISE := Vector3(0, 0.05, 0)
 const HAND_RAISE := Vector3(0, 0.04, -0.16)
@@ -114,14 +116,15 @@ func _show(key: Variant, node: CardNode, role: String) -> void:
 	var strength: float = float((HOVER_STRENGTH if over else STRENGTH)[role])
 	var color: Color = FOCUS.lerp(color_of(role), 0.35) if TargetSnap.same(key, _focus) else color_of(role)
 	node.fade_glow(color, strength)
-	# O "pode jogar" tem o estilo próprio (energia na borda e aura); os outros estados, a borda que respira.
+	# Dá para usar (ou tirar mana): a borda azul firme com o halo curto que respira; os outros estados, a borda que respira
+	# com o brilho correndo.
 	var material: ShaderMaterial = CardDressing.material_of(node)
 	if material:
-		material.set_shader_parameter("glow_style", 1 if role == "actionable" else 0)
+		material.set_shader_parameter("glow_style", 1 if role == "actionable" or role == "mana" else 0)
 	var raise := Vector3.ZERO
 	if role == "selected":
 		raise = HAND_RAISE if zone == "hand" else FIELD_RAISE
-	elif over and role == "target" and zone == "battlefield":
+	elif over and (role == "target" or role == "actionable" or role == "mana") and zone != "hand":
 		raise = FIELD_HOVER_RAISE
 	node.set_raise(raise)
 

@@ -1,5 +1,5 @@
 # Testes da mão: arrastar para jogar (soltar fora da mão joga, dentro devolve ou muda a ordem), a carta jogável mais
-# alta no leque e o voo da carta comprada.
+# alta no leque, a mão que desce parada e sobe com o mouse ou numa escolha, a carta impressa e o voo da carta comprada.
 extends "res://tests/test_case.gd"
 
 
@@ -98,6 +98,41 @@ func test_playable_card_sits_higher_and_the_hand_has_a_drop_band() -> void:
 	check_eq(table.hand_slots().map(func(s: Dictionary) -> int: return int(s["id"])), [8, 5, 6], "a ordem escolhida vale")
 	table.apply_state(_state())
 	check_eq(table.hand_slots().map(func(s: Dictionary) -> int: return int(s["id"])), [8, 5, 6], "e continua no estado seguinte")
+	table.catalog.queue_free()
+	table.queue_free()
+
+
+func test_hand_rests_low_and_rises_with_the_mouse_or_a_choice() -> void:
+	check_eq(HandPlacement.level_drop(false, false), HandPlacement.REST_DROP, "parada, a mão desce")
+	check_eq(HandPlacement.level_drop(true, false), HandPlacement.PEEK_DROP, "com o mouse em cima, sobe um pouco")
+	check_eq(HandPlacement.level_drop(false, true), 0.0, "numa escolha na mão, sobe inteira")
+	check(not HandPlacement.choosing_hand(_state()), "com a prioridade, não é escolha na mão")
+	var discard: Dictionary = _state([], {})
+	(discard["input"] as Dictionary).merge({"priority": false, "selectable": [6, 8]}, true)
+	check(HandPlacement.choosing_hand(discard), "descartar: as cartas da mão estão entre as escolhíveis")
+	var field: Dictionary = _state([], {})
+	(field["input"] as Dictionary).merge({"priority": false, "selectable": [40]}, true)
+	check(not HandPlacement.choosing_hand(field), "escolha só no campo: a mão fica baixa")
+	var mulligan: Dictionary = _state([], {})
+	(mulligan["input"] as Dictionary)["opening"] = "mulligan"
+	check(HandPlacement.choosing_hand(mulligan), "no mulligan a mão sobe inteira")
+
+	var table := _table()
+	table.apply_state(_state())
+	var view: Vector2 = table.get_viewport().get_visible_rect().size
+	var low: Rect2 = table.hand_rect()
+	check(low.end.y > view.y + low.size.y * 0.15, "parada, a parte de baixo das cartas fica fora da tela (%s em %s)" % [low, view])
+	table.update_hand_peek(Vector2(low.get_center().x, low.position.y + 20.0))
+	var peek: Rect2 = table.hand_rect()
+	check(peek.position.y < low.position.y - 10.0, "o mouse na mão: ela sobe")
+	check(peek.end.y > view.y, "mas ainda passa um pouco da borda")
+	table.update_hand_peek(Vector2(low.get_center().x, view.y * 0.2))
+	check(is_equal_approx(table.hand_rect().position.y, low.position.y), "o mouse saiu: desce de novo")
+	table.apply_hand_layout([], false, true)
+	check(table.hand_rect().end.y < view.y, "numa escolha na mão, as cartas ficam inteiras na tela")
+	var card: CardNode = table.card_node(5)
+	check(bool(card.get_meta("printed", false)), "a carta da mão aparece como impressa")
+	check(not bool(table.card_node("hand:1:0").get_meta("printed", false)), "os versos da mão do oponente, não")
 	table.catalog.queue_free()
 	table.queue_free()
 

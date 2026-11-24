@@ -1,7 +1,9 @@
 # Monta uma mesa de exemplo com a mão e o inspetor ligados e salva um print, para conferir a mão e a carta de perto.
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_hand.gd -- <cena> <saída.png>
 # Cenas: mao (cartas jogáveis acesas), previa (mouse sobre uma carta do campo), inspetor (clique direito numa criatura),
-# arrasto (carta da mão a caminho do campo), compra (carta comprada voando do grimório), mao-previa (mouse na mão).
+# arrasto (carta da mão a caminho do campo), compra (carta comprada voando do grimório), mao-previa (mouse na mão),
+# mao-mouse (o mouse na mão: ela sobe e a carta debaixo dele cresce, sem a prévia), mao-escolha (descartar: a mão inteira),
+# mao-inteira (a mão de sempre, inteira na tela).
 extends SceneTree
 
 const CARDS := {
@@ -117,6 +119,20 @@ func _initialize() -> void:
 				_move(from.lerp(to, (i + 1) / 20.0))
 				await process_frame
 			await create_timer(0.05).timeout
+		"mao-mouse":
+			_move(_screen_of(112))
+			await create_timer(0.5).timeout
+			_table.card_node(112).set_lifted(true)
+			await create_timer(0.6).timeout
+		"mao-escolha":
+			# Descartar: as cartas da mão são as escolhíveis (âmbar), sem a prioridade.
+			_table.highlight([], _hand, [], true)
+			_table.apply_hand_layout([], false, true)
+			await create_timer(0.6).timeout
+		"mao-inteira":
+			# A mão de sempre (jogáveis acesas), mas inteira na tela: para comparar com a de antes.
+			_table.apply_hand_layout(state["input"]["actionable"], true, true)
+			await create_timer(0.6).timeout
 		"compra":
 			_hand.append(116)
 			_gen += 1

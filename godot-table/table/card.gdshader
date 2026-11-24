@@ -8,9 +8,12 @@ uniform bool has_front = false;
 uniform vec3 sleeve_color : source_color = vec3(0.42, 0.24, 0.12);
 // Destaque: rgb a cor, a a força (pode jogar, alvo, selecionada).
 uniform vec4 glow = vec4(0.35, 0.8, 1.0, 0.0);
-// Estilo do destaque: 0 a borda que respira com um brilho correndo (alvo, selecionada, atacando); 1 o "pode jogar", com
-// filamentos de energia fluindo pela borda, luz entrando por dentro e um brilho que atravessa a face de tempos em tempos.
+// Estilo do destaque: 0 a borda que respira com um brilho correndo (alvo, selecionada, atacando); 1 o "pode usar", só um
+// fio azul firme na beira da carta, sem nada entrar na face (o halo curto que respira, do lado de fora, é do CardDressing).
 uniform int glow_style = 0;
+// A carta da sua mão (1): aparece como impressa, sem a luz da cena, reflexo nem brilho; as cores da imagem chegam à tela
+// quase iguais (o branco do papel fica logo abaixo do limiar do bloom). Entre 0 e 1 na carta arrastada saindo da mão.
+uniform float printed : hint_range(0.0, 1.0) = 0.0;
 // Escurece a carta que não pode ser escolhida no prompt atual.
 uniform float dim : hint_range(0.0, 1.0) = 0.0;
 // Brilho de passagem de mouse.
@@ -28,6 +31,10 @@ uniform vec3 crack_color : source_color = vec3(1.0, 0.95, 0.8);
 
 const vec2 SIZE = vec2(0.63, 0.88);
 const float CORNER = 0.035;
+// O tonemap Filmic da mesa (TableEnvironment: tonemap_white 6) e o quanto do branco a carta impressa usa: 0,74 da tela em
+// luz linear é o que o Filmic entrega para 1,35, logo abaixo do limiar do bloom (1,4).
+const float TONE_WHITE = 6.0;
+const float PRINT_PEAK = 0.74;
 
 float card_sdf(vec2 uv) {
 	vec2 p = (uv - 0.5) * SIZE;
@@ -81,6 +88,22 @@ vec3 bevel(vec2 uv) {
 	return vec3(out_dir, slope);
 }
 
+// O Filmic do Godot ao contrário: a luz que, depois do tonemap, aparece na tela como `y` (linear, de 0 a ~1).
+vec3 untonemap(vec3 y) {
+	const float FA = 0.88;
+	const float FB = 0.6;
+	const float FC = 0.1;
+	const float FD = 0.2;
+	const float FE = 0.01;
+	const float FF = 0.3;
+	float w = ((TONE_WHITE * (FA * TONE_WHITE + FC * FB) + FD * FE) / (TONE_WHITE * (FA * TONE_WHITE + FB) + FD * FF)) - FE / FF;
+	vec3 k = clamp(y, 0.0, 0.98) * w + FE / FF;
+	vec3 a = FA * (1.0 - k);
+	vec3 b = FB * (FC - k);
+	vec3 c = FD * (FE - k * FF);
+	return max((-b + sqrt(max(b * b - 4.0 * a * c, 0.0))) / (2.0 * a), 0.0);
+}
+
 vec3 hue(float h) {
 	return clamp(abs(fract(h + vec3(0.0, 0.6667, 0.3333)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
 }
@@ -122,7 +145,8 @@ void fragment() {
 	if (FRONT_FACING) {
 		color = has_front ? texture(front_tex, UV).rgb : vec3(0.18, 0.17, 0.2);
 		// O branco do papel (moldura e caixa de texto) não estoura sob a lâmpada: as partes mais claras descem um pouco.
-		color *= 1.0 - 0.1 * smoothstep(0.55, 1.0, max(max(color.r, color.g), color.b));
+		// Na mão (impressa, sem lâmpada) o branco fica como está, para o texto ter contraste.
+		color *= 1.0 - 0.1 * (1.0 - printed) * smoothstep(0.55, 1.0, max(max(color.r, color.g), color.b));
 		if (foil > 0.0 && has_front) {
 			// Foil: faixas de arco-íris na diagonal que andam com o ângulo da carta e com o tempo, mais fortes nas partes claras.
 			float diag = UV.x * 0.8 + UV.y * 1.1;
@@ -169,32 +193,31 @@ void fragment() {
 		ROUGHNESS = 0.74;
 		SPECULAR = 0.3;
 	}
-	ALBEDO = color;
+	// Na mão, a carta impressa: a cor vem toda da emissão (passada pelo Filmic ao contrário), sem luz nem reflexo.
+	ALBEDO = color * (1.0 - printed);
+	if (printed > 0.0) {
+		SPECULAR = (FRONT_FACING ? 0.2 : 0.3) * (1.0 - printed);
+		ROUGHNESS = mix(FRONT_FACING ? 0.66 : 0.74, 1.0, printed);
+		CLEARCOAT = FRONT_FACING ? 0.05 * (1.0 - printed) : 0.0;
+	}
+	vec3 shown = printed > 0.0 ? untonemap(color * PRINT_PEAK) * printed : vec3(0.0);
 	vec3 glow_light = vec3(0.0);
 	if (glow.a > 0.0) {
-		// Destaque: a borda acesa respira, um brilho corre em volta e um véu suave entra um pouco na carta.
-		vec2 p = (UV - 0.5) * SIZE;
-		float angle = atan(p.y, p.x);
-		float run = pow(0.5 + 0.5 * sin(angle - TIME * 2.6), 10.0) + pow(0.5 + 0.5 * sin(angle + 3.14159 - TIME * 2.6), 10.0);
-		float breathe = 0.82 + 0.18 * sin(TIME * 3.2);
-		float edge_band = smoothstep(-0.034, 0.0, d);
-		float veil = smoothstep(-0.08, 0.0, d) * 0.12;
-		glow_light = glow.rgb * glow.a * (edge_band * (1.15 * breathe + run * 1.6) + veil);
 		if (glow_style == 1) {
-			// Pode jogar: energia viva na borda em vez do brilho que corre.
-			float s = angle / 6.2831853 + 0.5;
-			float n1 = noise(vec2(s * 26.0 - TIME * 1.7, TIME * 0.55));
-			float n2 = noise(vec2(s * 57.0 + TIME * 2.6, 3.1 + TIME * 0.8));
-			float plasma = smoothstep(0.42, 0.95, n1 * 0.62 + n2 * 0.48);
-			float line = exp(-pow(d / 0.0035, 2.0));
-			float rim = smoothstep(-0.06, 0.0, d);
-			rim *= rim;
-			float diag2 = UV.x * 0.6 + UV.y * 0.9;
-			float sheen = smoothstep(0.07, 0.0, abs(fract(TIME * 0.26) * 2.6 - 0.8 - diag2));
-			vec3 hot = mix(glow.rgb, vec3(1.0), 0.6);
-			glow_light = glow.a * (hot * line * 1.6 + glow.rgb * rim * (0.45 + 1.4 * plasma) * breathe
-				+ hot * plasma * smoothstep(-0.02, 0.0, d) * 1.4 + vec3(0.9, 0.97, 1.0) * sheen * 0.12);
+			// Pode usar: um fio azul firme na beira, por cima da borda preta impressa (nada entra na arte nem no texto),
+			// na cor do destaque como ela é na tela; abaixo do bloom parado, um pouco acima com o mouse em cima.
+			float line = smoothstep(-0.0125, -0.0085, d);
+			glow_light = untonemap(pow(glow.rgb, vec3(2.2)) * min(glow.a * 1.06, 0.97)) * line;
+		} else {
+			// Destaque: a borda acesa respira, um brilho corre em volta e um véu suave entra um pouco na carta.
+			vec2 p = (UV - 0.5) * SIZE;
+			float angle = atan(p.y, p.x);
+			float run = pow(0.5 + 0.5 * sin(angle - TIME * 2.6), 10.0) + pow(0.5 + 0.5 * sin(angle + 3.14159 - TIME * 2.6), 10.0);
+			float breathe = 0.82 + 0.18 * sin(TIME * 3.2);
+			float edge_band = smoothstep(-0.034, 0.0, d);
+			float veil = smoothstep(-0.08, 0.0, d) * 0.12;
+			glow_light = glow.rgb * glow.a * (edge_band * (1.15 * breathe + run * 1.6) + veil);
 		}
 	}
-	EMISSION = glow_light + vec3(hover * 0.06) + dissolve_color * (dissolve > 0.0 ? smoothstep(dissolve * 1.1 + 0.06, dissolve * 1.1 - 0.05, burn) : 0.0) * 4.0 + flash.rgb * flash.a + extra;
+	EMISSION = shown + glow_light + vec3(hover * 0.06 * (1.0 - printed)) + dissolve_color * (dissolve > 0.0 ? smoothstep(dissolve * 1.1 + 0.06, dissolve * 1.1 - 0.05, burn) : 0.0) * 4.0 + flash.rgb * flash.a + extra;
 }

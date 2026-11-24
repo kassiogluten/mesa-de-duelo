@@ -168,7 +168,8 @@ a { color: var(--gold); }
 .field.opp .slot.tapped.attacking > .bfc { transform: translate(-50%, -22%) rotate(90deg); }
 .slot.tapped > .bfc .face { filter: brightness(0.8); }
 
-.bfc.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+/* Dá para usar: a borda azul firme; o halo curto que respira é do usableCard.css. */
+.bfc.actionable .face { box-shadow: 0 0 0 2px var(--glow); }
 .slot.attacking > .bfc .face { box-shadow: 0 0 0 2px var(--red), 0 0 18px rgba(236, 90, 63, 0.8); }
 .slot.blocking > .bfc .face { box-shadow: 0 0 0 2px var(--gold), 0 0 16px rgba(242, 181, 76, 0.7); }
 .bfc.targetable .face { box-shadow: 0 0 0 2px #ff8a3d, 0 0 10px rgba(255, 138, 61, 0.55); cursor: crosshair; }
@@ -288,7 +289,7 @@ a { color: var(--gold); }
   transform: translate(calc(-50% + var(--cw) * 0.22 * var(--i)), calc(-50% - var(--att-rise) * var(--i)));
 }
 .slot > .att .face { filter: brightness(0.9); }
-.slot > .att.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+.slot > .att.actionable .face { box-shadow: 0 0 0 2px var(--glow); }
 .slot > .bfc { z-index: 1; }
 .att-n {
   position: absolute; z-index: 5; display: inline-flex;
@@ -309,7 +310,7 @@ a { color: var(--gold); }
   transform: translate(calc(-50% - var(--cw) * 0.06 * var(--j)), calc(-50% + var(--exu-drop) * var(--j)));
 }
 .slot > .exu .face { filter: grayscale(0.6) brightness(0.62); box-shadow: 0 0 0 1px #8fa6ff66; }
-.slot > .exu.actionable .face { filter: none; box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+.slot > .exu.actionable .face { filter: none; box-shadow: 0 0 0 2px var(--glow); }
 .exu-n {
   /* No alto da permanente, no meio (o canto de cima à esquerda é da lupa e o da direita, do selo dos anexos). */
   position: absolute; z-index: 5; left: 50%; top: -10px; translate: -50% 0; display: inline-flex; align-items: center; gap: 2px; min-height: 22px; padding: 1px 6px 1px 4px; border-radius: 999px; cursor: pointer;
@@ -367,7 +368,7 @@ a { color: var(--gold); }
 .emblem:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
 /* O companheiro revelado: a mesma miniatura, com o aro prateado; aceso quando dá para pôr na mão. */
 .emblem.companion { border: 0; background: conic-gradient(from 45deg, #ececec, #7a7a7a, #ececec, #7a7a7a, #ececec); }
-.emblem.companion.playable { cursor: pointer; box-shadow: 0 0 0 2px var(--glow), 0 0 12px rgb(89 181 255 / .8); }
+.emblem.companion.playable { cursor: pointer; box-shadow: 0 0 0 2px var(--glow); }
 /*
  * Reserva de mana dentro do retrato: o retrato fica desfocado por baixo e os símbolos crescem conforme cabem
  * (uma cor ocupa quase tudo; várias se dividem em linhas, uma sobre a outra). Os símbolos ficam acima da vida,
@@ -431,7 +432,7 @@ a { color: var(--gold); }
 .gy-empty { border-radius: 6% / 4.5%; border: 1px dashed var(--line); }
 .pile.exile .gy-top { filter: saturate(0.6) brightness(0.85); }
 .pile.exile > span { color: var(--muted); }
-.pile.actionable .gy-top .face, .pile.actionable .gy-top { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); border-radius: 6% / 4.5%; }
+.pile.actionable .gy-top .face, .pile.actionable .gy-top { box-shadow: 0 0 0 2px var(--glow); border-radius: 6% / 4.5%; }
 .pile.actionable.exile .gy-top { filter: none; }
 .pile.lib.actionable .gy-top { cursor: pointer; }
 /* Cemitério e exílio: um ícone mínimo no canto oposto ao da contagem, sem cobrir a carta do topo. */
@@ -472,7 +473,7 @@ a { color: var(--gold); }
 .hcard.hidden-card { cursor: default; }
 .hcard.hidden-card .back { width: 100%; height: 100%; box-sizing: border-box; }
 .hcard.hidden-card:hover { transform: translateY(calc(34% + var(--dy))) rotate(var(--rot)); }
-.hcard.playable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 18px rgba(89, 181, 255, 0.8); }
+.hcard.playable .face { box-shadow: 0 0 0 2px var(--glow); }
 /* Cartas de fora da mão (cemitério, exílio) que dá para usar agora: separadas da mão e com a zona embaixo. */
 .hcard.outside:not(:first-child) { margin-left: calc(var(--hcw) * 0.12); }
 .hcard.outside + .hcard.outside { margin-left: calc(var(--hcw) * -0.34); }
@@ -1082,7 +1083,7 @@ body[data-screen='lobby'] .credits { display: none; }
   position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 2px 8px; border-radius: 999px;
   background: color-mix(in srgb, var(--azul-060912, #060912) 85%, transparent); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; white-space: nowrap;
 }
-.zone-view .q-face.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+.zone-view .q-face.actionable .face { box-shadow: 0 0 0 2px var(--glow); }
 .zone-view .exile-status { left: 8px; right: 8px; bottom: 8px; padding: 6px 4px; border-radius: 6px; font-size: 12px; }
 .zone-view .q-face.actionable .exile-status { color: var(--azul-cfe8ff, #cfe8ff); box-shadow: inset 0 0 0 1px #59b5ff66; }
 .zone-view .q-face:has(.exile-status) .zone-tag { bottom: 40px; }
