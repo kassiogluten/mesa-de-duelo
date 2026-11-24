@@ -387,7 +387,8 @@ static func _chip_style(fill: Color, border: Color, radius: int) -> StyleBoxFlat
 	style.bg_color = fill
 	style.border_color = border
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(radius)
+	# Cantos quase retos, como as pílulas do alto (a direção Nítido).
+	style.set_corner_radius_all(mini(radius, HudStyle.RADIUS_CHIP))
 	style.content_margin_left = 8
 	style.content_margin_right = 9
 	style.content_margin_top = 3

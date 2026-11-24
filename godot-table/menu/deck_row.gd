@@ -55,7 +55,7 @@ func _button(row: HBoxContainer, text: String, kind: int, name: String) -> Butto
 
 
 static func _style(hover: bool) -> StyleBoxFlat:
-	var style := ModalStyle.box(Color(0.08, 0.11, 0.19, 0.92 if hover else 0.7), 12, Color(ModalStyle.GOLD, 0.35 if hover else 0.12), 1)
+	var style: StyleBoxFlat = UiKit.row_box(hover)
 	style.content_margin_left = 14
 	style.content_margin_right = 14
 	style.content_margin_top = 10

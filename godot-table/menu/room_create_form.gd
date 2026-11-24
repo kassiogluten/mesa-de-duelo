@@ -42,7 +42,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	add_child(column)
-	column.add_child(ModalStyle.label(24, ModalStyle.GOLD, "Criar sala"))
+	column.add_child(OnlineScreen._card_title("Criar sala"))
 
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -122,7 +122,7 @@ func set_code(code: String) -> void:
 
 
 func _field(grid: GridContainer, caption: String, control: Control) -> void:
-	var label := ModalStyle.label(16, ModalStyle.MUTED, caption)
+	var label := UiKit.caption(caption)
 	label.custom_minimum_size = Vector2(96, 0)
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	grid.add_child(label)
@@ -130,19 +130,20 @@ func _field(grid: GridContainer, caption: String, control: Control) -> void:
 	grid.add_child(control)
 
 
-## Botões lado a lado em que só um fica marcado (o marcado em dourado).
+## Botões lado a lado em que só um fica marcado (o marcado com o filete e a letra dourados, UiKit.style_choice).
 func _segmented(options: Array, current: String, buttons: Dictionary, on_change: Callable) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	for option: Array in options:
 		var value: String = option[0]
-		var button := ModalStyle.button(option[1], ModalStyle.Kind.PRIMARY if value == current else ModalStyle.Kind.GHOST, 0, 40)
+		var button := ModalStyle.button(option[1], ModalStyle.Kind.GHOST, 0, 40)
+		UiKit.style_choice(button, value == current)
 		button.name = "Option_" + value
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buttons[value] = button
 		button.pressed.connect(func() -> void:
 			for key: String in buttons:
-				ModalStyle.style_button(buttons[key] as Button, ModalStyle.Kind.PRIMARY if key == value else ModalStyle.Kind.GHOST)
+				UiKit.style_choice(buttons[key] as Button, key == value)
 			on_change.call(value))
 		row.add_child(button)
 	return row

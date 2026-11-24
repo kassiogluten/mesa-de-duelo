@@ -28,7 +28,7 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 12)
 	column.add_child(head)
-	var title := ModalStyle.label(24, ModalStyle.GOLD, "Salas públicas")
+	var title := OnlineScreen._card_title("Salas públicas")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	_refresh = ModalStyle.button("Atualizar", ModalStyle.Kind.GHOST, 120, 38)
@@ -101,7 +101,7 @@ func _render() -> void:
 ## Uma linha: o título ("Sala de Ana"), os detalhes e o botão; a em andamento leva o selo vermelho.
 func _row(room: Dictionary, live: bool) -> PanelContainer:
 	var row := PanelContainer.new()
-	var style := ModalStyle.box(Color(0.085, 0.125, 0.21, 0.9), 12, Color(1, 1, 1, 0.12), 1)
+	var style: StyleBoxFlat = UiKit.row_box()
 	style.content_margin_left = 18
 	style.content_margin_right = 12
 	style.content_margin_top = 10
@@ -122,7 +122,7 @@ func _row(room: Dictionary, live: bool) -> PanelContainer:
 	text.add_child(info)
 	if live:
 		var chip := PanelContainer.new()
-		var chip_style := ModalStyle.box(Color(ModalStyle.BAD, 0.16), 99, Color(ModalStyle.BAD, 0.6), 1)
+		var chip_style := UiTheme.flat(Color(ModalStyle.BAD, 0.16), Color(ModalStyle.BAD, 0.6), 1)
 		chip_style.content_margin_left = 8
 		chip_style.content_margin_right = 8
 		chip.add_theme_stylebox_override("panel", chip_style)
@@ -130,7 +130,7 @@ func _row(room: Dictionary, live: bool) -> PanelContainer:
 		info.add_child(chip)
 	else:
 		var chip := PanelContainer.new()
-		var chip_style := ModalStyle.box(Color(ModalStyle.GOOD, 0.12), 99, Color(ModalStyle.GOOD, 0.5), 1)
+		var chip_style := UiTheme.flat(Color(ModalStyle.GOOD, 0.12), Color(ModalStyle.GOOD, 0.5), 1)
 		chip_style.content_margin_left = 8
 		chip_style.content_margin_right = 8
 		chip.add_theme_stylebox_override("panel", chip_style)

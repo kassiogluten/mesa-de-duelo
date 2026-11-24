@@ -17,6 +17,8 @@ func _initialize() -> void:
 	var sizes: PackedStringArray = (args[1] if args.size() > 1 and args[1].contains("x") else SIZES).split(",")
 	var commander: bool = args.has("commander")
 	var options: bool = args.has("opcoes")
+	# O tema e os sons da mesa (main.gd os liga; aqui não há main).
+	UiTheme.install()
 	# procurar / atualizar: a versão no canto com o botão Procurar atualização, ou com uma versão nova à espera.
 	var badge: String = "atualizar" if args.has("atualizar") else ("procurar" if args.has("procurar") else "")
 	# Sem Meus decks nem a partida guardada do jogador: só os prontos e uma sala de exemplo para o Voltar à partida.

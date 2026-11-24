@@ -40,10 +40,8 @@ func _ready() -> void:
 		add_child(checker)
 	catalog.info_ready.connect(func(_names: PackedStringArray) -> void: _paint_rows())
 	checker.checked.connect(func(_key: String, _result: Dictionary) -> void: _paint_rows())
-	var background := ColorRect.new()
-	background.color = Color(0.04, 0.05, 0.09)
-	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(background)
+	# O fundo de cena dos menus (luz, poeira dourada e vinheta), no lugar da cor chapada.
+	add_child(MenuBackdrop.new())
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side: String in ["left", "right"]:
@@ -79,11 +77,9 @@ func _ready() -> void:
 
 
 func _header() -> HBoxContainer:
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 14)
-	var title := ModalStyle.label(40, ModalStyle.GOLD, "Meus decks")
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
+	# O cabeçalho comum das telas (ui/ui_kit.gd), com a conta e Importar à direita.
+	var header: HBoxContainer = UiKit.screen_header("Meus decks", "Os seus decks e os prontos, com o que falta em cada um.", "Mesa de Duelo")
+	(header.get_node("Back") as Button).pressed.connect(func() -> void: closed.emit())
 	_sync_label = ModalStyle.label(16, ModalStyle.MUTED, "")
 	_sync_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_sync_label.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -93,10 +89,6 @@ func _header() -> HBoxContainer:
 	import.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	import.pressed.connect(open_import)
 	header.add_child(import)
-	var back := ModalStyle.button("Voltar", ModalStyle.Kind.GHOST, 120, 46)
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back.pressed.connect(func() -> void: closed.emit())
-	header.add_child(back)
 	return header
 
 

@@ -41,9 +41,7 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(WIDTH, 0)
-	var style: StyleBoxFlat = HudStyle.panel(HudStyle.PANEL_BG, 14)
-	style.border_color = Color(HudStyle.GOLD, 0.34)
-	style.set_border_width_all(1)
+	var style: StyleBoxFlat = HudStyle.framed(HudStyle.panel(HudStyle.PANEL_BG, 14))
 	style.shadow_color = Color(0, 0, 0, 0.45)
 	style.shadow_size = 16
 	style.shadow_offset = Vector2(0, 5)

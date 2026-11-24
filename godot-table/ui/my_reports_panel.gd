@@ -125,7 +125,7 @@ func _row(report: Dictionary) -> PanelContainer:
 
 static func _pill(text: String, tone: Color) -> PanelContainer:
 	var pill := PanelContainer.new()
-	var style := ModalStyle.box(Color(tone, 0.14), 99, Color(tone, 0.5), 1)
+	var style := ModalStyle.box(Color(tone, 0.14), ModalStyle.RADIUS, Color(tone, 0.5), 1)
 	style.content_margin_left = 10
 	style.content_margin_right = 10
 	pill.add_theme_stylebox_override("panel", style)

@@ -25,6 +25,8 @@ static func sample_room(seat: int, ready: Array, confirmed: Array) -> Dictionary
 
 
 func _initialize() -> void:
+	# O tema da mesa (main.gd o liga; aqui não há main).
+	UiTheme.install()
 	await process_frame
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var mode: String = args[0]
@@ -33,6 +35,8 @@ func _initialize() -> void:
 		screen.offline = true
 		root.add_child(screen)
 		await process_frame
+		# Um nome de exemplo no campo (o guardado é o de quem roda o print).
+		(screen.find_child("PlayerName", true, false) as LineEdit).text = "Ana"
 		screen.show_rooms(ROOMS)
 	else:
 		var bg := ColorRect.new()

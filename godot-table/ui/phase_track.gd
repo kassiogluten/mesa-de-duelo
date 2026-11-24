@@ -256,9 +256,7 @@ func _build_menu() -> void:
 	_menu = PanelContainer.new()
 	_menu.top_level = true
 	_menu.visible = false
-	var menu_style := HudStyle.panel(Color(0.035, 0.05, 0.085, 0.97), HudStyle.RADIUS_PANEL)
-	menu_style.border_color = HudStyle.BORDER
-	menu_style.set_border_width_all(1)
+	var menu_style := HudStyle.framed(HudStyle.panel(Color(0.035, 0.05, 0.085, 0.97), HudStyle.RADIUS_PANEL))
 	menu_style.shadow_color = Color(0, 0, 0, 0.45)
 	menu_style.shadow_size = 18
 	_menu.add_theme_stylebox_override("panel", menu_style)

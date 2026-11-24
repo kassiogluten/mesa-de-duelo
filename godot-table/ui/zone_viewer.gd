@@ -9,6 +9,8 @@ const TITLES := {"graveyard": "Cemitério", "exile": "Exílio", "command": "Zona
 const CARD_SIZE := Vector2(196, 273)
 const GOLD := Color("#f0b84a")
 
+## O painel da janela (para a entrada animada).
+var _frame: PanelContainer
 var catalog: CardCatalog:
 	set(value):
 		catalog = value
@@ -41,7 +43,8 @@ func _ready() -> void:
 			close())
 	add_child(shade)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", Hud._panel_style(Color(0.05, 0.07, 0.12, 0.97), 18))
+	_frame = panel
+	panel.add_theme_stylebox_override("panel", HudStyle.framed(Hud._panel_style(Color(0.05, 0.07, 0.12, 0.97), 18)))
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left = -660
 	panel.offset_right = 660
@@ -82,11 +85,16 @@ func _ready() -> void:
 func open_zone(player_id: int, zone: String) -> void:
 	_player = player_id
 	_zone = zone
+	var opening: bool = not visible
 	visible = true
 	_rebuild()
+	if opening:
+		UiKit.open_modal(_frame)
 
 
 func close() -> void:
+	if visible and _player >= 0 and is_inside_tree():
+		UiSounds.play("close")
 	visible = false
 	_player = -1
 	_waiting.clear()

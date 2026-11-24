@@ -6,6 +6,8 @@ const UpdateState := preload("res://boot/update_state.gd")
 const CONFIRM_AFTER_S := 2.0
 
 var _screen: Node
+## Telas saindo (por baixo da que entra, até ela terminar de aparecer).
+var _leaving: Array[Node] = []
 var _perf: PerfMeter
 ## Por cima de todas as telas: relato, Meus relatos, aviso de versão e a tela de atualização necessária.
 var _overlay: CanvasLayer
@@ -20,6 +22,11 @@ var _outdated: OutdatedScreen
 
 func _ready() -> void:
 	ClientLog.install()
+	# O visual Nítido em todo controle sem estilo próprio (ui/ui_theme.gd), os sons da interface (ui/ui_sounds.gd) e o
+	# movimento reduzido das Opções.
+	UiTheme.install()
+	UiSounds.install(get_tree())
+	UiKit.reduce_motion = bool(Prefs.load_all().get("reduce_motion", false))
 	var version: String = UpdateState.current_version()
 	get_tree().create_timer(CONFIRM_AFTER_S).timeout.connect(UpdateState.confirm)
 	print("Mesa aberta (%s)." % ("Versão %s" % version if version != "" else "Versão de desenvolvimento"))
@@ -138,10 +145,28 @@ func _start_match(start_message: Dictionary) -> void:
 
 
 func _swap(screen: Node) -> void:
-	if _screen:
-		_screen.queue_free()
+	var old: Node = _screen
 	_screen = screen
+	# Uma troca no meio da entrada de outra: as que ainda saíam vão embora já.
+	for leaving: Node in _leaving:
+		if is_instance_valid(leaving):
+			leaving.queue_free()
+	_leaving.clear()
 	add_child(screen)
+	if old:
+		# Entre duas telas do menu, a nova entra por cima da de antes (que já não responde) e só então ela sai; da
+		# partida e para ela, a troca é direta, e a tela nova só aparece do escuro.
+		if screen is Control and old is Control:
+			old.process_mode = Node.PROCESS_MODE_DISABLED
+			_leaving.append(old)
+			UiKit.enter(screen as Control).finished.connect(func() -> void:
+				_leaving.erase(old)
+				if is_instance_valid(old):
+					old.queue_free())
+		else:
+			old.queue_free()
+			if screen is Control:
+				UiKit.enter(screen as Control, 0.0)
 	# As janelas por cima recebem as teclas antes da tela (a ordem da árvore decide quem vê primeiro).
 	move_child(_overlay, -1)
 	_update_notice.show_if_pending(screen is MenuScreen)

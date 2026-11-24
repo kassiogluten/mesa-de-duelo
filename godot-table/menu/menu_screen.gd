@@ -297,12 +297,20 @@ func open_decks() -> DeckScreen:
 		_close_decks())
 	_deck_screen.closed.connect(_close_decks)
 	add_child(_deck_screen)
+	# Entra como as outras telas do menu (ui/ui_kit.gd): aparece do escuro subindo um pouco.
+	UiKit.enter(_deck_screen)
 	return _deck_screen
 
 
 func _close_decks() -> void:
 	if _deck_screen and is_instance_valid(_deck_screen):
-		_deck_screen.queue_free()
+		# Sai apagando, sem responder mais; a tela inicial já está por baixo.
+		var leaving: DeckScreen = _deck_screen
+		leaving.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		leaving.process_mode = Node.PROCESS_MODE_DISABLED
+		var tween: Tween = create_tween()
+		tween.tween_property(leaving, "modulate:a", 0.0, ModalStyle.EXIT_TIME)
+		tween.tween_callback(leaving.queue_free)
 	_deck_screen = null
 	_fill_decks()
 

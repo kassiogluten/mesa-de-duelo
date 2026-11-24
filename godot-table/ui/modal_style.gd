@@ -53,11 +53,12 @@ static func panel_style(_radius: int = RADIUS) -> StyleBoxFlat:
 	return style
 
 
-## Caixa simples (selos, faixas, cartões de jogador).
+## Caixa simples (selos, faixas, cartões de jogador), de cantos quase retos: o raio pedido só vale nos círculos (o
+## avatar de 38 px pede 19; os selos redondos, 99), o resto fica com RADIUS.
 static func box(color: Color, radius: int, border: Color = Color(0, 0, 0, 0), border_width: int = 0) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(radius if radius > 16 else mini(radius, RADIUS))
 	style.border_color = border
 	style.set_border_width_all(border_width)
 	style.anti_aliasing = true

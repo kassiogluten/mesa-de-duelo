@@ -1,0 +1,14 @@
+{
+  "Opções com abas, como num jogo": [
+    { "img": "opcoes.webp", "legenda": "A janela de Opções na aba Imagem: as abas do lado, a qualidade dos efeitos com setas e cada opção com a explicação embaixo." }
+  ],
+  "Jogar online e Meus decks com o visual das outras telas": [
+    { "img": "online-antes.webp", "legenda": "Antes: a tela Jogar online com o fundo chapado e os títulos em dourado." },
+    { "img": "online-agora.webp", "legenda": "Agora: o fundo com luz e poeira dourada, o cabeçalho com a etiqueta e as escolhas marcadas com o filete dourado." },
+    { "img": "decks-agora.webp", "legenda": "Meus decks no mesmo estilo, com o cabeçalho comum e as linhas de cantos quase retos." }
+  ],
+  "Partida com o visual das janelas": [
+    { "img": "menu-partida.webp", "legenda": "O menu da partida com o filete dourado no alto e as pílulas de cantos quase retos." },
+    { "img": "caixa-de-acao.webp", "legenda": "A caixa de ação com o botão principal na base de tecla." }
+  ]
+}

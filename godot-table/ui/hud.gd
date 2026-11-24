@@ -159,9 +159,7 @@ func _ready() -> void:
 
 	# Entre os jogos de uma melhor de três: seguir com o mesmo deck (trocar cartas com o sideboard fica para depois).
 	_between = PanelContainer.new()
-	var between_style := HudStyle.panel(Color(0.035, 0.05, 0.085, 0.96), 18)
-	between_style.border_color = Color(HudStyle.GOLD, 0.35)
-	between_style.set_border_width_all(1)
+	var between_style := HudStyle.framed(HudStyle.panel(Color(0.035, 0.05, 0.085, 0.96), 18))
 	between_style.shadow_color = Color(0, 0, 0, 0.5)
 	between_style.shadow_size = 24
 	between_style.content_margin_left = 32

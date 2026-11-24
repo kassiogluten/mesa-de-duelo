@@ -468,7 +468,7 @@ func _ribbon(t: Dictionary) -> PanelContainer:
 static func _box(color: Color, border: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(14)
+	style.set_corner_radius_all(ModalStyle.RADIUS)
 	style.border_color = border
 	style.set_border_width_all(1)
 	style.content_margin_left = 16

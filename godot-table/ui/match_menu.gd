@@ -55,7 +55,7 @@ static func _style(button: Button) -> void:
 	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(0.04, 0.06, 0.1, 0.82) if state_name != "hover" else Color(0.1, 0.13, 0.2, 0.92)
-		style.set_corner_radius_all(20)
+		style.set_corner_radius_all(HudStyle.RADIUS_CHIP)
 		style.border_color = Color(1, 1, 1, 0.1)
 		style.set_border_width_all(1)
 		style.content_margin_left = 14
@@ -77,7 +77,7 @@ func _build_panel() -> void:
 	_panel = PanelContainer.new()
 	_panel.top_level = true
 	_panel.visible = false
-	_panel.add_theme_stylebox_override("panel", Hud._panel_style(Color(0.04, 0.055, 0.09, 0.97), 14))
+	_panel.add_theme_stylebox_override("panel", HudStyle.framed(Hud._panel_style(Color(0.04, 0.055, 0.09, 0.97), 14)))
 	add_child(_panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
@@ -121,6 +121,7 @@ func _build_panel() -> void:
 	_volume.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_volume.value_changed.connect(func(v: float) -> void:
 		Prefs.save("volume", v)
+		UiSounds.set_volume(v)
 		volume_changed.emit(v))
 	sound.add_child(_volume)
 	column.add_child(sound)
@@ -199,15 +200,21 @@ static func _item(label: String, svg: String, color: Color) -> Button:
 	for state_name: String in ["normal", "hover", "pressed", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(1, 1, 1, 0.07 if state_name == "hover" else 0.0)
-		style.set_corner_radius_all(10)
+		style.set_corner_radius_all(ModalStyle.RADIUS)
 		style.content_margin_left = 10
 		button.add_theme_stylebox_override(state_name, style)
 	return button
 
 
 func set_open(open: bool) -> void:
-	_panel.visible = open
+	if open == _panel.visible:
+		return
 	_catcher.visible = open
+	if not open:
+		# Fecha com a saída curta das janelas (ui/ui_kit.gd), e o som.
+		UiKit.close_modal(_panel, func() -> void: _panel.visible = _catcher.visible)
+		return
+	_panel.visible = true
 	if open:
 		apply_state(_state)
 		_update.text = "Nova versão disponível. Ela entra na próxima vez que você abrir a mesa." if not UpdateCheck.pending.is_empty() else ""
@@ -215,7 +222,8 @@ func set_open(open: bool) -> void:
 		_catcher.position = Vector2.ZERO
 		_catcher.size = get_viewport_rect().size
 		_panel.position = get_global_rect().position + Vector2(0, size.y + 8)
-		_panel.reset_size.call_deferred()
+		_panel.reset_size()
+		UiKit.open_modal(_panel)
 
 
 func apply_state(state: Dictionary) -> void:

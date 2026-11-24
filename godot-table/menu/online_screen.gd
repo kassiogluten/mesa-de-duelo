@@ -28,10 +28,8 @@ var _loading: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var background := ColorRect.new()
-	background.color = Color(0.04, 0.05, 0.09)
-	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(background)
+	# O fundo de cena dos menus (luz, poeira dourada e vinheta), no lugar da cor chapada.
+	add_child(MenuBackdrop.new())
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side: String in ["left", "right"]:
@@ -43,25 +41,15 @@ func _ready() -> void:
 	page.add_theme_constant_override("separation", 18)
 	margin.add_child(page)
 
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 20)
+	# O cabeçalho comum das telas (ui/ui_kit.gd): Voltar, a etiqueta dourada, o título e a explicação.
+	var head: HBoxContainer = UiKit.screen_header("Jogar online", "Salas com outras pessoas, na mesa do navegador ou em outra mesa no PC.", "Mesa de Duelo")
 	page.add_child(head)
-	var back_button := ModalStyle.button("‹ Voltar", ModalStyle.Kind.GHOST, 120, 44)
-	back_button.name = "Back"
-	back_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back_button.pressed.connect(func() -> void: back.emit())
-	head.add_child(back_button)
-	var titles := VBoxContainer.new()
-	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	titles.add_theme_constant_override("separation", 0)
-	head.add_child(titles)
-	titles.add_child(ModalStyle.label(40, ModalStyle.GOLD, "Jogar online"))
-	titles.add_child(ModalStyle.label(17, ModalStyle.MUTED, "Salas com outras pessoas, na mesa do navegador ou em outra mesa no PC."))
+	(head.get_node("Back") as Button).pressed.connect(func() -> void: back.emit())
 	var name_box := VBoxContainer.new()
 	name_box.add_theme_constant_override("separation", 4)
 	name_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(name_box)
-	name_box.add_child(ModalStyle.label(15, ModalStyle.MUTED, "Seu nome na mesa"))
+	name_box.add_child(UiKit.caption("Seu nome na mesa"))
 	_name = _line_edit("Jogador", 280)
 	_name.name = "PlayerName"
 	_name.max_length = 24
@@ -146,7 +134,7 @@ func _code_card() -> PanelContainer:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	card.add_child(column)
-	column.add_child(ModalStyle.label(24, ModalStyle.GOLD, "Entrar com código"))
+	column.add_child(_card_title("Entrar com código"))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	column.add_child(row)
@@ -180,6 +168,14 @@ func _code_card() -> PanelContainer:
 	actions.add_child(_watch)
 	column.add_child(ModalStyle.wrap(14, ModalStyle.FAINT, "O código tem 4 letras ou números. Também dá para colar o link de convite da mesa do navegador.", 0.0, false))
 	return card
+
+
+## O título de um dos quadros da tela: branco, na letra encorpada (a direção Nítido).
+static func _card_title(text: String) -> Label:
+	var out := ModalStyle.label(23, Color.WHITE, text)
+	out.add_theme_font_override("font", HudStyle.bold_font())
+	out.add_theme_constant_override("outline_size", 0)
+	return out
 
 
 func _line_edit(placeholder: String, width: float) -> LineEdit:

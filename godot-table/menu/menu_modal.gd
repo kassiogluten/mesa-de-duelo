@@ -35,6 +35,7 @@ func _init(title: String = "", width: float = 560.0) -> void:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	UiSounds.play("open")
 	_backdrop.amount = 0.0
 	_backdrop.fade(1.0, 0.24)
 	_box.modulate.a = 0.0
@@ -49,6 +50,7 @@ func close() -> void:
 	if _closing:
 		return
 	_closing = true
+	UiSounds.play("close")
 	_backdrop.fade(0.0, ModalStyle.EXIT_TIME)
 	var tween := _box.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_box, "modulate:a", 0.0, ModalStyle.EXIT_TIME)

@@ -42,9 +42,7 @@ func _ready() -> void:
 	_panel = PanelContainer.new()
 	_panel.top_level = true
 	_panel.visible = false
-	var style := HudStyle.panel(Color(0.035, 0.05, 0.085, 0.97), HudStyle.RADIUS_PANEL)
-	style.border_color = HudStyle.BORDER
-	style.set_border_width_all(1)
+	var style := HudStyle.framed(HudStyle.panel(Color(0.035, 0.05, 0.085, 0.97), HudStyle.RADIUS_PANEL))
 	style.content_margin_left = 8
 	style.content_margin_right = 8
 	style.content_margin_top = 10

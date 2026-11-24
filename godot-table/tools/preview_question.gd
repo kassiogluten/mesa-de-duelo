@@ -22,6 +22,8 @@ static func samples() -> Dictionary:
 
 
 func _initialize() -> void:
+	# O tema da mesa (main.gd o liga; aqui não há main).
+	UiTheme.install()
 	await process_frame
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var all: Dictionary = samples()

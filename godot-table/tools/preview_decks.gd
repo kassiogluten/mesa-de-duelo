@@ -8,6 +8,8 @@ const SAMPLE_LIST := "Deck\n4 Monastery Swiftspear (BRO) 144\n4 Lightning Bolt\n
 
 
 func _initialize() -> void:
+	# O tema da mesa (main.gd o liga; aqui não há main).
+	UiTheme.install()
 	await process_frame
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var mode: String = args[0]

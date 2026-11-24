@@ -457,6 +457,7 @@ static func clicked(event: InputEvent) -> bool:
 # — Entrada, saída e "Ver a mesa" —
 
 func _open() -> void:
+	UiSounds.play("open")
 	visible = true
 	_closing = false
 	_minimized = false
@@ -590,5 +591,6 @@ func send(payload: Dictionary) -> void:
 	message.merge(payload)
 	if inspector:
 		inspector.hide_preview(true)
+	UiSounds.play("confirm")
 	_close()
 	answered.emit(message)

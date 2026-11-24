@@ -28,11 +28,26 @@ estrutura (Theme único, entrada das telas, peças de lista) valem para a A tamb
   cinza, sem base. Foco do teclado: um contorno branco de 2 px por fora.
 - **Campos.** Escuros, filete fino que fica dourado com o mouse, cantos quase retos (`HomeStyle.style_field`).
 
+## As peças
+
+- **Tema único** (`ui/ui_theme.gd`, ligado no `main.gd`): campos de texto e de escolha e a lista aberta deles, caixas de
+  marcar, deslizantes (puxador dourado com a base de tecla), barras de rolagem, abas de cima (a marcada com o filete
+  dourado no alto), listas e dicas. Todo controle sem estilo próprio sai assim.
+- **Peças montadas** (`ui/ui_kit.gd`): cabeçalho de tela (Voltar, etiqueta, título branco e explicação), legenda em
+  caixa alta, selo de estado, linha de lista, escolhas lado a lado, valor com setas, deslizante com o valor, linha de
+  opção (nome, explicação e controle), abas laterais (a marcada com o filete dourado à esquerda) e a entrada e a saída
+  das telas e das janelas.
+- **Fundo de cena** (`menu/menu_backdrop.gd`): o azul quase preto com uma luz quente que respira, poeira dourada
+  subindo e vinheta, nas telas do menu.
+- **Movimento e som.** As telas do menu entram aparecendo do escuro e subindo um pouco (0,24 s); as janelas crescem um
+  tico do meio e saem descendo (`UiKit.open_modal`, `close_modal`), com os sons de abrir, fechar, confirmar e cancelar
+  (`ui/ui_sounds.gd`, gerados no jogo, no volume dos efeitos). Opções > Imagem > "Menos movimento nas telas" tira o
+  deslocamento e o crescimento.
+- **HUD da partida** (`ui/hud_style.gd`): os mesmos cantos quase retos, o botão principal com a base de tecla e os
+  painéis com o filete dourado no alto (`HudStyle.framed`).
+
 ## Onde já vale
 
-- Todas as janelas, pelo `ModalStyle` (`panel_style`, `title`, `button`, `style_button`): perguntas da partida, sala
-  de espera, relatos, novidades, decks, conta, atualização e sair da partida.
-- Tela inicial: os botões da coluna (`HomeStyle.action_button`), os campos de formato e deck e a lista aberta deles, o
-  painel da partida, Novidades e o aviso de versão nova.
-- Ainda no estilo de antes: a tela Jogar online (títulos, linhas e selos), a mesa da partida (HUD) e peças que ainda
-  não têm a versão Nítido (caixa de texto, caixa de marcar, deslizante, abas, cartões de jogador da sala).
+Em todas as telas (roadmap 150, concluído em 24/11/2026): a tela inicial, Jogar online, Meus decks, as Opções, todas as
+janelas (pelo `ModalStyle`) e o HUD da partida. Fica de fora só o que é desenho da mesa 3D (cartas, selos sobre as
+cartas, setas).

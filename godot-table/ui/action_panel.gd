@@ -12,7 +12,7 @@ const PAD_X := 18.0
 const PAD_TOP := 14.0
 const PAD_BOTTOM := 16.0
 const INNER := WIDTH - PAD_X * 2.0
-const RADIUS := 16.0
+const RADIUS := 4.0
 ## Texto do Forge muito longo vira reticências (a carta inteira está no inspetor).
 const DETAIL_MAX := 300
 const HEADINGS := {"mulligan": "Manter esta mão?", "starting-player": "Quem começa a partida?", "play-draw": "Você ganhou o sorteio: jogar primeiro?"}

@@ -1,5 +1,6 @@
 # Estilo comum das peças do HUD (cores, raios, tamanhos de letra, painéis, pílulas, botões e textos com símbolos de mana),
-# para a caixa de ação, a barra do alto, os relógios, a trilha, os assentos e os avisos falarem a mesma língua.
+# para a caixa de ação, a barra do alto, os relógios, a trilha, os assentos e os avisos falarem a mesma língua, na
+# direção "Nítido" das janelas (docs/direcao-visual-mesa-pc.md): cantos quase retos, botões com a base de tecla.
 class_name HudStyle
 extends RefCounted
 
@@ -23,9 +24,10 @@ const CHIP_PRESSED := Color(0.03, 0.045, 0.075, 0.96)
 const BORDER := Color(1, 1, 1, 0.1)
 const BUTTON_BG := Color(0.12, 0.15, 0.24)
 
-const RADIUS_PANEL := 14
-const RADIUS_CHIP := 20
-const RADIUS_BUTTON := 26
+## Cantos quase retos (ModalStyle.RADIUS), em tudo; um pouco mais nas pílulas, que são pequenas.
+const RADIUS_PANEL := 4
+const RADIUS_CHIP := 5
+const RADIUS_BUTTON := 4
 ## Altura das pílulas do alto (menu, histórico, relógios, Desfazer, nível de passar).
 const CHIP_H := 40
 
@@ -50,16 +52,28 @@ static func bold_font() -> FontVariation:
 	return _bold
 
 
-## Um painel arredondado com as margens de dentro de sempre.
+## Um painel com as margens de dentro de sempre, de cantos quase retos (o raio pedido só vale nos redondos de verdade,
+## como o retrato: de 40 para cima).
 static func panel(color: Color = PANEL_BG, radius: int = RADIUS_PANEL) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(radius if radius >= 40 else mini(radius, RADIUS_PANEL))
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 14
 	style.content_margin_bottom = 14
 	style.anti_aliasing = true
+	return style
+
+
+## A moldura das janelas (ModalStyle.panel_style) num painel do HUD: o filete dourado no alto e a sombra macia.
+static func framed(style: StyleBoxFlat) -> StyleBoxFlat:
+	style.border_color = ModalStyle.GOLD
+	style.set_border_width_all(0)
+	style.border_width_top = ModalStyle.TOP_LINE
+	style.shadow_color = Color(0, 0, 0, 0.45)
+	style.shadow_size = maxi(style.shadow_size, 18)
+	style.shadow_offset = Vector2(0, 6)
 	return style
 
 
@@ -95,7 +109,7 @@ static func style_chip_button(button: Button) -> void:
 	button.add_theme_font_size_override("font_size", SIZE_BODY)
 	var fills: Dictionary = {"normal": CHIP_BG, "hover": CHIP_HOVER, "pressed": CHIP_PRESSED, "disabled": Color(CHIP_BG, 0.5), "focus": CHIP_BG}
 	for state_name: String in fills:
-		var style := chip_style(fills[state_name], Color(1, 1, 1, 0.22) if state_name == "hover" else BORDER)
+		var style := chip_style(fills[state_name], Color(ModalStyle.GOLD_LIGHT, 0.55) if state_name == "hover" else BORDER)
 		if state_name == "focus":
 			button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 			continue
@@ -161,48 +175,17 @@ static func has_symbols(text: String) -> bool:
 	return start >= 0 and text.find("}", start) > start
 
 
-## Botão grande da mesa (principal em dourado): acende ao passar o mouse, afunda ao apertar, apaga quando desligado.
+## Botão grande da mesa (principal em dourado): o das janelas (ModalStyle, a base de tecla que afunda ao apertar, o
+## brilho dourado com o mouse), na altura e na letra da caixa de ação.
 static func button(text: String, primary: bool) -> Button:
-	var out := Button.new()
-	out.text = text
-	out.custom_minimum_size = Vector2(0, 52)
+	var out: Button = ModalStyle.button(text, ModalStyle.Kind.PRIMARY if primary else ModalStyle.Kind.SECONDARY, 0.0, 52.0)
+	out.focus_mode = Control.FOCUS_ALL
 	out.add_theme_font_size_override("font_size", 20)
-	out.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var fill: Color = GOLD if primary else BUTTON_BG
-	var text_color: Color = INK if primary else Color.WHITE
-	var fills: Dictionary = {
-		"normal": fill, "hover": fill.lightened(0.14), "pressed": fill.darkened(0.18), "disabled": fill.darkened(0.45), "focus": fill,
-	}
-	for state_name: String in fills:
-		var style := panel(fills[state_name], RADIUS_BUTTON)
-		style.content_margin_top = 8
+	for state_name: String in ["normal", "hover", "pressed", "disabled"]:
+		var style: StyleBoxFlat = out.get_theme_stylebox(state_name)
+		style.content_margin_top = 8 + (ModalStyle.BUTTON_BASE if state_name == "pressed" else 0)
 		style.content_margin_bottom = 8
-		style.border_color = Color(1, 1, 1, 0.12)
-		style.set_border_width_all(1)
-		match state_name:
-			"hover":
-				style.border_color = Color(1, 1, 1, 0.45) if primary else Color(GOLD, 0.55)
-				style.shadow_color = Color(GOLD, 0.35) if primary else Color(0, 0, 0, 0.35)
-				style.shadow_size = 10 if primary else 6
-			"pressed":
-				style.content_margin_top = 10
-				style.content_margin_bottom = 6
-				style.border_color = Color(0, 0, 0, 0.3)
-			"normal":
-				if primary:
-					style.shadow_color = Color(GOLD, 0.18)
-					style.shadow_size = 6
-			"disabled":
-				style.border_color = Color(1, 1, 1, 0.05)
-		if state_name == "focus":
-			out.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
-		else:
-			out.add_theme_stylebox_override(state_name, style)
-	out.add_theme_color_override("font_color", text_color)
-	out.add_theme_color_override("font_hover_color", text_color)
-	out.add_theme_color_override("font_pressed_color", text_color)
-	out.add_theme_color_override("font_focus_color", text_color)
-	out.add_theme_color_override("font_disabled_color", text_color.lerp(Color(0.5, 0.5, 0.5), 0.6))
+	out.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	return out
 
 

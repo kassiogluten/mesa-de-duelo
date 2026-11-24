@@ -42,6 +42,7 @@ var _title: Label
 var _pips: HBoxContainer
 var _meta: Label
 var _time: float = 0.0
+var _motes: CPUParticles2D
 static var _art_material: ShaderMaterial
 
 
@@ -69,6 +70,10 @@ func _ready() -> void:
 	bottom.name = "FadeBottom"
 	var top := _overlay(HomeStyle.fade([[0.0, Color(HomeStyle.BG, 0.55)], [0.14, Color(HomeStyle.BG, 0.0)], [1.0, Color(HomeStyle.BG, 0.0)]], Vector2(0, 0), Vector2(0, 1)))
 	top.name = "FadeTop"
+	# A poeira dourada subindo devagar por cima da arte (o mesmo fundo de cena das outras telas do menu).
+	_motes = MenuBackdrop.motes(34)
+	_motes.emitting = Txt.of(Prefs.load_all().get("effects", "auto")) != "leve"
+	add_child(_motes)
 	_build_info()
 	resized.connect(_layout)
 	_layout()
@@ -133,6 +138,8 @@ func _layout() -> void:
 			(child as Control).size = _art_box.size + Vector2(2, 2)
 	for layer: Control in _layers:
 		_fit_layer(layer)
+	_motes.position = Vector2(size.x / 2.0, size.y + 20.0)
+	_motes.emission_rect_extents = Vector2(size.x / 2.0, 10.0)
 	var left: float = maxf(56.0, size.x * 0.03)
 	_info.position = Vector2(left, size.y * 0.755 - _info.get_combined_minimum_size().y)
 	_info.size = Vector2(art_w - left - 40.0, 0)

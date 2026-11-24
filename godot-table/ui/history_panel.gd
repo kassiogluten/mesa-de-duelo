@@ -24,7 +24,7 @@ var _urls: Dictionary = {}
 
 
 func _ready() -> void:
-	add_theme_stylebox_override("panel", Hud._panel_style(Color(0.035, 0.05, 0.085, 0.95), 14))
+	add_theme_stylebox_override("panel", HudStyle.framed(Hud._panel_style(Color(0.035, 0.05, 0.085, 0.95), 14)))
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var column := VBoxContainer.new()
