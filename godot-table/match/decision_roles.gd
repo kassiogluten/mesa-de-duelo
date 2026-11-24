@@ -28,7 +28,8 @@ static func opening_hand(s: Dictionary) -> Array:
 	return []
 
 
-## Os papéis para TableHighlights: {selected, selectable, attacking, untappable, actionable, mana_only, blocking, stacks}.
+## Os papéis para TableHighlights: {selected, selectable, attacking, untappable, actionable, mana_only, blocking, source,
+## stacks}; `source` é a permanente de onde vem a habilidade que se está pagando (PaymentCard.source_id).
 ## `dragged`: a permanente sendo arrastada (o atacante arrastado acende quem ele pode atacar).
 static func build(s: Dictionary, blocks: BlockFlow, attacks: AttackFlow, dragged: CardNode = null) -> Dictionary:
 	var input: Dictionary = _input(s)
@@ -68,7 +69,8 @@ static func build(s: Dictionary, blocks: BlockFlow, attacks: AttackFlow, dragged
 		attacking.append(int(entry.get("attacker", -1)))
 		blocking.append_array(_ints(entry.get("blockers")))
 	return {"selected": selected, "selectable": selectable, "attacking": attacking, "untappable": _ints(input.get("untappable")),
-		"actionable": actionable, "mana_only": _ints(input.get("manaOnly")), "blocking": blocking, "stacks": _ints(input.get("selectableStacks"))}
+		"actionable": actionable, "mana_only": _ints(input.get("manaOnly")), "blocking": blocking,
+		"source": [PaymentCard.source_id(s)].filter(func(id: int) -> bool: return id >= 0), "stacks": _ints(input.get("selectableStacks"))}
 
 
 ## Setas fixas: ataque (vermelho, até o retrato ou a permanente; com 3 ou 4 jogadores, na cor de quem é atacado) e

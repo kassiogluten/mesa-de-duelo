@@ -204,9 +204,12 @@ func _dissipate(pip: ManaPoolPip, lost: int, removed: bool) -> void:
 		pip.squash()
 
 
-## Para onde voa a mana gasta: o topo da pilha (a mágica ou habilidade que acabou de ser paga), senão a carta que estava
-## sendo paga; null se não se sabe.
+## Para onde voa a mana gasta: a carta que ainda está sendo paga (a mostrada junto da caixa de ação), senão o topo da
+## pilha (a mágica ou habilidade que acabou de ser paga), senão a carta que estava sendo paga; null se não se sabe.
 func _spend_key(state: Dictionary) -> Variant:
+	var input: Dictionary = state.get("input", {}) if state.get("input") is Dictionary else {}
+	if _paying_for != null and bool(input.get("paying", false)) and input.get("card") is Dictionary and int((input["card"] as Dictionary).get("id", -1)) == int(_paying_for):
+		return _paying_for
 	var stack: Array = state.get("stack", []) if state.get("stack") is Array else []
 	if not stack.is_empty():
 		var item: Dictionary = stack[0]
