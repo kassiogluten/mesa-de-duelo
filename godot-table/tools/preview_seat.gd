@@ -1,6 +1,8 @@
 # Monta mesas sem servidor com assentos cheios (veneno, energia, dano de comandante, reserva, monarca, zona de comando, cemitério cheio) e salva um print de cada uma.
-# npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_seat.gd -- <pasta>/assento
-# Grava <base>-<cena>.png: duelo, pagando, commander, bloqueio e as janelas de zona.
+# npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_seat.gd -- <pasta>/assento [cena] [LxA]
+# (LxA, como 1600x900 ou 1100x900, tira a janela do maximizado e a deixa desse tamanho: telas 16:9 e janelas estreitas.)
+# Grava <base>-<cena>.png: duelo, pagando, commander, bloqueio, dupla-comando (Commander de dois, com parceiros) e as
+# janelas de zona.
 extends SceneTree
 
 ## Cartas: id → [nome, tipo, dono, criatura, terreno].
@@ -31,6 +33,11 @@ func _initialize() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var base: String = args[0] if args.size() > 0 else OS.get_user_data_dir().path_join("assento")
 	var only: String = args[1] if args.size() > 1 else ""
+	if args.size() > 2 and args[2].contains("x"):
+		var dims: PackedStringArray = args[2].split("x")
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		DisplayServer.window_set_size(Vector2i(int(dims[0]), int(dims[1])))
+		await create_timer(0.3).timeout
 	var catalog := CardCatalog.new()
 	root.add_child(catalog)
 	var scenes: Array = [
@@ -38,6 +45,7 @@ func _initialize() -> void:
 		["zona-cemiterio", _duel(false), "1:graveyard"], ["zona-exilio", _duel(false), "1:exile"],
 		["commander", _commander(false), ""], ["bloqueio", _commander(true), ""],
 		["zona-comando", _commander(false), "0:command"], ["zona-dano", _commander(false), "3:damage"],
+		["dupla-comando", _commander_duel(), ""],
 	]
 	for scene: Array in scenes:
 		if only != "" and not Txt.of(scene[0]).contains(only):
@@ -169,3 +177,20 @@ func _commander(blocking: bool) -> Dictionary:
 	else:
 		extra["input"] = {"gen": 4, "priority": true, "selectablePlayers": [1, 2], "targeting": {"source": 101}, "message": "Escolha um jogador", "ok": {"label": "", "enabled": false}, "cancel": {"label": "Cancelar", "enabled": true}, "selectable": []}
 	return _base(players, extra)
+
+
+## Commander de dois: você com um comandante (taxa +2) e o oponente com uma dupla de parceiros (uma com taxa, outra sem)
+## e a mão cheia, para conferir a zona de comando junto dos retratos.
+func _commander_duel() -> Dictionary:
+	var state: Dictionary = _duel(false)
+	var me: Dictionary = (state["players"] as Array)[0]
+	var opp: Dictionary = (state["players"] as Array)[1]
+	me["life"] = 40
+	me["commandZone"] = [{"id": 600, "name": "Edgar Markov", "commander": true, "tapped": false}]
+	me["commanders"] = [{"id": 600, "name": "Edgar Markov", "casts": 1, "tax": 2}]
+	opp["life"] = 37
+	opp["handCount"] = 7
+	opp["commandZone"] = [{"id": 610, "name": "Thrasios, Triton Hero", "commander": true, "tapped": false},
+		{"id": 611, "name": "Tymna the Weaver", "commander": true, "tapped": false}]
+	opp["commanders"] = [{"id": 610, "name": "Thrasios, Triton Hero", "casts": 2, "tax": 4}, {"id": 611, "name": "Tymna the Weaver", "casts": 0, "tax": 0}]
+	return state

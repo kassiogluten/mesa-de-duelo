@@ -46,6 +46,8 @@ var _stack := StackPlacement.new(self)
 var highlights := TableHighlights.new(self)
 ## O destaque da pilha (contorno aurora, poucas partículas e as ondas de chegar e resolver).
 var stack_presence: StackPresence
+## O tamanho da tela da última vez que o seu comandante foi posto (ele segue o retrato quando a janela muda).
+var _command_view := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -90,7 +92,7 @@ func apply_state(state: Dictionary) -> void:
 		_hand.place(player, frame, sleeve, seen, names)
 		_place_pile(player, "graveyard", frame, sleeve, seen, names)
 		_place_pile(player, "exile", frame, sleeve, seen, names)
-		_place_pile(player, "commandZone", frame, sleeve, seen, names)
+		_place_command(player, frame, sleeve, seen, names)
 		_place_library(player, frame, sleeve, seen)
 	_stack.place(state.get("stack", []), you, seen, names)
 	catalog.request(names)
@@ -128,6 +130,8 @@ func set_target_marks(marks: Array) -> void:
 
 
 func _process(_delta: float) -> void:
+	if get_viewport().get_visible_rect().size != _command_view:
+		_replace_my_command()
 	var drawn: Array = []
 	for raw: Variant in _arrow_specs:
 		var spec: Dictionary = raw
@@ -277,13 +281,12 @@ func dragging(node: CardNode) -> bool:
 	return node != null and not node.visible
 
 
-## Cemitério, exílio e zona de comando: as cartas empilhadas, a de cima à mostra, e quantas são. O monte tem a
-## espessura das cartas de papel e uma bagunça arrumada fixa por id (PaperPhysics.pile_pose); quem chega pousa no alto
-## dele e empurra um tico a de baixo, e a carta nova (moída, destruída) cai rente sobre o monte.
+## Cemitério e exílio: as cartas empilhadas, a de cima à mostra, e quantas são. O monte tem a espessura das cartas de
+## papel e uma bagunça arrumada fixa por id (PaperPhysics.pile_pose); quem chega pousa no alto dele e empurra um tico a de
+## baixo, e a carta nova (moída, destruída) cai rente sobre o monte.
 func _place_pile(player: Dictionary, zone: String, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
 	var cards: Array = player.get(zone, []) if player.get(zone) is Array else []
-	var key: String = "command" if zone == "commandZone" else zone
-	var pos: Vector3 = frame[key]
+	var pos: Vector3 = frame[zone]
 	var scale: float = frame["scale"]
 	# No primeiro estado (a mesa sendo montada, antes de o grimório existir) os montes já começam no lugar.
 	var settled: bool = card_node("library:%d" % int(player["id"])) != null
@@ -294,10 +297,10 @@ func _place_pile(player: Dictionary, zone: String, frame: Dictionary, sleeve: Co
 		var card: Dictionary = cards[i]
 		var id: int = int(card["id"])
 		var fresh: bool = not _cards.has(id)
-		var arriving: bool = fresh or _zones.get(id, key) != key
+		var arriving: bool = fresh or _zones.get(id, zone) != zone
 		var face_down: bool = bool(card.get("faceDown", false))
 		var t: Transform3D = PaperPhysics.pile_pose(pos, scale, id, i, cards.size(), face_down)
-		put_card(id, card, key, t, sleeve, seen, names)
+		put_card(id, card, zone, t, sleeve, seen, names)
 		var node: CardNode = _cards[id]
 		node.set_pile_depth(step)
 		node.set_contact_shadow(i == 0)
@@ -307,7 +310,41 @@ func _place_pile(player: Dictionary, zone: String, frame: Dictionary, sleeve: Co
 		elif arriving:
 			node.land_on(below)
 		below = node
-	_count_label("%s:%d" % [key, int(player["id"])], cards.size(), pos + Vector3(0.22, 0.25, 0.3), seen, cards.size() > 1)
+	_count_label("%s:%d" % [zone, int(player["id"])], cards.size(), pos + Vector3(0.22, 0.25, 0.3), seen, cards.size() > 1)
+
+
+## A zona de comando: fora do campo, junto do retrato, cada comandante menor e inclinado como uma carta em exposição
+## (SeatLayout.command_pose), com o selo de coroa e taxa colado embaixo. O seu acompanha o retrato na tela.
+func _place_command(player: Dictionary, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
+	var cards: Array = player.get("commandZone", []) if player.get("commandZone") is Array else []
+	var spot: Vector3 = frame["command"]
+	var scale: float = frame["command_scale"]
+	if int(frame["side"]) > 0:
+		_command_view = get_viewport().get_visible_rect().size if is_inside_tree() else Vector2.ZERO
+		var mine: Dictionary = SeatLayout.my_command_spot(camera, player_screen_position.call(int(player["id"])), cards.size())
+		if not mine.is_empty():
+			spot = mine["pos"]
+			scale = mine["scale"]
+			frame["command"] = spot
+	for i: int in cards.size():
+		var card: Dictionary = cards[i]
+		var id: int = int(card["id"])
+		put_card(id, card, "command", SeatLayout.command_pose(spot, scale, i, cards.size(), int(frame["side"]) > 0), sleeve, seen, names)
+		var node: CardNode = _cards[id]
+		node.set_contact_shadow(false)
+		if bool(card.get("commander", false)) or (_ctx.get("commanders", {}) as Dictionary).has(id):
+			# O selo não encolhe com a carta: fica do tamanho dos selos do campo ali (FieldPlacement), um pouco maior.
+			var boost: float = (1.0 + maxf(0.0, -spot.z) * 0.07) * 1.1 / scale
+			node.set_badges({"bottom_mid": [BadgeSpec.command_seal(BadgeSpec.commander_tax(player, id))]}, false, false, boost)
+
+
+## A janela mudou de tamanho: o seu comandante volta para junto do retrato.
+func _replace_my_command() -> void:
+	_command_view = get_viewport().get_visible_rect().size
+	var you: int = int(_state.get("you", 0))
+	for raw: Variant in _state.get("players", []):
+		if int((raw as Dictionary)["id"]) == you and _frames.has(you):
+			_place_command(raw, _frames[you], sleeve_of(you), {}, PackedStringArray())
 
 
 ## O grimório: um bloco virado para baixo, apoiado no tampo, com a altura das cartas que tem (PaperPhysics.library_pose).
