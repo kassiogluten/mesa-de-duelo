@@ -199,6 +199,25 @@ static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dict
 		"aim": aim, "pending": pending}
 
 
+## O selo do comandante na zona de comando, colado embaixo dele: a coroa e a taxa ("+2", "+4"); sem taxa, só a coroa. Lá a
+## coroa sai do canto da carta (ela fica no canto só para o comandante no campo).
+static func command_seal(tax: int) -> Dictionary:
+	var seal: Dictionary = {"icon": "crown", "bg": Color("#1b1300"), "fg": Color("#ffd166"), "border": Color("#c99a3b"),
+		"name": "Comandante" if tax <= 0 else "Comandante: custa %d a mais para conjurar" % tax}
+	if tax > 0:
+		seal["text"] = "+%d" % tax
+	return seal
+
+
+## A taxa de comandante de `id` (commanders do jogador: [{id, name, casts, tax}]); 0 sem taxa.
+static func commander_tax(player: Dictionary, id: int) -> int:
+	if player.get("commanders") is Array:
+		for c: Variant in player["commanders"]:
+			if c is Dictionary and int((c as Dictionary).get("id", -1)) == id:
+				return int((c as Dictionary).get("tax", 0))
+	return 0
+
+
 ## Carta da lista de Game Changers numa partida com as regras do Commander, de frente para cima e que não é ficha.
 static func game_changer(card: Dictionary, ctx: Dictionary) -> bool:
 	var name: String = Txt.of(card.get("name", ""))
