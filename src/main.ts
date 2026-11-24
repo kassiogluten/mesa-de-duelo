@@ -33,18 +33,21 @@ import { startupLinks } from './app/startupLinks';
 import { createRouter, routePath, type Route } from './app/router';
 import { countFunnel } from './funnel';
 import { startScreenBugs } from './ui/screenBug';
+import { mountDeckView } from './deckView/view';
+import { setDeckOpener } from './ui/deckPreview';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
   <div class="screen" id="scrLobby"></div>
   <div class="screen" id="scrGame" hidden></div>
   <div class="screen" id="scrDecks" hidden></div>
+  <div class="screen" id="scrDeck" hidden></div>
   <div class="screen" id="scrFree" hidden></div>
   <div class="screen" id="scrLab" hidden></div>
   <footer class="credits">Cartas e imagens: <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.
   Magic: The Gathering é marca da Wizards of the Coast; projeto de fã, sem afiliação.</footer>`;
 
-const screens: Record<Screen, string> = { lobby: '#scrLobby', game: '#scrGame', decks: '#scrDecks', free: '#scrFree', lab: '#scrLab' };
+const screens: Record<Screen, string> = { lobby: '#scrLobby', game: '#scrGame', decks: '#scrDecks', deck: '#scrDeck', free: '#scrFree', lab: '#scrLab' };
 function show(name: Screen) {
   hideCardPreview(true);
   session.screen = name;
@@ -54,9 +57,9 @@ function show(name: Screen) {
   // Tela acesa enquanto há partida ou mesa livre aberta (S18).
   screenWake.setActive(name === 'game' || name === 'free');
   // One Tap só na tela inicial e em Meus decks: nunca por cima da mesa.
-  if (name === 'lobby' || name === 'decks') void mostrarOneTap(); else esconderOneTap();
+  if (name === 'lobby' || name === 'decks' || name === 'deck') void mostrarOneTap(); else esconderOneTap();
   // O aviso de resposta num relato também não fica por cima da mesa.
-  if (name !== 'lobby' && name !== 'decks') hideMyReportsNotice();
+  if (name !== 'lobby' && name !== 'decks' && name !== 'deck') hideMyReportsNotice();
   router.sync(screenPath());
 }
 
@@ -65,7 +68,7 @@ const session: MatchSession = { current: null, watching: null, screen: 'lobby' }
 
 /** O endereço da tela à vista: em Meus decks, o da lista, do editor do deck aberto ou da importação. */
 function screenPath() {
-  return routePath(session.screen === 'decks' ? builder.route() : { screen: session.screen } as Route);
+  return routePath(session.screen === 'decks' ? builder.route() : session.screen === 'deck' ? deckView.route() : { screen: session.screen } as Route);
 }
 /**
  * O painel por cima da tela que o voltar do celular fecha, do mais à frente para o mais atrás: as janelas (dialog), Enviar
@@ -92,6 +95,7 @@ function openRoute(route: Route) {
   switch (route.screen) {
     case 'lobby': show('lobby'); lobby.refresh(); break;
     case 'decks': builder.open(route.view === 'edit' ? { action: 'edit', deckId: route.deckId } : { action: route.view }); show('decks'); break;
+    case 'deck': deckView.openRoute(route); show('deck'); break;
     case 'lab': labView.open(); show('lab'); scrollTo({ top: 0 }); break;
     case 'free': if (savedFree) freeTable.resume(savedFree); show('free'); break;
   }
@@ -230,10 +234,22 @@ const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
   },
 });
 
-// Decks que chegaram da conta (outro aparelho, junção, lixeira) ou de outra aba: as duas telas se redesenham.
-addEventListener(EVENTS.decksSincronizados, () => { lobby.refresh(); builder.refresh(); });
+/** De onde a tela de detalhes do deck foi aberta: o Voltar leva para lá. */
+let deckFrom: 'lobby' | 'decks' = 'lobby';
+const deckView = mountDeckView(document.querySelector('#scrDeck')!, {
+  onBack: () => { if (deckFrom === 'decks') { builder.refresh(); show('decks'); } else { lobby.refresh(); show('lobby'); } },
+  onPlay: () => { lobby.refresh(); show('lobby'); },
+  onDecks: () => { builder.open({ action: 'library' }); show('decks'); },
+  onEdit: deckId => { builder.open({ action: 'edit', deckId }); show('decks'); },
+  onChange: () => { lobby.refresh(); builder.refresh(); },
+  onRouteChange: () => { if (session.screen === 'deck') router.sync(screenPath()); },
+});
+setDeckOpener((deck, actions) => { deckFrom = session.screen === 'decks' ? 'decks' : 'lobby'; deckView.openDeck(deck, actions); show('deck'); });
+
+// Decks que chegaram da conta (outro aparelho, junção, lixeira) ou de outra aba: as telas se redesenham.
+addEventListener(EVENTS.decksSincronizados, () => { lobby.refresh(); builder.refresh(); deckView.refresh(); });
 // Cartas da mesa ligada ou desligada: as telas redesenham com a outra imagem.
-addEventListener(EVENTS.ownArt, () => { lobby.refresh(); builder.refresh(); });
+addEventListener(EVENTS.ownArt, () => { lobby.refresh(); builder.refresh(); deckView.refresh(); });
 iniciarSincronia();
 
 const labView = mountLab(document.querySelector('#scrLab')!, {
@@ -399,7 +415,7 @@ if (saved) void resumeSaved(saved);
 else if (links.room) lobby.openRoomLink(links.room);
 else if (links.createRoom) lobby.openCreateRoom();
 else if (savedFree && (initial.screen === 'lobby' || initial.screen === 'free')) { freeTable.resume(savedFree); show('free'); }
-else if (initial.screen === 'decks' || initial.screen === 'lab') openRoute(initial);
+else if (initial.screen === 'decks' || initial.screen === 'lab' || initial.screen === 'deck') openRoute(initial);
 // Primeira visita neste aparelho: o tour da tela inicial (escolher o deck, ajustar a partida, Jogar).
 else if (initial.screen === 'lobby' && !load(KEYS.played) && !load(KEYS.tour)) lobby.startTour();
 // /partida sem partida para voltar e /mesa-livre sem jogo guardado caem no início. Voltando à partida, quem acerta o

@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.248.0] - 2026-11-24
+
+### Novo
+
+- **Tela de detalhes do deck.** Ver um deck (na tela inicial, em Meus decks ou na sala) abre agora uma tela própria, com endereço que dá para salvar ou mandar: o topo com a arte do comandante, as cores, o bracket e o preço, e as abas Visão geral, Cartas e Mão de teste. Escolher o deck, fazer a sua versão, editar e exportar continuam ali.
+- **Análise do deck.** A Visão geral diz se o deck tem terrenos na medida para o custo dele, a chance de a mão inicial vir com 2 a 4 terrenos e, no Commander, se há ramp, compra, remoção e limpa-campo suficientes, além dos números de sempre (curva, cores de mana, raridades, bracket e fichas).
+- **Funções das cartas.** Quantas cartas do deck são ramp, compra, remoção, limpa-campo, tutor, anulação, recursão, proteção, descarte e ganho de vida, pelas etiquetas da comunidade do Scryfall. Toque numa função para ver quais cartas a cumprem.
+- **Trocar a arte de cada carta.** Na aba Cartas, o botão Arte de cada carta mostra todas as coleções dela que a partida conhece, com o ano, o preço e o que cada uma tem de especial (sem borda, arte cheia, vitrine). A arte escolhida fica gravada no deck: na partida, todos veem a mesma. Num deck pronto ou de outra pessoa, o botão oferece fazer uma cópia sua antes.
+- **Mão de teste.** Sorteie a mão inicial do deck, faça mulligan (o de Londres, com o primeiro grátis no Commander, escolhendo quais cartas vão para o fundo) e compre as cartas seguintes, turno a turno.
+- **Compartilhar deck por link.** Com a conta conectada, o botão Compartilhar cria um link curto do deck (/d/…). Quem abre vê as cartas, a análise e a mão de teste, sem precisar de conta, e pode copiar o deck para os decks dele. O link acompanha as mudanças que você fizer, e dá para parar de compartilhar quando quiser.
+
 ## [0.243.0] - 2026-11-23
 
 ### Mudou

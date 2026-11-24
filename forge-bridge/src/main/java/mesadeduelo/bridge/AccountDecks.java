@@ -51,6 +51,12 @@ final class AccountDecks {
     private static long nextRev(JsonObject account) { long r = rev(account) + 1; account.addProperty("rev", r); return r; }
     private static boolean deleted(JsonObject entry) { return entry.has("apagadoEm"); }
 
+    /** O deck vivo da conta com este id; null se não existe ou está na lixeira. */
+    static JsonObject liveDeck(JsonObject account, String id) {
+        JsonObject entry = byId(account).get(id);
+        return entry == null || deleted(entry) ? null : entry.getAsJsonObject("deck");
+    }
+
     static int live(JsonObject account) {
         int n = 0;
         for (JsonElement e : decks(account)) if (!deleted(e.getAsJsonObject())) n++;

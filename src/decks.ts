@@ -120,7 +120,7 @@ function validTokens(v: unknown): v is DeckToken[] {
   return Array.isArray(v) && v.every(t => object(t) && ['oracleId', 'name', 'colors', 'set', 'cn'].every(k => typeof t[k] === 'string')
     && optionalText(t.power) && optionalText(t.toughness));
 }
-function validDeck(v: unknown): v is DeckData {
+export function validDeck(v: unknown): v is DeckData {
   return object(v) && typeof v.id === 'string' && !!v.id && typeof v.name === 'string' && validEntries(v.cards)
     && (v.sideboard === undefined || validEntries(v.sideboard)) && (v.format === undefined || DECK_FORMATS.includes(v.format as DeckFormat))
     && (v.commanders === undefined || validEntries(v.commanders)) && (v.bracket === undefined || isBracket(v.bracket))

@@ -2,18 +2,19 @@ import { NAMES } from './storage';
 /**
  * Banco do jogo no IndexedDB, separado do localStorage onde ficam os decks. Guarda as cartas do Scryfall (scryfall),
  * a gravação da última partida (gravacao), os relatos esperando conexão para sair (relatos) e as partidas guardadas para
- * rever (partidas, só o resumo de cada uma, e partidas-dados, a gravação comprimida). Sem IndexedDB
+ * rever (partidas, só o resumo de cada uma, e partidas-dados, a gravação comprimida) e o que a tela de detalhes do deck
+ * já buscou no servidor (deck: as artes de cada carta e as funções das cartas). Sem IndexedDB
  * (navegação privada, testes), open() devolve null e quem usa segue só com a memória da página.
  */
 const DB_NAME = NAMES.idb;
-export const STORES = { cards: 'scryfall', recording: 'gravacao', reports: 'relatos', replays: 'partidas', replayData: 'partidas-dados' } as const;
+export const STORES = { cards: 'scryfall', recording: 'gravacao', reports: 'relatos', replays: 'partidas', replayData: 'partidas-dados', deckInfo: 'deck' } as const;
 
 let opening: Promise<IDBDatabase | null> | null = null;
 export function openDb(): Promise<IDBDatabase | null> {
   return opening ??= new Promise(resolve => {
     try {
       if (typeof indexedDB === 'undefined') { resolve(null); return; }
-      const request = indexedDB.open(DB_NAME, 3);
+      const request = indexedDB.open(DB_NAME, 4);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(STORES.cards)) db.createObjectStore(STORES.cards);
@@ -21,6 +22,7 @@ export function openDb(): Promise<IDBDatabase | null> {
         if (!db.objectStoreNames.contains(STORES.reports)) db.createObjectStore(STORES.reports, { autoIncrement: true });
         if (!db.objectStoreNames.contains(STORES.replays)) db.createObjectStore(STORES.replays);
         if (!db.objectStoreNames.contains(STORES.replayData)) db.createObjectStore(STORES.replayData);
+        if (!db.objectStoreNames.contains(STORES.deckInfo)) db.createObjectStore(STORES.deckInfo);
       };
       request.onsuccess = () => {
         // Outra aba com uma versão mais nova do jogo pede para atualizar o banco: esta solta a conexão.

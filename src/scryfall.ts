@@ -65,6 +65,16 @@ export async function fetchPrintings(entries: { name: string; set?: string; cn?:
 }
 
 /**
+ * Guarda as imagens de uma impressão que a tela já tem (a arte escolhida na tela do deck, que veio do nosso servidor):
+ * a carta passa a aparecer com ela sem pedir nada ao Scryfall.
+ */
+export function rememberPrinting(name: string, print: Printing, images: PrintImages) {
+  const key = printKey(name, print), p = mirrorUrls(images);
+  printings.set(key, p); missingPrintings.delete(key);
+  void cardStore.write(PRINT_PREFIX + key, p);
+}
+
+/**
  * Carrega as cartas guardadas para a memória, antes das telas abrirem (cacheGet é síncrono). As cartas que ainda
  * estiverem no localStorage, de versões antigas, passam para o IndexedDB e saem de lá, liberando espaço para os decks.
  */

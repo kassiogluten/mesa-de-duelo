@@ -414,7 +414,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       return;
     }
     if (ds.inspect) { hideCardPreview(); inspectCard({ name: ds.inspect, print: printOf(ds) }, target); return; }
-    if (ds.peek) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.peek); if (deck) openDeckPreview(deck, { selected: false, onPick: () => edit(deck), pickLabel: deck.builtin ? 'Ver deck' : 'Editar deck' }); return; }
+    if (ds.peek) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.peek); if (deck) openDeckPreview(deck, deck.builtin ? {} : { onEdit: () => edit(deck) }); return; }
     if (ds.select) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.select); if (deck) edit(deck); return; }
     if (ds.copy) { const deck = DEFAULT_DECKS.find(d => d.id === ds.copy); if (deck) duplicate(deck); return; }
     if (ds.companionSlot !== undefined) { commanderSlot = null; companionSlot = true; searchOpen = true; resetSearch(); renderEdit(); $('#dwCardQuery')?.focus(); void runSearch(); return; }

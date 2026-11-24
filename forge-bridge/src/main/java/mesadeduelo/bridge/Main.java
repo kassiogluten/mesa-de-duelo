@@ -108,6 +108,9 @@ public final class Main {
             server.tournaments(tournaments);
             CardDataCache cardData = CardDataCache.fromSystem();
             server.cardData(cardData);
+            PublicDecks publicDecks = new PublicDecks(store.dir().getParent().resolve("decks-publicos"));
+            accounts.publicDecks(publicDecks);
+            server.deckApi(new DeckApi(publicDecks, CardPrints.fromSystem(cardData)));
             ServerNotice notice = new ServerNotice(System::currentTimeMillis);
             server.notice(notice);
             admin.notice(notice, server::clientCount);
@@ -116,6 +119,7 @@ public final class Main {
             Log.bridge().info("Histórico de partidas em %s", history.dir());
             Log.bridge().info(accounts.enabled() ? "Contas ligadas em /api/conta/ (" + accounts.count() + " em " + accounts.dir() + ")." : "Contas desligadas (defina MESA_GOOGLE_CLIENT_ID).");
             Log.bridge().info("Dados das cartas em /api/cartas (%d em %s).", cardData.size(), cardData.file());
+            Log.bridge().info("Decks públicos e artes em /api/deck/ (%d públicos em %s).", publicDecks.count(), publicDecks.dir());
             cardData.prewarm(Decks.cardNames());
             Log.bridge().info("Torneios em /api/torneios/ (%d em %s).", tournaments.count(), tournaments.dir());
             Log.bridge().info(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");

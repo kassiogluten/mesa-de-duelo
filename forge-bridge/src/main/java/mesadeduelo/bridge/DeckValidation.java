@@ -133,6 +133,19 @@ final class DeckValidation {
         return found != null && found.getName().equals(card.getName()) ? FlavorNames.oracle(found) : card;
     }
 
+    /**
+     * O Forge tem esta impressão da carta (série do Scryfall e número)? Só ela aparece na partida com a arte escolhida:
+     * é a mesma busca de {@link #printed}, e o número tem de ser o pedido (sem cair noutra impressão da série).
+     */
+    static boolean knowsPrint(String name, String set, String cn) {
+        PaperCard card = resolve(name);
+        if (card == null || set == null || cn == null) return false;
+        CardEdition edition = editionsByScryfall().get(set.strip().toLowerCase(Locale.ROOT));
+        if (edition == null) return false;
+        PaperCard found = StaticData.instance().getCommonCards().getCard(card.getName(), edition.getCode(), cn.strip());
+        return found != null && found.getName().equals(card.getName()) && cn.strip().equalsIgnoreCase(found.getCollectorNumber());
+    }
+
     private static volatile Map<String, CardEdition> editionsByScryfall;
     private static Map<String, CardEdition> editionsByScryfall() {
         Map<String, CardEdition> out = editionsByScryfall;

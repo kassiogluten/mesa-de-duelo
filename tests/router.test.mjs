@@ -62,6 +62,11 @@ test('each screen has its address and back', () => {
   assert.deepEqual(parseRoute('/index.html'), { screen: 'lobby' });
   assert.deepEqual(parseRoute('/qualquer'), { screen: 'lobby' });
   assert.equal(routePath({ screen: 'decks', view: 'edit', deckId: 'a b' }), '/decks/a%20b');
+  // Detalhes de um deck e o link público.
+  for (const path of ['/deck/3f2a-9', '/d/Ab3kQx9z']) assert.equal(routePath(parseRoute(path)), path);
+  assert.deepEqual(parseRoute('/deck/a%20b'), { screen: 'deck', deckId: 'a b' });
+  assert.deepEqual(parseRoute('/d/Ab3kQx9z'), { screen: 'deck', code: 'Ab3kQx9z' });
+  assert.deepEqual(parseRoute('/d/a/b'), { screen: 'lobby' });
 });
 
 test('a link straight to a screen keeps the start behind it, so back does not leave the site', async () => {

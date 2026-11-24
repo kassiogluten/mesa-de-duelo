@@ -341,4 +341,56 @@ public class AccountsTest {
         assertFalse("the deck id goes with the account", october.contains("deck-elfos"));
         assertTrue(october.contains(biaId));
     }
+
+    @Test public void aPublicDeckFollowsTheAccountAndHidesWhoOwnsIt() throws IOException {
+        Accounts a = accounts();
+        PublicDecks publics = new PublicDecks(tmp.getRoot().toPath().resolve("decks-publicos"));
+        a.publicDecks(publics);
+        String auth = enter(a, "7");
+        assertEquals(409, a.handle("POST", "publicos/d1", auth, new byte[0], "ip").status());
+        byte[] change = "{\"mudancas\":[{\"id\":\"d1\",\"base\":0,\"deck\":{\"id\":\"d1\",\"name\":\"Burn\",\"importSource\":\"https://x\",\"cards\":[{\"name\":\"Lightning Bolt\",\"count\":4}]}}]}".getBytes(StandardCharsets.UTF_8);
+        assertEquals(200, a.handle("POST", "sincronizar", auth, change, "ip").status());
+
+        String code = json(a.handle("POST", "publicos/d1", auth, new byte[0], "ip")).get("codigo").getAsString();
+        assertTrue(PublicDecks.validCode(code));
+        assertEquals("o mesmo deck mantém o código", code, json(a.handle("POST", "publicos/d1", auth, new byte[0], "ip")).get("codigo").getAsString());
+        assertEquals(code, json(a.handle("GET", "publicos", auth, new byte[0], "ip")).getAsJsonObject("publicos").get("d1").getAsString());
+
+        JsonObject seen = publics.read(code);
+        assertEquals("Kassio", seen.get("autor").getAsString());
+        assertEquals("Burn", seen.getAsJsonObject("deck").get("name").getAsString());
+        assertFalse(seen.toString().contains("importSource"));
+        assertFalse(seen.has("conta"));
+        assertFalse(seen.toString().contains("d1"));
+
+        byte[] edit = "{\"mudancas\":[{\"id\":\"d1\",\"base\":1,\"deck\":{\"id\":\"d1\",\"name\":\"Burn 2\",\"cards\":[{\"name\":\"Lightning Bolt\",\"count\":4,\"set\":\"m10\",\"cn\":\"146\"}]}}]}".getBytes(StandardCharsets.UTF_8);
+        assertEquals(200, a.handle("POST", "sincronizar", auth, edit, "ip").status());
+        JsonObject card = publics.read(code).getAsJsonObject("deck").getAsJsonArray("cards").get(0).getAsJsonObject();
+        assertEquals("a arte escolhida vai junto", "m10", card.get("set").getAsString());
+        assertEquals("Burn 2", new PublicDecks(publics.dir()).read(code).getAsJsonObject("deck").get("name").getAsString());
+
+        byte[] gone = "{\"mudancas\":[{\"id\":\"d1\",\"base\":2,\"apagar\":true}]}".getBytes(StandardCharsets.UTF_8);
+        assertEquals(200, a.handle("POST", "sincronizar", auth, gone, "ip").status());
+        assertNull("o deck apagado sai do ar", publics.read(code));
+        assertEquals(0, publics.codes(Accounts.accountId("7")).size());
+    }
+
+    @Test public void unpublishingAndDeletingTheAccountTakeTheDeckDown() throws IOException {
+        Accounts a = accounts();
+        PublicDecks publics = new PublicDecks(tmp.getRoot().toPath().resolve("decks-publicos"));
+        a.publicDecks(publics);
+        String auth = enter(a, "8");
+        byte[] change = "{\"mudancas\":[{\"id\":\"d1\",\"base\":0,\"deck\":{\"id\":\"d1\",\"name\":\"A\",\"cards\":[{\"name\":\"Island\",\"count\":1}]}},{\"id\":\"d2\",\"base\":0,\"deck\":{\"id\":\"d2\",\"name\":\"B\",\"cards\":[{\"name\":\"Island\",\"count\":1}]}}]}".getBytes(StandardCharsets.UTF_8);
+        assertEquals(200, a.handle("POST", "sincronizar", auth, change, "ip").status());
+        String one = json(a.handle("POST", "publicos/d1", auth, new byte[0], "ip")).get("codigo").getAsString();
+        String two = json(a.handle("POST", "publicos/d2", auth, new byte[0], "ip")).get("codigo").getAsString();
+        assertNotEquals(one, two);
+        assertEquals(200, a.handle("DELETE", "publicos/d1", auth, new byte[0], "ip").status());
+        assertNull(publics.read(one));
+        assertNotNull(publics.read(two));
+        assertEquals(401, a.handle("POST", "publicos/d2", null, new byte[0], "ip").status());
+        assertEquals(200, a.handle("DELETE", "conta", auth, new byte[0], "ip").status());
+        assertNull(publics.read(two));
+        assertNull(publics.read("../conta"));
+    }
 }

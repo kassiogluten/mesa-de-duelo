@@ -1,4 +1,4 @@
-// Endereço de cada tela do app (início, Meus decks, mesa livre, Laboratório, partida) pelo histórico do navegador: o voltar fecha o painel aberto e volta de tela.
+// Endereço de cada tela do app (início, Meus decks, detalhes de um deck, mesa livre, Laboratório, partida) pelo histórico do navegador: o voltar fecha o painel aberto e volta de tela.
 
 /**
  * As telas do index.html com endereço próprio. Todas dividem a mesma página (a conexão com o servidor, as cartas já
@@ -8,6 +8,9 @@ export type Route =
   | { screen: 'lobby' }
   | { screen: 'decks'; view: 'library' | 'import' }
   | { screen: 'decks'; view: 'edit'; deckId: string }
+  /** Detalhes de um deck deste aparelho (ou dos prontos) e o link público de um deck (/d/CÓDIGO). */
+  | { screen: 'deck'; deckId: string }
+  | { screen: 'deck'; code: string }
   | { screen: 'free' }
   | { screen: 'lab' }
   | { screen: 'game' };
@@ -20,6 +23,10 @@ export function parseRoute(pathname: string): Route {
   if (path === `/decks/${IMPORT}`) return { screen: 'decks', view: 'import' };
   const deck = /^\/decks\/([^/]+)$/.exec(path);
   if (deck) { try { return { screen: 'decks', view: 'edit', deckId: decodeURIComponent(deck[1]!) }; } catch { return { screen: 'decks', view: 'library' }; } }
+  const details = /^\/deck\/([^/]+)$/.exec(path);
+  if (details) { try { return { screen: 'deck', deckId: decodeURIComponent(details[1]!) }; } catch { return { screen: 'lobby' }; } }
+  const shared = /^\/d\/([A-Za-z0-9]+)$/.exec(path);
+  if (shared) return { screen: 'deck', code: shared[1]! };
   if (path === '/mesa-livre') return { screen: 'free' };
   if (path === '/laboratorio') return { screen: 'lab' };
   if (path === '/partida') return { screen: 'game' };
@@ -31,6 +38,7 @@ export function routePath(route: Route): string {
   switch (route.screen) {
     case 'lobby': return '/';
     case 'decks': return route.view === 'edit' ? `/decks/${encodeURIComponent(route.deckId)}` : route.view === 'import' ? `/decks/${IMPORT}` : '/decks';
+    case 'deck': return 'code' in route ? `/d/${route.code}` : `/deck/${encodeURIComponent(route.deckId)}`;
     case 'free': return '/mesa-livre';
     case 'lab': return '/laboratorio';
     case 'game': return '/partida';

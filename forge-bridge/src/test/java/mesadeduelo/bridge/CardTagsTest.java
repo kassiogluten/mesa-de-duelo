@@ -65,4 +65,14 @@ public class CardTagsTest {
         CardTags.Index idx = CardTags.parse(new StringReader("[" + tag("c", "cantrip", null, OPT, SERUM) + "]"));
         assertTrue(idx.has(OPT) && idx.has(SERUM));
     }
+
+    @Test public void functionsComeWithTheParentTags() throws Exception {
+        CardTags.Index idx = sample();
+        com.google.gson.JsonObject f = CardTags.functions(idx, List.of(OPT, OAT, SHOCK)).getAsJsonObject("funcoes");
+        assertFalse("sem tags de função, fica de fora", f.has(OAT));
+        String opt = f.get(OPT).toString();
+        assertTrue(opt.contains("\"cantrip\"") && opt.contains("\"draw\"") && opt.contains("\"library-manipulation\""));
+        assertFalse(opt.contains("three-letter-name"));
+        assertThrows(IllegalArgumentException.class, () -> CardTags.functions(List.of("x")));
+    }
 }

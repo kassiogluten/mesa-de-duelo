@@ -1,4 +1,25 @@
 {
+  "0.248.0": {
+    "Tela de detalhes do deck": [
+      { "img": "0.248.0/tela.webp", "legenda": "O topo da tela de um deck pronto de Commander: a arte do comandante, as cores, o bracket, o preço e as abas Visão geral, Cartas e Mão de teste." }
+    ],
+    "Análise do deck": [
+      { "img": "0.248.0/analise.webp", "legenda": "A análise de um deck de Commander: terrenos na medida para o custo dele, a chance de a mão inicial vir com 2 a 4 terrenos e quanto ramp, compra, remoção e limpa-campo ele tem." }
+    ],
+    "Funções das cartas": [
+      { "img": "0.248.0/funcoes.webp", "legenda": "Quantas cartas do deck cumprem cada função, com a Remoção aberta mostrando quais são." }
+    ],
+    "Trocar a arte de cada carta": [
+      { "img": "0.248.0/arte-escolher.webp", "legenda": "A janela de trocar a arte das **Aves do Paraíso**: cada coleção que a partida conhece, com o ano, o preço e o que a impressão tem de especial." },
+      { "img": "0.248.0/arte-no-deck.webp", "legenda": "Depois da escolha, as **Aves do Paraíso** aparecem no deck com a arte de The Zeta Set e a coleção e o número embaixo; as outras seguem com a arte padrão." }
+    ],
+    "Mão de teste": [
+      { "img": "0.248.0/mao.webp", "legenda": "Uma mão de teste sorteada, com os botões Nova mão, Mulligan e Comprar e quantos terrenos vieram." }
+    ],
+    "Compartilhar deck por link": [
+      { "img": "0.248.0/link.webp", "legenda": "Um deck aberto pelo link compartilhado: quem publicou, quando foi atualizado e o botão de copiar para os seus decks." }
+    ]
+  },
   "0.247.0": {
     "Tela inicial e janelas com outro visual, mais leve": [
       { "img": "0.247.0/tela-inicial.webp", "legenda": "A coluna da tela inicial: Jogar contra o computador em dourado, os outros botões em azul-escuro, todos com a base mais escura, e os campos de formato e deck de cantos quase retos." },

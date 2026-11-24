@@ -100,6 +100,33 @@ final class CardTags {
         });
     }
 
+    /** Cartas pedidas de uma vez nas funções de um deck (um Commander tem até 100, e o sideboard e os comandantes entram). */
+    static final int MAX_FUNCTIONS = 300;
+
+    /**
+     * As tags de função de cada carta (já com as tags-mãe), para a análise do deck contar compra, remoção, ramp e afins:
+     * {funcoes: {oracle_id: [tags]}}. Carta sem tags fica de fora; quem decide o que conta em cada categoria é a mesa.
+     */
+    static CompletableFuture<JsonObject> functions(Collection<String> oracleIds) {
+        if (oracleIds.size() > MAX_FUNCTIONS) throw new IllegalArgumentException("Cartas demais num pedido só.");
+        for (String id : oracleIds) if (id == null || !UUID.matcher(id).matches()) throw new IllegalArgumentException("Carta inválida.");
+        return current().thenApply(idx -> functions(idx, oracleIds));
+    }
+
+    static JsonObject functions(Index idx, Collection<String> oracleIds) {
+        JsonObject byCard = new JsonObject();
+        for (String id : new HashSet<>(oracleIds)) {
+            int[] tags = idx.cards().get(id);
+            if (tags == null) continue;
+            JsonArray list = new JsonArray();
+            for (int t : tags) list.add(idx.slugs()[t]);
+            byCard.add(id, list);
+        }
+        JsonObject out = new JsonObject();
+        out.add("funcoes", byCard);
+        return out;
+    }
+
     static List<Match> rank(Index idx, String target, Collection<String> candidates, int limit) {
         int[] mine = idx.cards().getOrDefault(target, new int[0]);
         Set<Integer> mineSet = new HashSet<>(); for (int t : mine) mineSet.add(t);

@@ -34,7 +34,7 @@ import java.net.InetSocketAddress;
  * Servidor WebSocket em ws://HOST:PORTA/ws. No modo watch, quem conecta recebe na hora o último estado publicado
  * por {@link #broadcast}; no modo play cada conexão recebe só o que é endereçado a ela ({@link #send(Channel, String)}).
  * Na mesma porta: GET /metrics, GET /health e, no modo play, POST /api/relatos ({@link Feedback}), POST /api/funil ({@link Funnel}),
- * os torneios ({@link Tournaments}), os dados das cartas ({@link CardDataCache}), a área de admin ({@link Admin}) e GET /api/aviso
+ * os torneios ({@link Tournaments}), os dados das cartas ({@link CardDataCache}), a tela de detalhes do deck ({@link DeckApi}), a área de admin ({@link Admin}) e GET /api/aviso
  * ({@link ServerNotice}, que também chega pelo WebSocket a quem conecta enquanto o aviso vale).
  */
 final class BridgeServer {
@@ -57,6 +57,8 @@ final class BridgeServer {
     private volatile Tournaments tournaments;
     /** Rota POST /api/cartas; null no modo watch. */
     private volatile CardDataCache cardData;
+    /** Rotas /api/deck/ (deck público, impressões, funções); null no modo watch. */
+    private volatile DeckApi deckApi;
     /** Aviso do servidor (manutenção); null no modo watch. */
     private volatile ServerNotice notice;
 
@@ -79,6 +81,7 @@ final class BridgeServer {
     void funnel(Funnel f) { funnel = f; }
     void tournaments(Tournaments t) { tournaments = t; }
     void cardData(CardDataCache c) { cardData = c; }
+    void deckApi(DeckApi d) { deckApi = d; }
     void notice(ServerNotice n) { notice = n; n.broadcaster(this::sendAll); }
 
     void start() throws InterruptedException {
@@ -107,6 +110,8 @@ final class BridgeServer {
                     if (t != null) ch.pipeline().addLast(t.new Handler());
                     CardDataCache d = cardData;
                     if (d != null) ch.pipeline().addLast(d.new Handler());
+                    DeckApi da = deckApi;
+                    if (da != null) ch.pipeline().addLast(da.new Handler());
                     ServerNotice sn = notice;
                     if (sn != null) ch.pipeline().addLast(sn.new Handler());
                     ch.pipeline()

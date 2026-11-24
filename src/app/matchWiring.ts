@@ -7,7 +7,7 @@ import type { RecordingSession } from './recordingSession';
 import { clearResume, saveResume, type ForgeMatch } from './resume';
 import { serverNotice } from '../ui/serverNotice';
 
-export type Screen = 'lobby' | 'game' | 'decks' | 'free' | 'lab';
+export type Screen = 'lobby' | 'game' | 'decks' | 'deck' | 'free' | 'lab';
 /** Assistindo à partida de uma sala: sem deck, sem assento e sem gravação; cair a conexão pede para assistir de novo. */
 export interface Watching { url: string; code: string; name: string }
 /** O que a página sabe da partida: a do assento (ou a sala esperando), a assistida e a tela à vista. */

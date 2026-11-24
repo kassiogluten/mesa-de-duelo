@@ -52,4 +52,14 @@ public class PrintingTest {
         assertTrue(r.json().toString(), r.valid());
         for (var card : r.deck().getMain().toFlatList()) assertNull(card.getName(), DeckValidation.printing(card));
     }
+
+    /** A troca de arte da tela do deck só oferece o que a partida mostra: a série e o número exatos que o Forge tem. */
+    @Test public void knowsOnlyThePrintsTheMatchCanShow() {
+        assertTrue(DeckValidation.knowsPrint("Lightning Bolt", "m10", "146"));
+        assertTrue(DeckValidation.knowsPrint("Lightning Bolt", "M10", " 146 "));
+        assertFalse("número que a série não tem", DeckValidation.knowsPrint("Lightning Bolt", "m10", "999"));
+        assertFalse("série que o Forge não conhece", DeckValidation.knowsPrint("Lightning Bolt", "zzz9", "1"));
+        assertFalse("outra carta no mesmo número", DeckValidation.knowsPrint("Counterspell", "m10", "146"));
+        assertFalse(DeckValidation.knowsPrint("Carta Que Não Existe", "m10", "146"));
+    }
 }

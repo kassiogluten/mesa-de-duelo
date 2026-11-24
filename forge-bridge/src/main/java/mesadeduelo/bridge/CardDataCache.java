@@ -113,6 +113,8 @@ final class CardDataCache {
     }
 
     Path file() { return file; }
+    /** A fila do Scryfall: as impressões ({@link CardPrints}) passam por ela, no mesmo ritmo. */
+    Scryfall scryfall() { return scryfall; }
     synchronized int size() { return cards.size(); }
 
     /** O nome que o {@code /cards/collection} acha: a frente de "Frente // Verso" (como {@code lookupName} na mesa). */

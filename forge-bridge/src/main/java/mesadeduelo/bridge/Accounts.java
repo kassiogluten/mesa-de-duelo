@@ -55,6 +55,9 @@ import mesadeduelo.bridge.Admin.Response;
  *   POST   lixeira/{id}/restaurar  {id, rev, deck, contaRev}
  *   GET    partidas?periodo&formato&deck&pagina   as partidas da conta e os números (ver {@link AccountMatches})
  *   POST   vincular/…              a mesa no PC entra pela conta do site (ver {@link AccountLinks})
+ *   GET    publicos                {publicos: {deckId: código}}: os decks da conta com link público
+ *   POST   publicos/{id}           {codigo}: publica o deck da conta (ver {@link PublicDecks})
+ *   DELETE publicos/{id}           tira o deck do ar
  *
  * Só "sincronizar" aceita corpo grande (até {@link #MAX_SYNC_BYTES}, para o primeiro login com muitos decks);
  * o resto passa pelo agregador de 64 KB.
@@ -83,6 +86,8 @@ final class Accounts {
     private int accounts;
     /** Histórico das partidas, para Minhas partidas; sem ele, a lista vem vazia. */
     private volatile MatchHistory history;
+    /** Decks públicos (link /d/CÓDIGO); null deixa as rotas de publicar fora do ar. */
+    private volatile PublicDecks publics;
     /** Vínculos da mesa no PC em andamento (só na memória). */
     private final AccountLinks links;
     private final ThreadPoolExecutor workers = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(64),
@@ -115,6 +120,7 @@ final class Accounts {
 
     boolean enabled() { return google != null; }
     void history(MatchHistory history) { this.history = history; }
+    void publicDecks(PublicDecks publics) { this.publics = publics; }
     Path dir() { return dir; }
     synchronized int count() { return accounts; }
     synchronized int sessionCount() { return sessions.size(); }
@@ -141,6 +147,7 @@ final class Accounts {
             if (path.equals("lixeira") && "GET".equals(method)) return withDecks(account, false, AccountDecks::trash);
             if (path.equals("partidas") && "GET".equals(method)) return matches(account, query);
             String[] parts = path.split("/");
+            if (parts[0].equals("publicos")) return publics(method, account, parts);
             if (parts.length == 3 && parts[0].equals("lixeira") && parts[2].equals("restaurar") && "POST".equals(method)) return restore(account, parts[1]);
             return Response.error(404, "Rota desconhecida das contas.");
         } catch (IllegalArgumentException e) {
@@ -236,9 +243,54 @@ final class Accounts {
         try { changes = JsonParser.parseString(new String(body, StandardCharsets.UTF_8)).getAsJsonObject(); }
         catch (RuntimeException e) { throw new IllegalArgumentException("Corpo inválido."); }
         long now = clock.getAsLong();
-        Response r = withDecks(account, true, a -> AccountDecks.sync(a, changes, now));
+        Response r = withDecks(account, true, a -> {
+            JsonObject result = AccountDecks.sync(a, changes, now);
+            refreshPublic(account, a, result.getAsJsonArray("aplicadas"), now);
+            return result;
+        });
         syncCounter().increment();
         return r;
+    }
+
+    /** Os decks públicos que a sincronia mudou acompanham a conta (o apagado sai do ar). */
+    private void refreshPublic(String account, JsonObject a, com.google.gson.JsonArray applied, long now) {
+        PublicDecks p = publics;
+        if (p == null || applied == null) return;
+        Map<String, String> mine = p.codes(account);
+        if (mine.isEmpty()) return;
+        for (JsonElement e : applied) {
+            String id = e.getAsJsonObject().get("id").getAsString();
+            if (!mine.containsKey(id)) continue;
+            try { p.refresh(account, id, AccountDecks.liveDeck(a, id), nickname(a), now); }
+            catch (IOException ex) { Log.bridge().warn("Decks públicos: não deu para atualizar um deck: " + ex); }
+        }
+    }
+
+    /** GET publicos, POST publicos/{id} (publica o deck da conta) e DELETE publicos/{id}. */
+    private Response publics(String method, String account, String[] parts) throws IOException {
+        PublicDecks p = publics;
+        if (p == null) return Response.error(503, "Compartilhar decks está desligado neste servidor.");
+        if (parts.length == 1 && "GET".equals(method)) {
+            JsonObject codes = new JsonObject();
+            p.codes(account).forEach(codes::addProperty);
+            JsonObject o = new JsonObject();
+            o.add("publicos", codes);
+            return Response.json(200, o);
+        }
+        if (parts.length != 2 || parts[1].isEmpty() || parts[1].length() > AccountDecks.MAX_ID) return Response.error(404, "Rota desconhecida das contas.");
+        String deckId = parts[1];
+        if ("DELETE".equals(method)) { p.unpublish(account, deckId); return Response.json(200, new JsonObject()); }
+        if (!"POST".equals(method)) return Response.error(405, "Use POST ou DELETE.");
+        JsonObject a, deck;
+        synchronized (this) {
+            a = read(account);
+            if (a == null) return Response.error(401, "Entre de novo: a conta não existe mais.");
+            deck = AccountDecks.liveDeck(a, deckId);
+        }
+        if (deck == null) return Response.error(409, "Este deck ainda não chegou à sua conta. Espere a sincronia terminar e tente de novo.");
+        JsonObject o = new JsonObject();
+        o.addProperty("codigo", p.publish(account, deckId, deck, nickname(a), clock.getAsLong()));
+        return Response.json(200, o);
     }
 
     /** Minhas partidas: lê o histórico fora do lock das contas (pode levar um tempo com muitos meses). */
@@ -276,6 +328,8 @@ final class Accounts {
 
     private synchronized void delete(String account) throws IOException {
         if (Files.deleteIfExists(file(account))) accounts--;
+        PublicDecks p = publics;
+        if (p != null) p.forget(account);
         sessions.values().removeIf(s -> s.account().equals(account));
         saveSessions();
         // As partidas ficam no histórico, sem a ligação com a conta.
@@ -314,21 +368,29 @@ final class Accounts {
                 String account = authorized(authorization);
                 JsonObject a = account == null ? null : read(account);
                 if (a == null) return null;
-                String nickname = null;
-                JsonObject prefs = a.has("prefs") && a.get("prefs").isJsonObject() ? a.getAsJsonObject("prefs") : null;
-                if (prefs != null && prefs.has("mesa:name") && prefs.get("mesa:name").isJsonObject()) {
-                    JsonElement value = prefs.getAsJsonObject("mesa:name").get("valor");
-                    if (value != null && value.isJsonPrimitive()) nickname = Feedback.cleanName(value.getAsString());
-                }
-                JsonObject profile = a.has("perfil") && a.get("perfil").isJsonObject() ? a.getAsJsonObject("perfil") : new JsonObject();
-                if (nickname == null) nickname = Feedback.cleanName(FeedbackStore.Entry.text(profile, "apelido"));
-                if (nickname == null) nickname = Feedback.cleanName(FeedbackStore.Entry.text(profile, "nome"));
-                return new FeedbackStore.Author(nickname, account, false);
+                return new FeedbackStore.Author(nickname(a), account, false);
             }
         } catch (IOException | RuntimeException e) {
             Log.bridge().warn("Contas: não deu para ler a conta de um relato: " + e);
             return null;
         }
+    }
+
+    /**
+     * O nome da conta para os outros: o nome na mesa sincronizado com a conta ({@code mesa:name}) ou, sem ele, o
+     * apelido do perfil (o primeiro nome do Google). Null sem nenhum.
+     */
+    static String nickname(JsonObject a) {
+        String nickname = null;
+        JsonObject prefs = a.has("prefs") && a.get("prefs").isJsonObject() ? a.getAsJsonObject("prefs") : null;
+        if (prefs != null && prefs.has("mesa:name") && prefs.get("mesa:name").isJsonObject()) {
+            JsonElement value = prefs.getAsJsonObject("mesa:name").get("valor");
+            if (value != null && value.isJsonPrimitive()) nickname = Feedback.cleanName(value.getAsString());
+        }
+        JsonObject profile = a.has("perfil") && a.get("perfil").isJsonObject() ? a.getAsJsonObject("perfil") : new JsonObject();
+        if (nickname == null) nickname = Feedback.cleanName(FeedbackStore.Entry.text(profile, "apelido"));
+        if (nickname == null) nickname = Feedback.cleanName(FeedbackStore.Entry.text(profile, "nome"));
+        return nickname;
     }
 
     private String newSession(String account, long now) throws IOException {
