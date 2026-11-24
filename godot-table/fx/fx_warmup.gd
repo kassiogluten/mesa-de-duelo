@@ -27,7 +27,7 @@ func _ready() -> void:
 	var shaders: Array[Material] = []
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), ShieldFx.DOME, CardDressing._halo(),
 			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash(),
-			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER, StackPresence.HAZE_SHADER,
+			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER,
 			ExilePortal.SHADER, TrailRibbon.SHADER, EnergyBeam.SHADER, MomentExtras.SHAFT, MomentExtras.LEAF, MomentExtras.STAR,
 			FinaleFx.GRADE, BoardSweep.SCORCH, BoardSweep.HEAT, ArrivalFx.GEM_SHADER, ArrivalFx.LENS_SHADER, ArrivalFx.LIQUID_SHADER]:
 		var material := ShaderMaterial.new()

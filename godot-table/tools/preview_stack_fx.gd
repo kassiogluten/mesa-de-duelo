@@ -1,4 +1,4 @@
-# Prévia do destaque da pilha na mesa 3D (chamas de luz, ar tremendo, borda correndo, partículas, a onda de chegar e a de
+# Prévia do destaque da pilha na mesa 3D (contorno aurora, partículas, a onda de chegar e a de
 # resolver, e o pode-responder), sem servidor, em quadros fixos. Com janela:
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_stack_fx.gd -- <pasta>
 extends SceneTree

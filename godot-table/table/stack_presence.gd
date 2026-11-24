@@ -1,24 +1,28 @@
-# A presença da pilha na mesa 3D: o item do topo ganha chamas de luz atrás, ar tremendo em volta, luzes correndo pela
-# borda e partículas subindo; os de baixo, um halo mais fraco. Quando um item chega ao topo ou resolve, uma onda na forma da
-# carta e faíscas. Na cor da carta (dourado nos gatilhos); mais forte e rápido quando a vez é sua contra um item do oponente.
+# A presença da pilha na mesa 3D: o item do topo ganha o contorno aurora (borda fina num degradê de três tons girando
+# devagar, com um brilho curto junto dela) e umas poucas partículas subindo; os de baixo ficam sem nada. Quando um item
+# chega ao topo ou resolve, uma onda na forma da carta e faíscas. Na cor da carta (dourado nos gatilhos); um pouco mais
+# forte e rápido quando a vez é sua contra um item do oponente.
 class_name StackPresence
 extends Node3D
 
 const AURA_SHADER := preload("res://table/stack_aura.gdshader")
-const HAZE_SHADER := preload("res://table/stack_haze.gdshader")
+## Margem da onda de chegar e resolver em volta da carta; o contorno usa uma malha mais justa (o brilho é curto).
 const PAD := 0.42
-## Quanto o halo de cada camada abaixo do topo apaga; a borda delas continua acesa (fica claro que há mais itens).
-const LOWER_DIM := 0.45
-const LOWER_EDGE := 0.6
+const AURA_PAD := 0.14
+## Voltas por segundo do degradê do contorno: uma a cada 10 s; quando dá para responder, uma a cada 5 s.
+const SPIN_CALM := 0.1
+const SPIN_URGENT := 0.2
 ## Espera a carta terminar o voo até o lugar dela na pilha antes da onda de chegada.
 const ARRIVAL_DELAY := 0.5
 
 var view: TableView
-## Por chave da carta na pilha: {node (WeakRef), layers: {aura, edge, haze, motes}, color, top}.
+## Por chave da carta na pilha: {node (WeakRef), layers: {aura, motes}, color, top}.
 var _items: Dictionary = {}
 var _top_key: Variant = null
 var _urgency: float = 0.0
 var _urgency_target: float = 0.0
+## Quanto o degradê já girou (voltas), somado aqui para a velocidade mudar sem salto.
+var _spin: float = 0.0
 
 
 func _init(table: TableView) -> void:
@@ -57,12 +61,13 @@ func sync(entries: Array, state: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	_urgency = move_toward(_urgency, _urgency_target, delta * 2.0)
+	_spin = fposmod(_spin + delta * lerpf(SPIN_CALM, SPIN_URGENT, _urgency), 1.0)
 	for key: Variant in _items:
-		var layers: Dictionary = (_items[key] as Dictionary)["layers"]
-		for name: String in ["aura", "edge"]:
-			var mesh: MeshInstance3D = layers.get(name)
-			if mesh and is_instance_valid(mesh):
-				(mesh.material_override as ShaderMaterial).set_shader_parameter("urgency", _urgency)
+		var mesh: MeshInstance3D = ((_items[key] as Dictionary)["layers"] as Dictionary).get("aura")
+		if mesh and is_instance_valid(mesh) and mesh.visible:
+			var material: ShaderMaterial = mesh.material_override
+			material.set_shader_parameter("urgency", _urgency)
+			material.set_shader_parameter("spin", _spin)
 
 
 ## Mesma chave: as das mágicas são números (id da carta) e as das habilidades, texto ("stack:5"); comparar tipos
@@ -77,6 +82,18 @@ static func _color_of(item: Dictionary) -> Color:
 		return Hud.GOLD
 	var source: Dictionary = item.get("source", {}) if item.get("source") is Dictionary else {}
 	return Fx.card_color(source)
+
+
+## Os três tons do degradê do contorno: a cor do item e dois vizinhos dela no círculo das cores, um pouco mais claros.
+## No dourado e no laranja, o vizinho de cima cairia no verde: lá os tons são um âmbar e um creme.
+static func _tones(color: Color) -> Array[Color]:
+	if color.s > 0.2 and color.h > 0.05 and color.h < 0.2:
+		return [color,
+			Color.from_hsv(color.h - 0.045, color.s, color.v),
+			Color.from_hsv(color.h + 0.015, color.s * 0.45, minf(color.v * 1.2 + 0.1, 1.0))]
+	return [color,
+		Color.from_hsv(fposmod(color.h + 0.07, 1.0), color.s * 0.85, minf(color.v * 1.1 + 0.05, 1.0)),
+		Color.from_hsv(fposmod(color.h - 0.06, 1.0), color.s * 0.7, minf(color.v * 1.2 + 0.1, 1.0))]
 
 
 ## Os ids (de carta e de item da pilha) anulados neste estado: esses saem queimando pelo diretor, sem a onda de resolver.
@@ -96,51 +113,43 @@ static func _countered_ids(state: Dictionary) -> Dictionary:
 func _attach(key: Variant, node: CardNode, color: Color) -> void:
 	if _items.has(key):
 		_detach(key, false)
-	var seed: float = randf() * 50.0
-	var layers: Dictionary = {}
-	if Fx.quality > 0:
-		layers["haze"] = _layer(node, HAZE_SHADER, -0.05, color, seed, -1)
-	layers["aura"] = _layer(node, AURA_SHADER, -0.035, color, seed, 0)
-	layers["edge"] = _layer(node, AURA_SHADER, 0.006, color, seed, 1)
+	var layers: Dictionary = {"aura": _contour(node, color, randf())}
 	if Fx.quality > 0:
 		layers["motes"] = _motes(node, color)
 	_items[key] = {"node": weakref(node), "layers": layers, "color": color, "stack_id": int(node.data.get("stackId", -1)), "top": false}
-	# Aparece aos poucos (a carta ainda está voando para o lugar).
-	for name: String in ["aura", "edge"]:
-		var material: ShaderMaterial = (layers[name] as MeshInstance3D).material_override
-		material.set_shader_parameter("intensity", 0.0)
 
 
-func _layer(node: CardNode, shader: Shader, y: float, color: Color, seed: float, layer: int) -> MeshInstance3D:
+## O contorno aurora, logo acima da carta (o brilho fica só do lado de fora dela). Começa apagado e aparece aos poucos
+## quando o item é o do topo (a carta ainda está voando para o lugar).
+func _contour(node: CardNode, color: Color, seed: float) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = CardNode.SIZE + Vector2(PAD, PAD) * 2.0
+	plane.size = CardNode.SIZE + Vector2(AURA_PAD, AURA_PAD) * 2.0
 	mesh.mesh = plane
 	var material := ShaderMaterial.new()
-	material.shader = shader
+	material.shader = AURA_SHADER
+	var tones: Array[Color] = _tones(color)
 	material.set_shader_parameter("card", CardNode.SIZE)
-	material.set_shader_parameter("pad", PAD)
+	material.set_shader_parameter("pad", AURA_PAD)
 	material.set_shader_parameter("seed", seed)
-	if layer < 0:
-		# O ar tremendo copia a tela antes das camadas transparentes: desenhado primeiro, não apaga o halo das cartas de
-		# baixo (que vêm depois, somando luz por cima).
-		material.render_priority = -10
-	if layer >= 0:
-		material.set_shader_parameter("color", color)
-		material.set_shader_parameter("hot", color.lerp(Color.WHITE, 0.45))
-		material.set_shader_parameter("layer", layer)
+	material.set_shader_parameter("color", tones[0])
+	material.set_shader_parameter("tone_b", tones[1])
+	material.set_shader_parameter("tone_c", tones[2])
+	material.set_shader_parameter("layer", 0)
+	material.set_shader_parameter("intensity", 0.0)
 	mesh.material_override = material
 	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mesh.position = Vector3(0, y, 0)
+	mesh.position = Vector3(0, 0.006, 0)
+	mesh.visible = false
 	node.add_child(mesh)
 	return mesh
 
 
-## Partículas que sobem da borda da carta (no plano dela: "para cima" na tela é o -Z da carta).
+## Umas poucas partículas pequenas que sobem da borda da carta (no plano dela: "para cima" na tela é o -Z da carta).
 func _motes(node: CardNode, color: Color) -> GPUParticles3D:
 	var motes := GPUParticles3D.new()
-	motes.amount = 48 if Fx.quality > 1 else 22
-	motes.lifetime = 1.6
+	motes.amount = 12 if Fx.quality > 1 else 6
+	motes.lifetime = 2.0
 	motes.local_coords = true
 	motes.preprocess = 1.0
 	var process := ParticleProcessMaterial.new()
@@ -149,16 +158,16 @@ func _motes(node: CardNode, color: Color) -> GPUParticles3D:
 	process.emission_point_count = 96
 	process.direction = Vector3(0, 0.2, -1)
 	process.spread = 35.0
-	process.initial_velocity_min = 0.08
-	process.initial_velocity_max = 0.3
+	process.initial_velocity_min = 0.05
+	process.initial_velocity_max = 0.16
 	process.gravity = Vector3.ZERO
 	process.damping_min = 0.05
 	process.damping_max = 0.2
-	process.scale_min = 0.01
-	process.scale_max = 0.026
+	process.scale_min = 0.006
+	process.scale_max = 0.013
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(color.lerp(Color.WHITE, 0.6), 0.0))
-	ramp.add_point(0.15, Color(color.lerp(Color.WHITE, 0.5), 1.0))
+	ramp.add_point(0.2, Color(color.lerp(Color.WHITE, 0.5), 0.55))
 	ramp.set_color(ramp.get_point_count() - 1, Color(color, 0.0))
 	var ramp_tex := GradientTexture1D.new()
 	ramp_tex.gradient = ramp
@@ -196,7 +205,7 @@ static func _perimeter_points() -> ImageTexture:
 	return _points_tex
 
 
-## Topo: tudo aceso; abaixo: o halo mais fraco e a borda acesa na cor do item, sem o ar tremendo e as partículas.
+## Topo: o contorno aceso e as partículas; abaixo, nada (o contorno se apaga e deixa de ser desenhado).
 func _set_role(key: Variant, top: bool) -> void:
 	var info: Dictionary = _items[key]
 	if bool(info["top"]) == top and info.has("set"):
@@ -204,22 +213,30 @@ func _set_role(key: Variant, top: bool) -> void:
 	info["top"] = top
 	info["set"] = true
 	var layers: Dictionary = info["layers"]
-	_fade(layers.get("aura"), 1.0 if top else LOWER_DIM, 0.6)
-	_fade(layers.get("edge"), 1.0 if top else LOWER_EDGE, 0.4)
-	if layers.get("haze") and is_instance_valid(layers["haze"]):
-		(layers["haze"] as MeshInstance3D).visible = top
+	_fade(layers.get("aura"), 1.0 if top else 0.0, 0.6 if top else 0.4)
 	if layers.get("motes") and is_instance_valid(layers["motes"]):
 		(layers["motes"] as GPUParticles3D).emitting = top
 
 
+## Acende ou apaga a camada aos poucos; apagada, ela fica invisível (sem custo de desenho).
 static func _fade(mesh: Variant, to: float, seconds: float) -> void:
 	if not mesh is MeshInstance3D or not is_instance_valid(mesh):
 		return
-	var material: ShaderMaterial = (mesh as MeshInstance3D).material_override
+	var instance: MeshInstance3D = mesh
+	var material: ShaderMaterial = instance.material_override
 	var current: Variant = material.get_shader_parameter("intensity")
 	var from: float = float(current) if current != null else 1.0
-	var tween := (mesh as MeshInstance3D).create_tween()
+	if to > 0.0:
+		instance.visible = true
+	# Um apagar que ainda corria não pode esconder a camada que acabou de voltar ao topo.
+	var running: Variant = instance.get_meta("fade") if instance.has_meta("fade") else null
+	if running is Tween and (running as Tween).is_valid():
+		(running as Tween).kill()
+	var tween := instance.create_tween()
+	instance.set_meta("fade", tween)
 	tween.tween_method(func(v: float) -> void: material.set_shader_parameter("intensity", v), from, to, seconds).set_trans(Tween.TRANS_SINE)
+	if to <= 0.0:
+		tween.tween_callback(func() -> void: instance.visible = false)
 
 
 ## Saiu da pilha: as camadas se apagam; resolvendo (não anulado), a onda e as faíscas no lugar onde estava.
@@ -234,7 +251,7 @@ func _detach(key: Variant, burst: bool) -> void:
 			continue
 		if layer is GPUParticles3D:
 			(layer as GPUParticles3D).emitting = false
-			(layer as Node).get_tree().create_timer(1.7).timeout.connect((layer as Node).queue_free)
+			(layer as Node).get_tree().create_timer(2.1).timeout.connect((layer as Node).queue_free)
 		elif layer is MeshInstance3D:
 			_fade(layer, 0.0, 0.25)
 			(layer as Node).get_tree().create_timer(0.3).timeout.connect((layer as Node).queue_free)

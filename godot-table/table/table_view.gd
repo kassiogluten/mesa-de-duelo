@@ -44,7 +44,7 @@ var _field := FieldPlacement.new(self)
 var _hand := HandPlacement.new(self)
 var _stack := StackPlacement.new(self)
 var highlights := TableHighlights.new(self)
-## O destaque da pilha (chamas de luz, ar tremendo, partículas e as ondas de chegar e resolver).
+## O destaque da pilha (contorno aurora, poucas partículas e as ondas de chegar e resolver).
 var stack_presence: StackPresence
 
 

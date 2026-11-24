@@ -1,4 +1,4 @@
-# Destaque da pilha: a cor de cada item, os anulados (sem a onda de resolver) e as chaves de tipos diferentes.
+# Destaque da pilha: a cor de cada item, os tons do contorno, os anulados (sem a onda de resolver) e as chaves de tipos diferentes.
 extends "res://tests/test_case.gd"
 
 
@@ -22,3 +22,13 @@ func test_keys_of_different_types_never_match() -> void:
 	check(StackPresence._same("stack:5", "stack:5"), "mesmo texto")
 	check(not StackPresence._same(5, "stack:5"), "número e texto não se comparam")
 	check(not StackPresence._same(5, null), "nada no topo antes")
+
+
+func test_aurora_tones_start_at_the_item_color_and_gold_never_turns_green() -> void:
+	for color: Color in [Hud.GOLD, Fx.card_color({"manaCost": "{U}"}), Fx.card_color({"manaCost": "{R}"})]:
+		var tones: Array[Color] = StackPresence._tones(color)
+		check_eq(tones.size(), 3, "três tons")
+		check_eq(tones[0], color, "o primeiro é a cor do item")
+		check(not tones[1].is_equal_approx(color) and not tones[2].is_equal_approx(color), "os outros dois são vizinhos")
+	for tone: Color in StackPresence._tones(Hud.GOLD):
+		check(tone.h < 0.2 or tone.s < 0.1, "o dourado fica entre o âmbar e o creme, sem verde")

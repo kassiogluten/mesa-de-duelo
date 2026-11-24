@@ -1,5 +1,5 @@
-# A moldura viva de uma peça da pilha (cabeçalho, texto, pílula recolhida): segue um retângulo da tela, troca de cor com
-# o item do topo, acende o halo quando dá para responder e dá um clarão quando um item novo chega (ui/stack_frame.gdshader).
+# A moldura de uma peça da pilha (cabeçalho, texto, pílula recolhida): borda fixa que segue um retângulo da tela e troca de
+# cor com o item do topo, halo que respira só quando dá para responder e um clarão quando um item novo chega.
 class_name StackFrame
 extends ColorRect
 
@@ -26,13 +26,12 @@ func _init() -> void:
 	material = _material
 
 
-## Põe a moldura em volta de `rect` (coordenadas do pai) com cantos de `radius`; `runner` 0 tira as luzes que correm.
-func wrap(rect: Rect2, radius: float, runner: float = 0.8, border: float = 0.55) -> void:
+## Põe a moldura em volta de `rect` (coordenadas do pai) com cantos de `radius`; `border` é quanto a borda fixa aparece.
+func wrap(rect: Rect2, radius: float, border: float = 0.55) -> void:
 	position = rect.position - Vector2(PAD, PAD)
 	size = rect.size + Vector2(PAD, PAD) * 2.0
 	_material.set_shader_parameter("box", rect.size)
 	_material.set_shader_parameter("radius", minf(radius, minf(rect.size.x, rect.size.y) / 2.0))
-	_material.set_shader_parameter("runner", runner)
 	_material.set_shader_parameter("border", border)
 
 

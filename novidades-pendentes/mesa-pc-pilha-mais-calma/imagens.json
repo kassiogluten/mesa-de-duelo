@@ -1,0 +1,7 @@
+{
+  "Pilha mais calma": [
+    { "img": "pilha-contorno.webp", "legenda": "O Raio no topo da pilha com o contorno fino nos tons do vermelho e um brilho curto em volta, sem chamas nem raios." },
+    { "img": "pilha-gatilho.webp", "legenda": "Um gatilho no topo: o contorno é dourado, do âmbar ao creme, e a carta de baixo fica sem brilho." },
+    { "img": "pilha-responder.webp", "legenda": "Contramágica do oponente no topo e a vez é sua: o contorno azul brilha um pouco mais, e a moldura do painel acende para lembrar que dá para responder." }
+  ]
+}

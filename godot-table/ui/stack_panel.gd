@@ -522,7 +522,7 @@ func _place() -> void:
 	_info.size = Vector2(WIDTH, 0)
 	_info.reset_size()
 	_info.size.x = WIDTH
-	_info_frame.wrap(Rect2(_info.position, _info.size), 14.0, 0.0, 0.35)
+	_info_frame.wrap(Rect2(_info.position, _info.size), 14.0, 0.35)
 
 
 ## O cabeçalho e os números das camadas (para os testes).
