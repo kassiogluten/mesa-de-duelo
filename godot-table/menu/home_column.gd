@@ -73,7 +73,7 @@ func _brand() -> HBoxContainer:
 ## O painel compacto da partida: o formato e o deck do computador.
 func _match_panel(modes: Array) -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := ModalStyle.box(HomeStyle.PANEL, 16, HomeStyle.LINE, 1)
+	var style := UiKit.inset_panel(HomeStyle.PANEL)
 	style.content_margin_left = 20
 	style.content_margin_right = 20
 	style.content_margin_top = 16

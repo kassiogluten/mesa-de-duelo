@@ -95,17 +95,8 @@ static func style_field(field: OptionButton) -> void:
 	field.focus_mode = Control.FOCUS_NONE
 	field.fit_to_longest_item = false
 	field.clip_text = true
-	var fills: Dictionary = {
-		"normal": [Color(0.04, 0.055, 0.094, 0.78), Color(1, 1, 1, 0.1)],
-		"hover": [Color(0.07, 0.09, 0.15, 0.9), Color(HudStyle.GOLD, 0.6)],
-		"pressed": [Color(0.03, 0.04, 0.07, 0.9), Color(HudStyle.GOLD, 0.8)],
-		"disabled": [Color(0.04, 0.055, 0.094, 0.5), Color(1, 1, 1, 0.05)],
-	}
-	for state_name: String in fills:
-		var style := ModalStyle.box((fills[state_name] as Array)[0], 10, (fills[state_name] as Array)[1], 1)
-		style.content_margin_left = 14
-		style.content_margin_right = 14
-		field.add_theme_stylebox_override(state_name, style)
+	for state_name: String in ["normal", "hover", "pressed", "disabled"]:
+		field.add_theme_stylebox_override(state_name, UiKit.field_box(state_name))
 	field.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	field.add_theme_color_override("font_color", ModalStyle.INK)
 	field.add_theme_color_override("font_hover_color", Color.WHITE)
@@ -116,13 +107,15 @@ static func style_field(field: OptionButton) -> void:
 
 ## A lista aberta de um campo: painel escuro, a linha do mouse em dourado.
 static func style_popup(popup: PopupMenu) -> void:
-	var panel := ModalStyle.box(Color(0.05, 0.07, 0.12, 0.98), 10, Color(HudStyle.GOLD, 0.3), 1)
+	var panel := UiKit.inset_panel(Color(0.05, 0.07, 0.12, 0.98), 10.0)
+	panel.border = Color(HudStyle.GOLD, 0.3)
 	panel.content_margin_top = 6
 	panel.content_margin_bottom = 6
 	panel.content_margin_left = 6
 	panel.content_margin_right = 6
 	popup.add_theme_stylebox_override("panel", panel)
-	var hover := ModalStyle.box(Color(HudStyle.GOLD, 0.16), 7)
+	var hover := CutBox.new()
+	hover.fill = Color(HudStyle.GOLD, 0.16)
 	popup.add_theme_stylebox_override("hover", hover)
 	popup.add_theme_font_size_override("font_size", 17)
 	popup.add_theme_color_override("font_color", ModalStyle.INK)
@@ -155,16 +148,8 @@ static func link(text: String) -> Button:
 	return out
 
 
-## Um botão grande da coluna (dourado no principal) com a letra encorpada e a altura da tela inicial.
+## Um botão grande da coluna (dourado no principal), o do kit (ui/ui_kit.gd), na altura da tela inicial.
 static func action_button(text: String, primary: bool, height: float = 60.0) -> Button:
-	var out: Button = HudStyle.button(text, primary)
-	out.custom_minimum_size = Vector2(0, height)
+	var out: Button = UiKit.button(text, UiKit.Kind.PRIMARY if primary else UiKit.Kind.SECONDARY, 0.0, height)
 	out.focus_mode = Control.FOCUS_NONE
-	out.add_theme_font_override("font", HudStyle.bold_font())
-	out.add_theme_font_size_override("font_size", 20)
-	if not primary:
-		for state_name: String in ["normal", "hover", "pressed"]:
-			var style: StyleBoxFlat = (out.get_theme_stylebox(state_name) as StyleBoxFlat).duplicate()
-			style.bg_color = Color(0.12, 0.15, 0.25, 0.92) if state_name == "normal" else style.bg_color
-			out.add_theme_stylebox_override(state_name, style)
 	return out

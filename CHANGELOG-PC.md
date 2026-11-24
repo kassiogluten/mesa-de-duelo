@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.246.0] - 2026-11-24
+
+### Mudou
+
+- **Tela inicial e janelas com visual novo.** Botões, painéis e campos ganharam um visual mais moderno e limpo, com cara de jogo: cantos cortados em reta em vez de arredondados, letra condensada em caixa alta nos botões e títulos, e uma barra dourada antes do título de cada janela. Vale na tela inicial (Jogar contra o computador, Jogar online, Meus decks, formato e deck do computador, Novidades, Opções e o aviso de versão nova) e em todas as janelas: as perguntas da partida, a sala de espera, Relatar um problema, Meus relatos, Novidades, os decks e a atualização necessária. Com o mouse em cima, o botão ganha um filete e um brilho dourados; navegando pelo teclado, um contorno branco mostra o botão escolhido.
+
 ## [0.245.0] - 2026-11-24
 
 ### Novo

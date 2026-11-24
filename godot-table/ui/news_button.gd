@@ -19,9 +19,9 @@ func _ready() -> void:
 	if feed == null:
 		feed = NewsFeed.new()
 	add_child(feed)
-	_button = HudStyle.button("Novidades", false)
+	_button = ModalStyle.button("Novidades", ModalStyle.Kind.SECONDARY, 150, 44)
 	_button.name = "News"
-	_button.custom_minimum_size = Vector2(150, 44)
+	_button.focus_mode = Control.FOCUS_ALL
 	_button.tooltip_text = "O que mudou em cada versão da mesa."
 	_button.pressed.connect(open)
 	add_child(_button)

@@ -19,22 +19,10 @@ const ENTER_TIME := 0.18
 const EXIT_TIME := 0.16
 
 
-## O painel das janelas: azul-escuro translúcido, cantos redondos, borda dourada fina e sombra funda.
-static func panel_style(radius: int = 18) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.055, 0.088, 0.155, 0.95)
-	style.set_corner_radius_all(radius)
-	style.border_color = Color(GOLD, 0.3)
-	style.set_border_width_all(1)
-	style.shadow_color = Color(0, 0, 0, 0.6)
-	style.shadow_size = 42
-	style.shadow_offset = Vector2(0, 16)
-	style.content_margin_left = 34
-	style.content_margin_right = 34
-	style.content_margin_top = 24
-	style.content_margin_bottom = 24
-	style.anti_aliasing = true
-	return style
+## O painel das janelas (o do kit, ui/ui_kit.gd): chapado, filete fino, dois cantos cortados e sombra macia.
+## `_radius` ficou da caixa redonda de antes.
+static func panel_style(_radius: int = 18) -> CutBox:
+	return UiKit.panel()
 
 
 ## Caixa simples (selos, faixas, cartões de jogador).
@@ -114,32 +102,25 @@ static func cost_icons(cost: String, px: int) -> HBoxContainer:
 	return row
 
 
-## Título dourado, centrado, com um filete que some nas pontas embaixo.
-static func title(text: String, size: int = 28) -> VBoxContainer:
-	var holder := VBoxContainer.new()
-	holder.add_theme_constant_override("separation", 8)
+## Título da janela (o do kit): branco, em versalete, no meio, com a barra dourada antes; o "Title" aceita {símbolos}.
+static func title(text: String, size: int = 28) -> HBoxContainer:
+	var holder := HBoxContainer.new()
+	holder.alignment = BoxContainer.ALIGNMENT_CENTER
+	holder.add_theme_constant_override("separation", 12)
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var heading := rich(text, size, GOLD, true)
+	var bar := ColorRect.new()
+	bar.color = GOLD
+	bar.custom_minimum_size = Vector2(4, 0)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(bar)
+	var heading := rich(text, size, Color.WHITE)
 	heading.name = "Title"
-	heading.add_theme_constant_override("outline_size", 6)
-	heading.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	# Uma linha só, da largura do texto: o título fica no meio, como o resto da janela, com a barra colada nele.
+	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.add_theme_font_override("normal_font", UiKit.title_font())
+	heading.add_theme_font_size_override("normal_font_size", UiKit.caps_size(size))
+	heading.add_theme_constant_override("outline_size", 0)
 	holder.add_child(heading)
-	var line := TextureRect.new()
-	var gradient := Gradient.new()
-	gradient.set_color(0, Color(GOLD, 0.0))
-	gradient.set_color(1, Color(GOLD, 0.0))
-	gradient.add_point(0.5, Color(GOLD, 0.55))
-	var tex := GradientTexture2D.new()
-	tex.gradient = gradient
-	tex.width = 256
-	tex.height = 2
-	line.texture = tex
-	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	line.stretch_mode = TextureRect.STRETCH_SCALE
-	line.custom_minimum_size = Vector2(320, 2)
-	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	holder.add_child(line)
 	return holder
 
 
@@ -155,55 +136,21 @@ static func button(text: String, kind: int = Kind.SECONDARY, min_width: float = 
 	return out
 
 
+## Pinta um botão com o kit (ui/ui_kit.gd): dois cantos cortados, versalete, brilho dourado com o mouse em cima.
 static func style_button(out: Button, kind: int) -> void:
-	var fill: Color
-	var border: Color
-	var ink: Color
+	UiKit.style_button(out, kit_kind(kind))
+
+
+## O tipo de botão do kit que corresponde a um daqui.
+static func kit_kind(kind: int) -> UiKit.Kind:
 	match kind:
 		Kind.PRIMARY:
-			fill = GOLD
-			border = Color(GOLD_LIGHT, 0.9)
-			ink = Color(0.16, 0.1, 0.02)
-		Kind.DANGER:
-			fill = Color("#b9452f")
-			border = Color("#ff9b80", 0.55)
-			ink = Color.WHITE
+			return UiKit.Kind.PRIMARY
 		Kind.GHOST:
-			fill = Color(1, 1, 1, 0.0)
-			border = Color(1, 1, 1, 0.2)
-			ink = Color(1, 1, 1, 0.86)
-		_:
-			fill = NAVY
-			border = Color(0.62, 0.76, 1.0, 0.24)
-			ink = INK
-	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := box(fill, 25, border, 1)
-		style.content_margin_left = 24
-		style.content_margin_right = 24
-		style.content_margin_top = 6
-		style.content_margin_bottom = 6
-		match state_name:
-			"hover":
-				style.bg_color = fill.lightened(0.14) if kind != Kind.GHOST else Color(1, 1, 1, 0.08)
-				style.border_color = GOLD_LIGHT if kind == Kind.PRIMARY else (Color(BLUE, 0.8) if kind != Kind.DANGER else Color("#ffb7a3"))
-			"pressed":
-				style.bg_color = fill.darkened(0.14) if kind != Kind.GHOST else Color(1, 1, 1, 0.12)
-			"disabled":
-				style.bg_color = Color(0.17, 0.19, 0.24, 0.92)
-				style.border_color = Color(1, 1, 1, 0.08)
-			"focus":
-				style.bg_color = Color(0, 0, 0, 0)
-				style.border_color = Color(0, 0, 0, 0)
-				style.set_border_width_all(0)
-		if kind == Kind.PRIMARY and state_name in ["normal", "hover"]:
-			style.shadow_color = Color(GOLD, 0.32 if state_name == "normal" else 0.5)
-			style.shadow_size = 10 if state_name == "normal" else 16
-		out.add_theme_stylebox_override(state_name, style)
-	out.add_theme_color_override("font_color", ink)
-	out.add_theme_color_override("font_hover_color", ink if kind != Kind.GHOST else Color.WHITE)
-	out.add_theme_color_override("font_pressed_color", ink)
-	out.add_theme_color_override("font_hover_pressed_color", ink)
-	out.add_theme_color_override("font_disabled_color", Color(0.74, 0.77, 0.84, 0.78))
+			return UiKit.Kind.GHOST
+		Kind.DANGER:
+			return UiKit.Kind.DANGER
+	return UiKit.Kind.SECONDARY
 
 
 ## Caixa de marcar com o quadrado desenhado em dourado (o do tema padrão some no fundo escuro).

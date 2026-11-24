@@ -1,4 +1,11 @@
 {
+  "0.246.0": {
+    "Tela inicial e janelas com visual novo": [
+      { "img": "0.246.0/tela-inicial.webp", "legenda": "A coluna da tela inicial: botões com cantos cortados e letra em caixa alta, e os campos de formato e deck no mesmo estilo." },
+      { "img": "0.246.0/janela.webp", "legenda": "Uma janela da mesa, com a barra dourada antes do título e os botões novos." },
+      { "img": "0.246.0/pergunta.webp", "legenda": "As perguntas da partida também mudaram: aqui, a ordem dos gatilhos." }
+    ]
+  },
   "0.245.0": {
     "Números do que a carta conta": [
       { "img": "0.245.0/contagens-mao.webp", "legenda": "Na mão, o Terror Tolariano mostra 4 mágicas instantâneas e feitiços no cemitério (e custa {2}{U}), e a Combustion Technique as 2 Lições." },
