@@ -8,6 +8,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.243.0] - 2026-11-23
+
+### Mudou
+
+- **Texto inteiro nas cartas de Arte e texto.** No estilo Arte e texto, o nome, o tipo e o texto de regras diminuem a letra até caberem, em vez de serem cortados com reticências ou sumirem esmaecidos no fim da caixa. O texto também contorna o selo de poder e resistência (e o de lealdade), em vez de ficar escondido atrás dele. Só quando nem a menor letra dá conta o fim volta a esmaecer, e o texto completo continua no inspetor.
+- **Barras no tom da carta.** No estilo Arte e texto, as barras do nome e do tipo e a caixa de texto ganham um tom claro da cor da carta (azul, vermelho, verde, dourado das multicoloridas…), e continuam fáceis de ler.
+- **Carta que dá para usar com borda azul.** A carta que você pode jogar ou usar agora (na mão, no campo, no exílio, no cemitério, na zona de comando ou o companheiro) ganha uma borda azul firme e um halo curto em volta, que respira devagar, no lugar do brilho forte que corria pela borda e entrava na carta. Com o mouse em cima, ela acende um pouco mais e sobe. Na mão, as que não dá para jogar ficam só um pouco mais escuras.
+- **Novidades só da mesa do navegador.** O painel Novidades da tela inicial passa a mostrar só o que muda na mesa do navegador: as novidades da mesa no PC ficam no painel dela, e o selo "Mesa no PC" sai daqui. A página Novidades em imagens ganhou duas abas, Navegador e Mesa no PC, cada uma com os prints da sua mesa.
+
+### Corrigido
+
+- **Fichas com arte mesmo quando a coleção da carta não tem a ficha.** Algumas fichas entravam cinza, sem arte, porque a coleção da carta que as criou não tinha a imagem delas (como os Cidadãos de Icatian Town e os Thopters de Hangarback Walker da Kaladesh Inventions). Agora elas aparecem com a arte da mesma ficha, tirada da coleção mais recente que a imprimiu.
+
 ## [0.242.1] - 2026-11-23
 
 ### Corrigido

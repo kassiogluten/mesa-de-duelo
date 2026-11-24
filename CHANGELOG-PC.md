@@ -2,6 +2,32 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.243.0] - 2026-11-23
+
+### Novo
+
+- **Carta à vista na hora de pagar.** Ao conjurar, a carta que saiu da mão não some mais: ela fica grande logo acima da caixa "Pague", com o custo em símbolos em cima, e cada símbolo pago se apaga, ficando aceso só o que falta. Com a pilha aberta, a carta fica ao lado dela, sem cobri-la. Clicar na carta abre a carta de perto. Ela também aparece enquanto se escolhe um custo que não é mana (descartar, sacrificar, pagar vida) ou os alvos da mágica, e, se você desistir, volta voando para o lugar dela na mão.
+- **Permanente acesa ao pagar uma habilidade.** Pagando a habilidade de uma permanente que já está no campo, é ela que acende em dourado, no lugar dela, em vez de aparecer uma cópia junto da caixa.
+- **Arte ondulando no enjoo de invocação.** Enquanto a criatura está com enjoo de invocação, a ilustração dela ondula bem de leve, como um reflexo na água, junto das estrelinhas que giram sobre a carta. O nome, o texto e o poder e a resistência ficam parados e legíveis. Vale para as criaturas de todos os jogadores, e quando o enjoo passa a ondulação se acalma aos poucos até parar, junto da saída das estrelinhas. Desligar os efeitos contínuos (ou usar os efeitos leves) tira a ondulação junto com o giro das estrelinhas.
+- **Carta desenhada enquanto a imagem chega.** Em vez do cartão cinza só com o nome, a carta que ainda não tem imagem aparece desenhada na cor dela, com o nome, o custo, o tipo, o texto em português e o poder e a resistência: dá para jogar lendo a carta enquanto a imagem baixa.
+- **Cartas da mesa nas Opções.** Em Opções › Aparência, o interruptor Cartas da mesa troca os terrenos básicos e as staples (Sol Ring, Command Tower, Arcane Signet, Swiftfoot Boots, Lightning Greaves, Rhystic Study e Commander's Sphere) pela arte feita para a mesa, que já vem dentro do aplicativo. Começa desligado, e a arte escolhida no deck continua valendo.
+
+### Mudou
+
+- **Carta que dá para usar com borda azul.** A carta que você pode jogar ou usar agora (na mão, no campo, no exílio, no cemitério, na zona de comando ou o companheiro) ganha uma borda azul firme e um halo curto em volta, que respira devagar, no lugar do brilho forte que corria pela borda e entrava na carta. Com o mouse em cima, ela acende um pouco mais e sobe. Na mão, as que não dá para jogar ficam só um pouco mais escuras.
+- **Mão mais fácil de ler.** As cartas da sua mão aparecem com as cores da carta impressa, sem a luz, o reflexo e o brilho da mesa por cima, e o branco da moldura e da caixa de texto volta a ser branco: o texto fica nítido. O leque inclina metade do que inclinava, e nada mais passa por cima da carta, só a borda azul de fora.
+- **Mão mais baixa.** Parada, a sua mão fica mais baixa, com a parte de baixo das cartas fora da tela, e sobra mais campo à vista. Com o mouse na mão, ela sobe até as cartas aparecerem quase inteiras, e a carta debaixo do mouse cresce inteira na tela, como antes. Quando a escolha é sobre as cartas da mão (descartar, mulligan, revelar, escolher da mão), a mão sobe inteira sozinha enquanto a escolha estiver aberta.
+- **Imagens das cartas mais rápidas.** As imagens do seu deck (e as do deck do computador) começam a baixar já na sala de espera e no mulligan, e as cartas da mão e do campo passam na frente do cemitério e do exílio. Cada carta mostra primeiro uma imagem pequena, trocada pela nítida quando ela chega, mais imagens baixam ao mesmo tempo pela mesma conexão, e quando o servidor de imagens demora a mesa busca direto no Scryfall em vez de esperar.
+- **Terrenos básicos na série Nyx.** Planície, Ilha, Pântano, Montanha e Floresta aparecem com a arte cheia da série Nyx de Theros Além da Morte, também no lugar da impressão em português. A arte escolhida no deck continua valendo.
+- **Pilha mais calma.** A carta do topo da pilha troca as chamas de luz, os raios girando, o ar tremendo e as luzes correndo pela borda por um contorno fino num degradê de três tons da cor dela (dourado nos gatilhos), que dá uma volta a cada 10 segundos, com um brilho curto junto da borda. Quando dá para responder a uma mágica do oponente, o contorno gira duas vezes mais rápido e brilha um pouco mais. As cartas de baixo ficam sem brilho, as partículas que sobem são poucas e pequenas, e a onda ao chegar e ao resolver continua. No painel da pilha, a moldura fica fixa e só acende, respirando devagar, quando dá para responder.
+- **Zona de comando fora do campo.** O comandante que está na zona de comando não fica mais deitado dentro do campo, do tamanho das permanentes: ele vai para fora da borda, ao lado do retrato e da vida do jogador, menor e um pouco inclinado, como uma carta em exposição. Colado embaixo dele, um selo com a coroa e a taxa de comandante ("+2", "+4"; sem taxa, só a coroa). A coroa no canto da carta fica só para o comandante no campo. Vale para você e para os oponentes, no duelo e no Commander de 3 ou 4 jogadores; clicar, ver de perto e conjurar o comandante continuam iguais.
+- **Novidades só da mesa no PC.** O painel Novidades da tela inicial mostra só o que muda na mesa no PC, sem as novidades da mesa do navegador e sem o selo "Mesa no PC" em cada item. O "ver em imagens" abre a página Novidades em imagens já na aba Mesa no PC.
+
+### Corrigido
+
+- **Fichas com arte mesmo quando a coleção da carta não tem a ficha.** Algumas fichas entravam cinza, sem arte, porque a coleção da carta que as criou não tinha a imagem delas (como os Cidadãos de Icatian Town e os Thopters de Hangarback Walker da Kaladesh Inventions). Agora elas aparecem com a arte da mesma ficha, tirada da coleção mais recente que a imprimiu.
+- **Fichas sem arte.** A ficha que chegava sem imagem ficava cinza, com o nome em inglês ("Goblin Token"). Agora a mesa acha a arte pelo nome da ficha e, quando não há arte, desenha a ficha na cor dela, com o nome e o tipo em português ("Goblin", "Criatura Ficha — Goblin"), as palavras-chave e o poder e a resistência.
+
 ## [0.241.0] - 2026-11-23
 
 ### Mudou

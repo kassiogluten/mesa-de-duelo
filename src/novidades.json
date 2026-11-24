@@ -1,4 +1,76 @@
 {
+  "0.243.0": {
+    "Texto inteiro nas cartas de Arte e texto": [
+      { "img": "0.243.0/encaixe-antes.webp", "legenda": "Antes: com letra fixa, nomes longos terminavam em reticências e o fim das regras sumia esmaecido, atrás do poder e resistência." },
+      { "img": "0.243.0/encaixe-depois.webp", "legenda": "Agora: a letra diminui até o texto caber inteiro, e ele contorna o selo de poder e resistência no canto." }
+    ],
+    "Barras no tom da carta": [
+      { "img": "0.243.0/tom-por-cor.webp", "legenda": "Barras do nome e do tipo e caixa de texto num tom claro da cor de cada carta: azul, incolor, multicolorida, preta e branca." }
+    ],
+    "Fichas com arte mesmo quando a coleção da carta não tem a ficha": [
+      { "img": "0.243.0/fichas-sem-arte-antes.webp", "legenda": "Antes: os quatro Cidadãos de Icatian Town entravam cinza, só com o tipo e a força." },
+      { "img": "0.243.0/fichas-com-arte.webp", "legenda": "Agora: os mesmos Cidadãos entram com a arte da ficha, tirada de uma coleção mais recente." }
+    ],
+    "Carta que dá para usar com borda azul": [
+      { "img": "0.243.0/carta-usavel-pc.webp", "legenda": "Na mesa no PC: as cartas que dá para usar, na mão e no campo, com a borda azul e o halo curto; as outras da mão, um pouco mais escuras." },
+      { "img": "0.243.0/carta-usavel-navegador.webp", "legenda": "No navegador: a mesma borda azul com o halo curto nas cartas da mão que dá para jogar." }
+    ],
+    "Mão mais fácil de ler": [
+      { "img": "0.243.0/mao-legivel-antes.webp", "legenda": "Antes: a luz da mesa acinzentava a caixa de texto e o brilho de jogável entrava na carta." },
+      { "img": "0.243.0/mao-legivel-depois.webp", "legenda": "Agora: as cores da carta impressa, o texto nítido, o leque mais reto e só a borda azul do lado de fora." }
+    ],
+    "Mão mais baixa": [
+      { "img": "0.243.0/mao-mais-baixa-parada.webp", "legenda": "Parada, a mão fica mais baixa, com a parte de baixo das cartas fora da tela." },
+      { "img": "0.243.0/mao-mais-baixa-mouse.webp", "legenda": "Com o mouse na mão, ela sobe um pouco e a carta debaixo do mouse cresce inteira na tela." },
+      { "img": "0.243.0/mao-mais-baixa-escolha.webp", "legenda": "Numa escolha sobre as cartas da mão, como descartar, a mão sobe inteira sozinha." }
+    ],
+    "Carta à vista na hora de pagar": [
+      { "img": "0.243.0/carta-pagando.webp", "legenda": "Cultivar grande acima da caixa \"Falta {1} de {2}{G}\": no custo em cima da carta, o {1} que falta está aceso, e o {1} e o {G} já pagos estão apagados." },
+      { "img": "0.243.0/carta-com-pilha.webp", "legenda": "Respondendo a um Raio com Contramágica: a carta fica ao lado da pilha aberta, sem cobri-la, com um dos dois {U} já pago." },
+      { "img": "0.243.0/carta-descarte.webp", "legenda": "Machado Relampejante pede descartar uma carta como custo: ele fica à vista enquanto se escolhe a carta da mão." },
+      { "img": "0.243.0/carta-volta-mao.webp", "legenda": "Desistindo da mágica, Cultivar volta voando de junto da caixa para o lugar dela na mão." }
+    ],
+    "Permanente acesa ao pagar uma habilidade": [
+      { "img": "0.243.0/habilidade-origem.webp", "legenda": "Pagando {4} da Passagem do Ladino: a terra acende em dourado no campo, e nenhuma cópia aparece junto da caixa." }
+    ],
+    "Arte ondulando no enjoo de invocação": [
+      { "img": "0.243.0/arte-ondulando.webp", "legenda": "A criatura que acabou de entrar: a ilustração ondula de leve, com as estrelinhas girando por cima, enquanto o nome, o texto e o 2/2 continuam parados." }
+    ],
+    "Carta desenhada enquanto a imagem chega": [
+      { "img": "0.243.0/carta-desenhada.webp", "legenda": "Elfos de Llanowar, Anjo de Serra, Raio e uma ficha de Goblin desenhados com o nome, o custo, o tipo, o texto em português e o P/R, na cor de cada carta." },
+      { "img": "0.243.0/mesa-desenhada.webp", "legenda": "A mão e o campo com as cartas desenhadas enquanto as imagens não chegam." }
+    ],
+    "Cartas da mesa nas Opções": [
+      { "img": "0.243.0/opcoes-cartas-da-mesa.webp", "legenda": "Opções da tela inicial: o interruptor Cartas da mesa, em Aparência, com a explicação embaixo." },
+      { "img": "0.243.0/terrenos-cartas-da-mesa.webp", "legenda": "Com Cartas da mesa ligada, os cinco terrenos básicos com a arte feita para a mesa." }
+    ],
+    "Terrenos básicos na série Nyx": [
+      { "img": "0.243.0/terrenos-nyx.webp", "legenda": "Planície, Ilha, Pântano, Montanha e Floresta na série Nyx, a arte padrão dos terrenos." }
+    ],
+    "Fichas sem arte": [
+      { "img": "0.243.0/ficha-com-arte.webp", "legenda": "A ficha de Goblin com a arte achada pelo nome da ficha." },
+      { "img": "0.243.0/ficha-desenhada.webp", "legenda": "Sem arte, as fichas de Goblin, Soldado e Espírito desenhadas na cor de cada uma, com o tipo em português, as palavras-chave e o P/R." }
+    ],
+    "Pilha mais calma": [
+      { "img": "0.243.0/pilha-contorno.webp", "legenda": "O Raio no topo da pilha com o contorno fino nos tons do vermelho e um brilho curto em volta, sem chamas nem raios." },
+      { "img": "0.243.0/pilha-gatilho.webp", "legenda": "Um gatilho no topo: o contorno é dourado, do âmbar ao creme, e a carta de baixo fica sem brilho." },
+      { "img": "0.243.0/pilha-responder.webp", "legenda": "Contramágica do oponente no topo e a vez é sua: o contorno azul brilha um pouco mais, e a moldura do painel acende para lembrar que dá para responder." }
+    ],
+    "Zona de comando fora do campo": [
+      { "img": "0.243.0/zona-de-comando-sua.webp", "legenda": "O seu comandante fora do campo, acima do retrato, com o selo da coroa e da taxa (+2) colado embaixo." },
+      { "img": "0.243.0/zona-de-comando-parceiros.webp", "legenda": "No duelo, a dupla de parceiros do oponente ao lado do retrato dele: um com taxa +4, o outro só com a coroa." },
+      { "img": "0.243.0/zona-de-comando-mesa-de-4.webp", "legenda": "No Commander de 4, o comandante de cada oponente ao lado do retrato, antes do leque da mão." }
+    ],
+    "Novidades só da mesa do navegador": [
+      { "img": "0.243.0/painel-navegador.webp", "legenda": "O painel Novidades do navegador com a próxima versão: só os itens da mesa do navegador, sem o selo \"Mesa no PC\"." },
+      { "img": "0.243.0/abas-navegador.webp", "legenda": "A página Novidades em imagens com as duas abas, aberta na aba Navegador." },
+      { "img": "0.243.0/abas-mesa-no-pc.webp", "legenda": "A mesma página na aba Mesa no PC, com os prints só da mesa no PC." }
+    ],
+    "Novidades só da mesa no PC": [
+      { "img": "0.243.0/painel-mesa-no-pc.webp", "legenda": "O painel Novidades da mesa no PC: só o que muda nela, sem selo em cada item." },
+      { "img": "0.243.0/abas-mesa-no-pc.webp", "legenda": "O \"ver em imagens\" do painel abre a página Novidades em imagens já na aba Mesa no PC." }
+    ]
+  },
   "0.242.1": {
     "Mana a mais de Solo Fértil na reserva": [
       { "img": "0.242.1/pagar-com-a-reserva.webp", "legenda": "Falta {U} para Animar, e o {U} que o Solo Fértil deu está na reserva: o **Pagar automaticamente** fica aceso e paga com ela." },
