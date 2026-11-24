@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const { hypergeometric, between, deckInsights, recommendedLands } = await import('../src/deckView/analysis.ts');
+const { hypergeometric, between, deckInsights, recommendedLands, landDropChance, functionTargets } = await import('../src/deckView/analysis.ts');
+const { functionBarsHTML, landDropsHTML } = await import('../src/deckView/charts.ts');
 const { CATEGORIES, countCategories } = await import('../src/deckView/functions.ts');
 const { newHand, mulligan, putOnBottom, drawCard, expand } = await import('../src/deckView/sampleHand.ts');
 const { choosePrint, printTraits, printPrice } = await import('../src/deckView/artChoice.ts');
@@ -120,4 +121,31 @@ test('o que distingue cada impressão e o preço', () => {
 test('o código do link público tem 8 letras sem as parecidas', () => {
   assert.ok(PUBLIC_CODE.test('Ab3kQx9z'));
   for (const bad of ['Ab3kQx9', 'Ab3kQx9zz', 'Ab3kQx9O', 'Ab3kQx91', 'Ab3kQx9l', 'Ab3kQx9I', '../conta']) assert.ok(!PUBLIC_CODE.test(bad), bad);
+});
+
+test('terrenos por turno: quem joga depois vê uma carta a mais', () => {
+  // Turno 1 jogando primeiro: só a mão de 7; pelo menos um terreno.
+  assert.equal(landDropChance(99, 38, 1, true), 1 - hypergeometric(99, 38, 7, 0));
+  // Turno 4 jogando depois: 11 cartas vistas, pelo menos 4 terrenos.
+  assert.ok(Math.abs(landDropChance(99, 38, 4, false) - between(99, 38, 11, 4, 11)) < 1e-12);
+  for (let t = 1; t <= 7; t++) assert.ok(landDropChance(60, 24, t, false) >= landDropChance(60, 24, t, true));
+  // Grimório pequeno: não vê mais cartas do que tem.
+  assert.equal(landDropChance(10, 10, 7, false), 1);
+  assert.equal(landDropsHTML(7, 3), '');
+  assert.equal(landDropsHTML(60, 0), '');
+  const html = landDropsHTML(60, 24);
+  assert.equal((html.match(/class="dv-hit"/g) ?? []).length, 7);
+  assert.match(html, /<table>/);
+});
+
+test('as barras de funções marcam o comum do formato', () => {
+  const counts = [{ category: category('ramp'), count: 4, cards: [] }, { category: category('draw'), count: 12, cards: [] }];
+  const commander = functionBarsHTML(counts, true);
+  assert.equal((commander.match(/class="dv-frow/g) ?? []).length, functionTargets(true).length);
+  assert.match(commander, /Ramp: 4; o comum é 10/);
+  assert.match(commander, /dv-frow low" role="listitem" aria-label="Ramp/);
+  assert.match(commander, /Remoção: 0; o comum é 8/);
+  const sixty = functionBarsHTML(counts, false);
+  assert.deepEqual(functionTargets(false).map(t => t.id), ['removal', 'draw']);
+  assert.doesNotMatch(sixty, /Ramp/);
 });

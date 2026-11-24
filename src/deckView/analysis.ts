@@ -48,6 +48,24 @@ export function recommendedLands(input: Pick<AnalysisInput, 'commander' | 'libra
   return Math.min(Math.round(input.library * 0.45), Math.max(Math.round(input.library * 0.27), Math.round(raw)));
 }
 
+export interface FunctionTarget { id: CategoryId; ideal: number; low: number; title: string; what: string }
+/** O que um deck costuma ter de cada função. No Commander, as faixas de quem monta deck (o modelo do The Command Zone): 10 de ramp, 10 de compra, 8 a 10 remoções e 2 a 3 limpa-campos. */
+export function functionTargets(commander: boolean): FunctionTarget[] {
+  const t = (id: CategoryId, ideal: number, low: number, title: string, what: string) => ({ id, ideal, low, title, what });
+  return commander
+    ? [t('ramp', 10, 7, 'Ramp', 'aceleradores de mana'), t('draw', 10, 7, 'Compra', 'cartas de compra'), t('removal', 8, 5, 'Remoção', 'remoções'), t('sweeper', 2, 1, 'Limpa-campo', 'limpa-campos')]
+    : [t('removal', 6, 3, 'Remoção', 'remoções'), t('draw', 4, 2, 'Compra', 'cartas de compra')];
+}
+
+/**
+ * Chance de ter terreno para baixar um por turno até o turno `turn` (pelo menos `turn` terrenos entre as cartas vistas),
+ * sem mulligan. Quem joga primeiro não compra no primeiro turno.
+ */
+export function landDropChance(library: number, lands: number, turn: number, first: boolean): number {
+  const seen = Math.min(library, 7 + turn - (first ? 1 : 0));
+  return between(library, lands, seen, turn, seen);
+}
+
 /** O que dizer do deck, do mais importante para o que só informa. */
 export function deckInsights(input: AnalysisInput): Insight[] {
   const out: Insight[] = [];
@@ -74,11 +92,7 @@ export function deckInsights(input: AnalysisInput): Insight[] {
 
   if (input.categories) {
     const count = (id: CategoryId) => input.categories!.find(c => c.category.id === id)?.count ?? 0;
-    // Faixas comuns de quem monta Commander (o modelo do The Command Zone): 10 de ramp, 10 de compra, 8 a 10 remoções e 2 a 3 limpa-campos.
-    const targets: [CategoryId, number, number, string, string][] = input.commander
-      ? [['ramp', 10, 7, 'Ramp', 'aceleradores de mana'], ['draw', 10, 7, 'Compra', 'cartas de compra'], ['removal', 8, 5, 'Remoção', 'remoções'], ['sweeper', 2, 1, 'Limpa-campo', 'limpa-campos']]
-      : [['removal', 6, 3, 'Remoção', 'remoções'], ['draw', 4, 2, 'Compra', 'cartas de compra']];
-    for (const [id, ideal, low, title, what] of targets) {
+    for (const { id, ideal, low, title, what } of functionTargets(input.commander)) {
       const n = count(id);
       if (n >= ideal) out.push({ tone: 'good', title, text: `${plural(n, 'carta', 'cartas')} de ${title.toLowerCase()}: bem servido.` });
       else if (n < low) out.push({ tone: 'warn', title: `${title} abaixo do comum`, text: `Só ${n} ${what}; o comum é ter pelo menos ${ideal}.` });

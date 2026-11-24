@@ -1,4 +1,14 @@
 {
+  "0.250.0": {
+    "Gráficos do deck": [
+      { "img": "0.250.0/graficos-terrenos.webp", "legenda": "A chance de ter terreno para baixar um por turno, jogando primeiro (linha cheia) e jogando depois (tracejada), com os números do turno 4 em destaque." },
+      { "img": "0.250.0/graficos-tipos.webp", "legenda": "O deck dividido por tipo de carta e a curva de mana com cada custo dividido pelos mesmos tipos." },
+      { "img": "0.250.0/graficos-funcoes.webp", "legenda": "Ramp, compra, remoção e limpa-campo do deck; o traço marca o que um deck de Commander costuma ter." }
+    ],
+    "Ver detalhes no editor": [
+      { "img": "0.250.0/editor-detalhes.webp", "legenda": "O botão Ver detalhes no topo do editor, ao lado do formato e de Ações do deck." }
+    ]
+  },
   "0.248.0": {
     "Tela de detalhes do deck": [
       { "img": "0.248.0/tela.webp", "legenda": "O topo da tela de um deck pronto de Commander: a arte do comandante, as cores, o bracket, o preço e as abas Visão geral, Cartas e Mão de teste." }

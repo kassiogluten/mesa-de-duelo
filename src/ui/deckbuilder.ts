@@ -460,6 +460,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'list-edit': { const deck = current(); if (deck) beginImport(deck, true); break; }
       case 'import-cancel': { user = loadUserDecks(); const deck = importTarget && user.find(d => d.id === importTarget!.id); importTarget = null; listEdit = false; if (deck) edit(deck); else goLibrary(); break; }
       case 'dup': { const deck = current(); if (deck) duplicate(deck); break; }
+      case 'details': { const deck = current(); setDeckActions(false); if (deck) openDeckPreview(deck, deck.builtin ? {} : { onEdit: () => edit(deck) }); break; }
       case 'del': {
         const deck = current(); if (!deck || deck.builtin) break;
         setDeckActions(false, true);
