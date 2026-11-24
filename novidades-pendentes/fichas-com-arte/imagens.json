@@ -1,0 +1,6 @@
+{
+  "Fichas com arte mesmo quando a coleção da carta não tem a ficha": [
+    { "img": "fichas-sem-arte-antes.webp", "legenda": "Antes: os quatro Cidadãos de Icatian Town entravam cinza, só com o tipo e a força." },
+    { "img": "fichas-com-arte.webp", "legenda": "Agora: os mesmos Cidadãos entram com a arte da ficha, tirada de uma coleção mais recente." }
+  ]
+}
