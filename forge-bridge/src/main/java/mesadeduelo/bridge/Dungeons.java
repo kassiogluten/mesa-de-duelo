@@ -51,7 +51,7 @@ final class Dungeons {
         JsonObject d = new JsonObject();
         d.addProperty("id", c.getId());
         d.addProperty("name", c.getName());
-        String image = StateJson.tokenImage(c.getView().getCurrentState());
+        String image = TokenImages.of(c.getView().getCurrentState());
         if (image != null) d.addProperty("image", image);
         String current = c.getCurrentRoom();
         if (current != null && !current.isEmpty()) d.addProperty("room", current);

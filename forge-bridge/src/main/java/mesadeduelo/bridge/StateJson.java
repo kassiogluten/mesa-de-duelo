@@ -6,9 +6,6 @@ import java.util.Map;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import forge.ImageKeys;
-import forge.StaticData;
-import forge.card.CardEdition;
 import forge.item.PaperCard;
 import forge.card.CardStateName;
 import forge.card.MagicColor;
@@ -327,44 +324,6 @@ final class StateJson {
         return null;
     }
 
-    /** Imagens de ficha já resolvidas, por chave de imagem do Forge (null = sem imagem conhecida). */
-    private static final Map<String, String> TOKEN_IMAGES = new java.util.concurrent.ConcurrentHashMap<>();
-
-    /**
-     * Endereço da imagem de uma ficha no Scryfall, como o ImageFetcher do Forge calcula: a chave
-     * "t:nome|SET|número" aponta para o número da ficha na coleção de fichas do SET (ex.: tblb/3).
-     * Sem número, vale a primeira ficha com esse nome na coleção.
-     */
-    static String tokenImage(CardStateView s) {
-        String key;
-        try { key = s.getImageKey(null); } catch (RuntimeException e) { return null; }
-        if (key == null || !key.startsWith(ImageKeys.TOKEN_PREFIX)) return null;
-        String cached = TOKEN_IMAGES.get(key);
-        if (cached != null) return cached.isEmpty() ? null : cached;
-        String url = null;
-        String tmp = key.substring(ImageKeys.TOKEN_PREFIX.length());
-        boolean back = tmp.endsWith(ImageKeys.BACKFACE_POSTFIX);
-        if (back) tmp = tmp.substring(0, tmp.length() - ImageKeys.BACKFACE_POSTFIX.length());
-        String[] parts = tmp.split("\\|");
-        CardEdition edition = parts.length > 1 ? StaticData.instance().getEditions().get(parts[1]) : null;
-        if (edition != null && edition.getType() != CardEdition.Type.CUSTOM_SET) {
-            String number = parts.length > 2 ? parts[2] : null;
-            if (number == null) {
-                for (CardEdition.EditionEntry e : edition.getTokens().get(parts[0])) {
-                    if (e.collectorNumber() != null && !e.collectorNumber().isEmpty()) { number = e.collectorNumber(); break; }
-                }
-            }
-            if (number != null) {
-                if (number.endsWith("☇")) { back = true; number = number.substring(0, number.length() - 1); }
-                url = "https://api.scryfall.com/cards/" + edition.getTokensCode() + "/"
-                        + java.net.URLEncoder.encode(number, java.nio.charset.StandardCharsets.UTF_8)
-                        + "?format=image&version=normal" + (back ? "&face=back" : "");
-            }
-        }
-        TOKEN_IMAGES.put(key, url == null ? "" : url);
-        return url;
-    }
-
     /** Como a permanente ficou virada para baixo (informação pública): metamorfose, disfarce, manifestada ou encoberta. */
     /** A impressão que o dono escolheu no deck, enquanto a carta mostra uma das próprias faces (um clone mostra a carta copiada). */
     static JsonObject printing(Card gc, String shownName) {
@@ -410,7 +369,7 @@ final class StateJson {
         Card source = cardOf(c, game);
         if (c.isToken()) {
             String img = TokenPrints.image(source);
-            if (img == null) img = tokenImage(s);
+            if (img == null) img = TokenImages.of(s);
             if (img != null) o.addProperty("image", img);
         }
         o.addProperty("set", s.getSetCode());
@@ -513,9 +472,14 @@ final class StateJson {
                 forge.game.card.CardState printed = part.getOriginalState(part.getCurrentStateName());
                 m.addProperty("name", printed.getName());
                 m.addProperty("set", printed.getSetCode());
-                String img = part.isToken() ? TokenPrints.image(part) : null;
-                if (img == null) img = tokenImage(printed.getView());
-                if (img != null) { m.addProperty("token", true); m.addProperty("image", img); }
+                // Ficha em qualquer posição mostra a arte: a série escolhida no deck ou a impressão dela. A de baixo é a
+                // permanente, e o isToken() dela responde pela carta de cima.
+                if (part.isRealToken()) {
+                    m.addProperty("token", true);
+                    String img = TokenPrints.image(part);
+                    if (img == null) img = TokenImages.of(printed.getView());
+                    if (img != null) m.addProperty("image", img);
+                }
             }
             merged.add(m);
         }

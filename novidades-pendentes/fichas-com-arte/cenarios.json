@@ -1,0 +1,38 @@
+[
+  {
+    "nome": "Icatian Town: os quatro Cidadãos entram com arte",
+    "item": "Fichas com arte mesmo quando a coleção da carta não tem a ficha",
+    "conferir": "Conjure Icatian Town ({5}{W}) com as seis Planícies. Ela cria quatro fichas de Cidadão 1/1 brancas: todas devem aparecer com a arte da ficha (um vulto de capa vermelha), e não cinza, só com o nome e a força.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": ["Icatian Town"],
+          "library": ["Plains", "Plains", "Plains", "Plains", "Plains"],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            { "name": "Plains" },
+            { "name": "Plains" },
+            { "name": "Plains" },
+            { "name": "Plains" },
+            { "name": "Plains" },
+            { "name": "Plains" }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": ["Plains", "Plains", "Plains", "Plains", "Plains"],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [{ "name": "Plains" }]
+        }
+      ]
+    }
+  }
+]
