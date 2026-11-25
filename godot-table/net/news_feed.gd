@@ -96,7 +96,8 @@ static func _newer(a: String, b: String) -> bool:
 	return false
 
 
-## O /novidades.json conferido: {version, releases: [{version, title, date, visual, groups: [{name, items: [{title, text}]}]}]}.
+## O /novidades.json conferido: {version, releases: [{version, title, date, visual, groups: [{name, items: [{title, text, images?}]}]}]}.
+## `images` ([{src, caption}], o endereço no site começando com /) só no item que tem prints na página Novidades em imagens.
 ## O que não tem o formato fica de fora; {} quando não há nenhuma versão.
 static func parse(data: Variant) -> Dictionary:
 	if not data is Dictionary or not (data as Dictionary).get("releases") is Array:
@@ -117,7 +118,11 @@ static func parse(data: Variant) -> Dictionary:
 					continue
 				var item: Dictionary = i
 				if Txt.of(item.get("title")) != "" or Txt.of(item.get("text")) != "":
-					items.append({"title": Txt.of(item.get("title")), "text": Txt.of(item.get("text"))})
+					var kept: Dictionary = {"title": Txt.of(item.get("title")), "text": Txt.of(item.get("text"))}
+					var images: Array = _images(item.get("images"))
+					if not images.is_empty():
+						kept["images"] = images
+					items.append(kept)
 			if not items.is_empty():
 				groups.append({"name": Txt.of((g as Dictionary).get("name")), "items": items})
 		var version: String = Txt.of(release["version"])
@@ -128,6 +133,15 @@ static func parse(data: Variant) -> Dictionary:
 	if releases.is_empty():
 		return {}
 	return {"version": Txt.of((data as Dictionary).get("version")), "releases": releases}
+
+
+## Os prints de um item que têm endereço no site; os outros ficam de fora.
+static func _images(data: Variant) -> Array:
+	var out: Array = []
+	for raw: Variant in data if data is Array else []:
+		if raw is Dictionary and Txt.of((raw as Dictionary).get("src")).begins_with("/"):
+			out.append({"src": Txt.of(raw["src"]), "caption": Txt.of((raw as Dictionary).get("caption"))})
+	return out
 
 
 ## A cópia guardada: {feed, etag} (feed vazio sem nenhuma ou com o arquivo estragado).

@@ -94,6 +94,7 @@
 .dw-edit-controls > .dw-field { font-size: 12px; gap: 5px; }
 .dw-edit-controls select { height: 44px; min-width: 126px; padding-block: 8px; background-color: var(--azul-0b1423, #0b1423); }
 .dw-deck-actions { position: relative; }
+.dw-details-button { min-height: 44px; white-space: nowrap; }
 .dw-actions-trigger { min-height: 44px; white-space: nowrap; background: var(--azul-19283c, #19283c); border-color: #ffffff24; }
 .dw-actions-trigger svg { width: 15px; height: 15px; flex-shrink: 0; }
 .dw-actions-trigger[aria-expanded='true'] { border-color: var(--dw-accent); color: var(--gold-light); }

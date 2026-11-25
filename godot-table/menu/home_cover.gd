@@ -1,5 +1,6 @@
 # A capa da tela inicial: a arte do deck escolhido ocupando a esquerda como a capa de um jogo, apagando no fundo à direita
-# e embaixo, com "SEU DECK", o nome e a linha das cores e do formato; troca de deck num esmaecer e deriva bem devagar.
+# e embaixo, com "SEU DECK", o nome e a linha das cores e do formato; troca de deck num esmaecer, deriva bem devagar e
+# tem umas poucas luzinhas subindo devagar por cima.
 class_name HomeCover
 extends Control
 
@@ -30,8 +31,18 @@ void fragment() {
 }
 """
 
-## A deriva lenta da arte (desligada no nível de efeitos leve).
-var drift: bool = true
+## Luzinhas subindo sobre a arte: poucas, pequenas e lentas, só um toque de ambiente.
+const MOTES := 14
+const MOTE_LIFE_S := 12.0
+const MOTE_COLOR := Color(1.0, 0.88, 0.64, 0.4)
+
+## A deriva lenta da arte e as luzinhas (desligadas no nível de efeitos leve).
+var drift: bool = true:
+	set(on):
+		drift = on
+		if _motes:
+			_motes.emitting = on
+			_motes.visible = on
 
 var _art_box: Control
 ## As camadas da arte: a do deck da vez por cima, as antigas apagando embaixo.
@@ -70,9 +81,7 @@ func _ready() -> void:
 	bottom.name = "FadeBottom"
 	var top := _overlay(HomeStyle.fade([[0.0, Color(HomeStyle.BG, 0.55)], [0.14, Color(HomeStyle.BG, 0.0)], [1.0, Color(HomeStyle.BG, 0.0)]], Vector2(0, 0), Vector2(0, 1)))
 	top.name = "FadeTop"
-	# A poeira dourada subindo devagar por cima da arte (o mesmo fundo de cena das outras telas do menu).
-	_motes = MenuBackdrop.motes(34)
-	_motes.emitting = Txt.of(Prefs.load_all().get("effects", "auto")) != "leve"
+	_motes = _build_motes()
 	add_child(_motes)
 	_build_info()
 	resized.connect(_layout)
@@ -87,6 +96,55 @@ func _overlay(texture: Texture2D) -> TextureRect:
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_art_box.add_child(rect)
 	return rect
+
+
+func _build_motes() -> CPUParticles2D:
+	var motes := CPUParticles2D.new()
+	motes.name = "Motes"
+	motes.amount = MOTES
+	motes.lifetime = MOTE_LIFE_S
+	# Já espalhadas quando a tela abre, em vez de nascerem todas juntas.
+	motes.preprocess = MOTE_LIFE_S
+	motes.randomness = 1.0
+	motes.local_coords = false
+	motes.texture = _mote_texture()
+	motes.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	motes.direction = Vector2(0, -1)
+	motes.spread = 28.0
+	motes.gravity = Vector2(0, -1.5)
+	motes.initial_velocity_min = 6.0
+	motes.initial_velocity_max = 15.0
+	# Cada uma nasce de um tamanho sorteado, de um pontinho a um brilho maior e macio (textura de 32 px: de ~8 a ~50 px).
+	motes.scale_amount_min = 0.25
+	motes.scale_amount_max = 1.6
+	motes.color = MOTE_COLOR
+	# Acende devagar, fica e apaga devagar.
+	var ramp := Gradient.new()
+	ramp.offsets = PackedFloat32Array([0.0, 0.25, 0.7, 1.0])
+	ramp.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 1, 1, 0.85), Color(1, 1, 1, 0.6), Color(1, 1, 1, 0)])
+	motes.color_ramp = ramp
+	# Somam luz à arte (aditivo): clareiam o que está embaixo em vez de pintar um disco por cima.
+	var additive := CanvasItemMaterial.new()
+	additive.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	motes.material = additive
+	motes.emitting = drift
+	motes.visible = drift
+	return motes
+
+
+## Um ponto de luz redondo e macio (centro claro que se desfaz na borda).
+static func _mote_texture() -> GradientTexture2D:
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.18, 0.5, 1.0])
+	gradient.colors = PackedColorArray([Color(1, 1, 1, 0.9), Color(1, 1, 1, 0.5), Color(1, 1, 1, 0.12), Color(1, 1, 1, 0)])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 32
+	texture.height = 32
+	return texture
 
 
 func _build_info() -> void:
@@ -138,8 +196,9 @@ func _layout() -> void:
 			(child as Control).size = _art_box.size + Vector2(2, 2)
 	for layer: Control in _layers:
 		_fit_layer(layer)
-	_motes.position = Vector2(size.x / 2.0, size.y + 20.0)
-	_motes.emission_rect_extents = Vector2(size.x / 2.0, 10.0)
+	# As luzinhas nascem na parte de baixo e no meio da arte e sobem, apagando antes de chegar ao alto.
+	_motes.position = Vector2(art_w * 0.46, size.y * 0.68)
+	_motes.emission_rect_extents = Vector2(art_w * 0.42, size.y * 0.26)
 	var left: float = maxf(56.0, size.x * 0.03)
 	_info.position = Vector2(left, size.y * 0.755 - _info.get_combined_minimum_size().y)
 	_info.size = Vector2(art_w - left - 40.0, 0)

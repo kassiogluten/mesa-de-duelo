@@ -1,4 +1,4 @@
-// A aba Visão geral da tela do deck: análise com os avisos, as categorias das cartas, os números, o bracket e as fichas.
+// A aba Visão geral da tela do deck: análise com os avisos, os gráficos, as categorias das cartas, os números, o bracket e as fichas.
 import { commanderRules, hasCommandZone, type DeckData } from '../decks';
 import { cacheGet } from '../scryfall';
 import { esc } from '../ui/cardtext';
@@ -9,6 +9,7 @@ import { BRACKET_NAME, deckBracket, estimateBracket } from '../brackets';
 import type { TokenKind } from '../deckTokens';
 import { deckInsights, type Insight } from './analysis';
 import { countCategories, type CategoryCount } from './functions';
+import { functionBarsHTML, landDropsHTML, typesHTML } from './charts';
 
 const COLOR_NAME: Record<string, string> = { W: 'branco', U: 'azul', B: 'preto', R: 'vermelho', G: 'verde' };
 const RARITY: [string, string][] = [['mythic', 'Míticas'], ['rare', 'Raras'], ['uncommon', 'Incomuns'], ['common', 'Comuns']];
@@ -22,16 +23,17 @@ function categoryRows(deck: DeckData) {
 }
 
 /** Os números que a análise usa, tirados do deck e das funções já recebidas. */
-function analyze(deck: DeckData, functions: FunctionsState): { insights: Insight[]; categories: CategoryCount[] | null } {
+function analyze(deck: DeckData, functions: FunctionsState) {
   const stats = deckStats(deck);
   const categories = functions instanceof Map ? countCategories(categoryRows(deck), functions) : null;
   const helpers = categories ? new Set(categories.filter(c => c.category.id === 'ramp' || c.category.id === 'draw').flatMap(c => c.cards.map(x => x.name))) : new Set<string>();
   const cheapHelpers = deckRows(deck.cards).filter(r => helpers.has(r.name) && (r.cmc ?? 0) <= 2).reduce((n, r) => n + r.count, 0);
-  const insights = deckInsights({
-    commander: hasCommandZone(deck.format) && deck.format !== 'oathbreaker', library: stats.total, lands: stats.lands, average: stats.average, cheapHelpers,
+  const commander = hasCommandZone(deck.format) && deck.format !== 'oathbreaker';
+  const insights: Insight[] = deckInsights({
+    commander, library: stats.total, lands: stats.lands, average: stats.average, cheapHelpers,
     categories, shortColors: manaBase(deck).rows.filter(r => r.short).map(r => COLOR_NAME[r.color] ?? r.color), unknown: stats.unknown,
   });
-  return { insights, categories };
+  return { insights, categories, stats, commander };
 }
 
 const label = (name: string) => cacheGet(name)?.pt?.name || name;
@@ -42,11 +44,11 @@ function insightsHTML(insights: Insight[]) {
 }
 
 /** No Commander as quatro categorias da análise aparecem mesmo zeradas (faltar limpa-campo é um aviso); nos outros, só as que o deck tem. */
-function categoriesHTML(categories: CategoryCount[] | null, functions: FunctionsState, commander: boolean) {
+function categoriesHTML(categories: CategoryCount[] | null, functions: FunctionsState, commander: boolean, barsCommander: boolean) {
   const body = functions === 'erro'
     ? '<p class="dv-note">Não foi possível ler as funções das cartas agora. O resto da análise continua valendo.</p>'
     : !categories ? '<p class="dv-note dv-loading">Lendo as funções das cartas…</p>'
-    : `<div class="dv-categories">${categories.filter(c => c.count || (commander && ['ramp', 'draw', 'removal', 'sweeper'].includes(c.category.id))).map(c =>
+    : `${functionBarsHTML(categories, barsCommander)}<div class="dv-categories">${categories.filter(c => c.count || (commander && ['ramp', 'draw', 'removal', 'sweeper'].includes(c.category.id))).map(c =>
       `<details class="dv-category"${c.count ? '' : ' data-empty'}><summary title="${esc(c.category.hint)}"><b>${c.count}</b><span>${esc(c.category.label)}</span></summary>${c.cards.length ? `<ul>${c.cards.map(x => `<li><button type="button" class="dv-link" data-inspect="${esc(x.name)}">${x.count > 1 ? `${x.count} ` : ''}${esc(label(x.name))}</button></li>`).join('')}</ul>` : `<p class="dv-note">${esc(c.category.hint)}</p>`}</details>`).join('')}</div>
       <p class="dv-note">Pelas etiquetas de função da comunidade do Scryfall (Tagger). Terrenos não entram. Toque numa categoria para ver as cartas.</p>`;
   return `<section class="dv-panel"><h2>Funções das cartas</h2>${body}</section>`;
@@ -69,6 +71,8 @@ function rarityHTML(deck: DeckData) {
 }
 
 export function overviewHTML(deck: DeckData, functions: FunctionsState, tokens: TokenKind[]) {
-  const { insights, categories } = analyze(deck, functions);
-  return `<div class="dv-overview"><div class="dv-col">${insightsHTML(insights)}${categoriesHTML(categories, functions, commanderRules(deck.format))}</div><div class="dv-col"><section class="dv-panel"><h2>Números</h2>${statsHTML(deck)}${rarityHTML(deck)}</section>${bracketHTML(deck)}${tokensPreviewHTML(deck, tokens)}</div></div>`;
+  const { insights, categories, stats, commander } = analyze(deck, functions);
+  // Sem os dados de boa parte das cartas, a contagem de terrenos engana: o gráfico espera, como a análise.
+  const lands = stats.unknown > stats.total * 0.1 ? '' : landDropsHTML(stats.total, stats.lands);
+  return `<div class="dv-overview"><div class="dv-col">${insightsHTML(insights)}${lands}${categoriesHTML(categories, functions, commanderRules(deck.format), commander)}</div><div class="dv-col">${typesHTML(deck)}<section class="dv-panel dv-numbers"><h2>Números</h2>${statsHTML(deck)}${rarityHTML(deck)}</section>${bracketHTML(deck)}${tokensPreviewHTML(deck, tokens)}</div></div>`;
 }

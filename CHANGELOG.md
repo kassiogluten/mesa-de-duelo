@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.250.0] - 2026-11-24
+
+### Novo
+
+- **Gráficos do deck.** A Visão geral da tela do deck ganhou gráficos: a chance de ter terreno para baixar um em cada turno até o 7º, jogando primeiro e jogando depois; o deck dividido por tipo de carta; a curva de mana com cada custo dividido pelos mesmos tipos; e ramp, compra, remoção e limpa-campo ao lado do que um deck do formato costuma ter. Toque ou passe o mouse numa barra ou num turno para ver os números.
+- **Ver detalhes no editor.** Ao editar um deck em Meus decks, o botão Ver detalhes, ao lado de Ações do deck, abre a tela do deck com a análise, os gráficos e a mão de teste; Voltar leva de novo ao editor.
+
 ## [0.248.0] - 2026-11-24
 
 ### Novo

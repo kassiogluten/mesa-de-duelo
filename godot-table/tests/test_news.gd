@@ -22,7 +22,7 @@ func test_parse_keeps_versions_groups_and_items() -> void:
 	check_eq(release["date"], "24/11/2026", "a data")
 	check(bool(release["visual"]), "a versão com prints")
 	var items: Array = ((release["groups"] as Array)[0] as Dictionary)["items"]
-	check_eq(items[1], {"title": "Zip da mesa no PC", "text": "Baixe em `/baixar` e extraia onde quiser."}, "o título e o texto")
+	check_eq(items[1], {"title": "Zip da mesa no PC", "text": "Baixe em `/baixar` e extraia onde quiser.", "images": [{"src": "/novidades/0.239.0/zip.webp", "caption": "O zip."}]}, "o título, o texto e os prints")
 	check_eq(((releases[2] as Dictionary)["groups"] as Array).size(), 1, "item sem grupo e parágrafo solto num grupo sem nome")
 
 
