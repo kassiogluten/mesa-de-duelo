@@ -247,7 +247,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     user.unshift(deck); persist(); edit(deck); $('#dwName')?.focus(); ($('#dwName') as HTMLInputElement)?.select();
   }
   function duplicate(source: DeckData) {
-    const { price: _price, ...rest } = source;
+    const { price: _price, priceBrl: _priceBrl, ...rest } = source;
     const deck: DeckData = { ...rest, id: crypto.randomUUID(), name: `${source.name} (cópia)`, builtin: false, cards: source.cards.map(e => ({ ...e })), commanders: source.commanders?.map(e => ({ ...e })) ?? [], sideboard: source.sideboard?.map(e => ({ ...e })) ?? [], ...(source.tokens ? { tokens: source.tokens.map(t => ({ ...t })) } : {}), sourceTemplateId: source.builtin ? source.id : source.sourceTemplateId, updatedAt: new Date().toISOString() };
     user.unshift(deck); persist('Cópia criada nos seus decks.'); edit(deck);
   }

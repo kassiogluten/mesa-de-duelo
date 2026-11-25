@@ -3076,7 +3076,13 @@
         "name": "Negate",
         "count": 3
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 85.88,
+      "semSideboard": 71.08,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-orzhov",
@@ -3174,7 +3180,13 @@
         "name": "Zealous Persecution",
         "count": 3
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 112.2,
+      "semSideboard": 108.63,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-infect",
@@ -3268,7 +3280,13 @@
         "name": "Become Immense",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 72.42,
+      "semSideboard": 53.23,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-vermelho",
@@ -3374,7 +3392,13 @@
         "name": "Abrade",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 21.71,
+      "semSideboard": 19.61,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-ciclagem",
@@ -3472,7 +3496,13 @@
         "name": "Zenith Flare",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 73.88,
+      "semSideboard": 48.38,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-myr",
@@ -3554,7 +3584,13 @@
         "name": "Rats' Feast",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 63.96,
+      "semSideboard": 56.67,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-jeskai",
@@ -3692,7 +3728,13 @@
         "name": "Forsake the Worldly",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 74.75,
+      "semSideboard": 53.34,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-eldrazi",
@@ -3814,7 +3856,13 @@
         "name": "Natural State",
         "count": 3
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 55.84,
+      "semSideboard": 49.82,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-vinganca",
@@ -3956,7 +4004,13 @@
         "name": "Rootborn Defenses",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 12.72,
+      "semSideboard": 10.29,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-ratos",
@@ -4066,7 +4120,13 @@
         "name": "Contagion",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 66.89,
+      "semSideboard": 28.22,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-goblins",
@@ -4184,7 +4244,13 @@
         "name": "Abrade",
         "count": 3
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 48.6,
+      "semSideboard": 44.17,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-neve",
@@ -4282,7 +4348,13 @@
         "name": "Disenchant",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 44.46,
+      "semSideboard": 43.55,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-reluz",
@@ -4380,7 +4452,13 @@
         "name": "Disenchant",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 107.09,
+      "semSideboard": 99.45,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-pestilencia",
@@ -4478,7 +4556,13 @@
         "name": "Molder",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 90.47,
+      "semSideboard": 85.29,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-dimir",
@@ -4592,7 +4676,13 @@
         "name": "Cower in Fear",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 162.71,
+      "semSideboard": 34.92,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-laelia",
@@ -4718,7 +4808,13 @@
         "name": "Disenchant",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 81.27,
+      "semSideboard": 62.06,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-boros",
@@ -4816,7 +4912,13 @@
         "name": "Blood Lust",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 44.45,
+      "semSideboard": 40.75,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-hipergenese",
@@ -4918,7 +5020,13 @@
         "name": "Dead // Gone",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 82.33,
+      "semSideboard": 67.42,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-aventuras",
@@ -5032,7 +5140,13 @@
         "name": "Return to Nature",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 15.99,
+      "semSideboard": 13.7,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-heroico",
@@ -5142,7 +5256,13 @@
         "name": "Essence Capture",
         "count": 3
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 41.14,
+      "semSideboard": 34.6,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-devocao",
@@ -5232,7 +5352,13 @@
         "name": "Return to Nature",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 43.44,
+      "semSideboard": 18.91,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-muralhas",
@@ -5342,7 +5468,13 @@
         "name": "Return to Nature",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 48.64,
+      "semSideboard": 33.84,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-poste",
@@ -5464,7 +5596,13 @@
         "name": "Disenchant",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 84.76,
+      "semSideboard": 81.97,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-espiritos",
@@ -5558,7 +5696,13 @@
         "name": "Hibernation",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 25.0,
+      "semSideboard": 19.44,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-abzan",
@@ -5664,7 +5808,13 @@
         "name": "Cataclysmic Gearhulk",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 48.12,
+      "semSideboard": 45.41,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-afinidade",
@@ -5790,7 +5940,13 @@
         "name": "Metallic Rebuke",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 47.17,
+      "semSideboard": 32.35,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "sacola-rack",
@@ -5900,7 +6056,13 @@
         "name": "Lost Legacy",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 78.92,
+      "semSideboard": 60.33,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-25"
+    }
   },
   {
     "id": "commander-fichas",

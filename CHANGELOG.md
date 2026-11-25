@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.253.0] - 2026-11-25
+
+### Novo
+
+- **Preço em reais nos decks prontos de Sacola 50.** Os decks prontos de Sacola 50 mostram quanto custam em reais, pelo menor preço de cada carta na LigaMagic, no lugar onde os outros decks mostram o preço em dólar: na escolha de deck da tela inicial, em Meus decks e na tela do deck. O valor é o das 75 cartas, com o sideboard; a dica sobre ele diz também quanto fica só o deck principal e a data da cotação.
+
+### Corrigido
+
+- **Dica do preço na tela do deck.** Na tela de detalhes de um deck, passar o mouse ou tocar no preço volta a abrir a explicação do valor, logo acima da linha do preço; antes ela ficava escondida.
+
 ## [0.250.0] - 2026-11-24
 
 ### Novo

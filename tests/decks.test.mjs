@@ -408,6 +408,16 @@ test('starter deck price shows only when recorded, and not on personal decks', (
   for (const deck of decks.DEFAULT_DECKS.filter(d => d.price)) assert.ok(deck.price.usd > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.price.date), deck.id);
 });
 
+test('Sacola 50 starter decks show the price in reais, with and without the sideboard in the tip', () => {
+  const delver = decks.DEFAULT_DECKS.find(d => d.id === 'sacola-delver');
+  assert.equal(decks.deckPriceText(delver), 'R$ 85,88');
+  assert.equal(decks.deckPriceDescription(delver), 'Quanto custam as 75 cartas com o sideboard em reais, pelo menor preço de cada uma na LigaMagic em 25/11/2026. Só as 60 do deck principal: R$ 71,08. É uma referência: o preço muda com o tempo.');
+  assert.match(deckPriceHTML(delver, 'x', true), />R\$ 85,88<span class="deck-price-tip"/);
+  assert.equal(decks.deckPriceText({ ...delver, builtin: false }), '');
+  assert.doesNotMatch(decks.deckPriceDescription({ ...delver, sideboard: [] }), /sideboard|Só as/);
+  for (const deck of decks.DEFAULT_DECKS.filter(d => d.priceBrl)) assert.ok(deck.priceBrl.total >= deck.priceBrl.semSideboard && deck.priceBrl.semSideboard > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.priceBrl.date), deck.id);
+});
+
 
 test('Commander tags preserve command designation and do not infer a sideboard from blank lines', () => {
   for (const marker of ['*CMDR*', '[Commander]']) {

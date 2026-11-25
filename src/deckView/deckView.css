@@ -14,7 +14,7 @@
 .dv-hero h1 { margin: 0; font: 600 clamp(24px, 3.2vw, 34px)/1.15 var(--display, sans-serif); overflow-wrap: anywhere; }
 .dv-hero h1:focus { outline: none; }
 .dv-commanders { margin: 0; color: var(--dw-accent); font-weight: 600; }
-.dv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 6px 0 0; color: var(--dw-muted); font-size: 14px; }
+.dv-meta { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 6px 0 0; color: var(--dw-muted); font-size: 14px; }
 .dv-pips { display: inline-flex; gap: 3px; }
 .dv-actions { justify-content: flex-end; }
 .dv-notice { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--dw-accent) 12%, var(--dw-surface)); border: 1px solid color-mix(in srgb, var(--dw-accent) 40%, transparent); font-size: 14px; }

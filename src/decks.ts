@@ -77,6 +77,8 @@ export interface DeckData {
   unresolved?: string[];
   /** Soma do preço das cartas em dólar na data registrada (só nos decks prontos). */
   price?: { usd: number; date: string };
+  /** Preço em reais (decks prontos de Sacola 50): com o sideboard (`total`) e só o deck principal, da fonte e na data registradas. */
+  priceBrl?: { total: number; semSideboard: number; fonte: string; date: string };
   /** Bracket escolhido para o deck de Commander (nos prontos, conferido à mão); pode ficar abaixo do mínimo das cartas. */
   bracket?: Bracket;
   /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander nem em Oathbreaker. */
@@ -95,10 +97,18 @@ export const countEntries = (entries: DeckEntry[]) => entries.reduce((s, e) => s
 export const deckSize = (d: DeckData) => countEntries(d.cards);
 export const totalDeckSize = (d: DeckData) => deckSize(d) + countEntries(d.commanders ?? []);
 export const deckEntries = (d: DeckData) => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])];
-/** "US$ 1.605,93" para decks prontos com preço registrado; vazio nos outros. */
-export const deckPriceText = (d: DeckData) => d.builtin && d.price ? `US$ ${d.price.usd.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+const money = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const brDate = (iso: string) => iso.split('-').reverse().join('/');
+/** "R$ 85,88" (com o sideboard) nos decks prontos com preço em reais, "US$ 1.605,93" nos com preço em dólar; vazio nos outros. */
+export const deckPriceText = (d: DeckData) => !d.builtin ? '' : d.priceBrl ? `R$ ${money(d.priceBrl.total)}` : d.price ? `US$ ${money(d.price.usd)}` : '';
 /** O que o preço significa, para a dica sobre o valor. */
-export const deckPriceDescription = (d: DeckData) => d.price ? `Quanto custam as ${totalDeckSize(d)} cartas em dólar, pela edição mais barata de cada uma, no Scryfall em ${d.price.date.split('-').reverse().join('/')}. É uma referência: o preço muda com o tempo.` : '';
+export const deckPriceDescription = (d: DeckData) => {
+  if (d.priceBrl) {
+    const side = countEntries(d.sideboard ?? []), main = totalDeckSize(d);
+    return `Quanto custam as ${main + side} cartas${side ? ' com o sideboard' : ''} em reais, pelo menor preço de cada uma na LigaMagic em ${brDate(d.priceBrl.date)}.${side ? ` Só as ${main} do deck principal: R$ ${money(d.priceBrl.semSideboard)}.` : ''} É uma referência: o preço muda com o tempo.`;
+  }
+  return d.price ? `Quanto custam as ${totalDeckSize(d)} cartas em dólar, pela edição mais barata de cada uma, no Scryfall em ${brDate(d.price.date)}. É uma referência: o preço muda com o tempo.` : '';
+};
 export const allDecks = (): DeckData[] => [...loadUserDecks(), ...DEFAULT_DECKS];
 
 export const DECK_STORAGE_KEY = KEYS.decks;
