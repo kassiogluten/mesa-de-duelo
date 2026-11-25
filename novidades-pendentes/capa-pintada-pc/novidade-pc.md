@@ -1,0 +1,3 @@
+### Mudou
+
+- **Arte da capa com cara de pintura.** Na tela inicial, a arte do seu deck ocupa boa parte da tela, bem maior que a imagem que vem da carta, e por isso aparecia borrada e com quadradinhos. Agora ela passa por um filtro de pintura: as áreas viram pinceladas lisas de contorno nítido, com uma trama de tela leve por cima, e a capa lê como a capa de um jogo, não como uma foto esticada. As cores, a deriva lenta da arte e as luzinhas continuam iguais. O filtro roda uma vez para cada arte, na troca de deck (as últimas ficam guardadas), e não pesa na tela inicial, nem com os efeitos no Leve.

@@ -1,6 +1,7 @@
 # A capa da tela inicial: a arte do deck escolhido ocupando a esquerda como a capa de um jogo, apagando no fundo à direita
 # e embaixo, com "SEU DECK", o nome e a linha das cores e do formato; troca de deck num esmaecer, deriva bem devagar e
-# tem umas poucas luzinhas subindo devagar por cima.
+# tem umas poucas luzinhas subindo devagar por cima. A arte passa uma vez por um filtro de pintura, que troca o borrado da
+# ampliação por pinceladas.
 class_name HomeCover
 extends Control
 
@@ -10,26 +11,113 @@ const FADE_S := 0.35
 ## Um ciclo inteiro da deriva lenta da arte (aproxima e afasta, andando um pouco para o lado).
 const DRIFT_PERIOD_S := 46.0
 const DRIFT_ZOOM := 0.06
-## A arte recortada do Scryfall tem uns 626 px de largura e aqui fica com mais de 1200: o desenho suaviza os blocos do
-## JPEG ampliado e põe um grão fino por cima, que lê como pintura em vez de imagem esticada.
-const ART_SHADER := """
+## A arte recortada do Scryfall tem uns 626 px de largura e aqui fica com mais de 1200: ampliada, ela borra e mostra os
+## blocos do JPEG. Por isso passa uma vez (por arte) pelo filtro de Kuwahara generalizado (Kyprianidis, pesos
+## polinomiais): 8 setores num disco em volta de cada ponto, cada um pesado pelo inverso da variação. As áreas viram
+## manchas lisas de bordas nítidas, que leem como pinceladas em qualquer ampliação. Caro (uns 13 ms na UHD 770): roda
+## num viewport só para isso, que desenha um quadro e guarda (`_painted`).
+const PAINT_SHADER := """
 shader_type canvas_item;
-uniform float grain = 0.022;
+// O tamanho do passo, em pixels da arte original: o disco cobre uns 2,5 px dela.
+uniform float step_px = 0.62;
+// Quanto a variação pesa contra um setor (maior: bordas mais duras).
+uniform float q = 8.0;
+const int R = 4;
 void fragment() {
-	vec2 px = TEXTURE_PIXEL_SIZE * 0.85;
-	vec4 c = texture(TEXTURE, UV) * 0.36;
-	c += texture(TEXTURE, UV + vec2(px.x, px.y)) * 0.16;
-	c += texture(TEXTURE, UV + vec2(-px.x, px.y)) * 0.16;
-	c += texture(TEXTURE, UV + vec2(px.x, -px.y)) * 0.16;
-	c += texture(TEXTURE, UV + vec2(-px.x, -px.y)) * 0.16;
-	// hash12 (Dave Hoskins): sem os padrões de listras do fract(sin()) em coordenadas grandes.
-	vec3 p3 = fract(vec3(FRAGCOORD.xyx) * 0.1031);
-	p3 += dot(p3, p3.yzx + 33.33);
-	float n = fract((p3.x + p3.y) * p3.z);
-	c.rgb += (n - 0.5) * grain;
-	COLOR = c * COLOR;
+	vec2 px = TEXTURE_PIXEL_SIZE * step_px;
+	vec4 m[8];
+	vec3 s[8];
+	for (int k = 0; k < 8; k++) { m[k] = vec4(0.0); s[k] = vec3(0.0); }
+	float zeta = 2.0 / float(R);
+	float eta = 0.84;
+	for (int j = -R; j <= R; j++) {
+		for (int i = -R; i <= R; i++) {
+			vec2 v = vec2(float(i), float(j)) / float(R);
+			if (dot(v, v) > 1.0) { continue; }
+			vec3 c = textureLod(TEXTURE, UV + vec2(float(i), float(j)) * px, 0.0).rgb;
+			float w[8];
+			float sum = 0.0;
+			float z; float vxx; float vyy;
+			vxx = zeta - eta * v.x * v.x;
+			vyy = zeta - eta * v.y * v.y;
+			z = max(0.0, v.y + vxx); w[0] = z * z; sum += w[0];
+			z = max(0.0, -v.x + vyy); w[2] = z * z; sum += w[2];
+			z = max(0.0, -v.y + vxx); w[4] = z * z; sum += w[4];
+			z = max(0.0, v.x + vyy); w[6] = z * z; sum += w[6];
+			vec2 r = 0.70710678 * vec2(v.x - v.y, v.x + v.y);
+			vxx = zeta - eta * r.x * r.x;
+			vyy = zeta - eta * r.y * r.y;
+			z = max(0.0, r.y + vxx); w[1] = z * z; sum += w[1];
+			z = max(0.0, -r.x + vyy); w[3] = z * z; sum += w[3];
+			z = max(0.0, -r.y + vxx); w[5] = z * z; sum += w[5];
+			z = max(0.0, r.x + vyy); w[7] = z * z; sum += w[7];
+			float g = exp(-3.125 * dot(v, v)) / max(sum, 1e-6);
+			for (int k = 0; k < 8; k++) {
+				float wk = w[k] * g;
+				m[k] += vec4(c * wk, wk);
+				s[k] += c * c * wk;
+			}
+		}
+	}
+	vec3 acc = vec3(0.0);
+	float wsum = 0.0;
+	vec3 calm = vec3(0.0);
+	float calm_sigma = 1e9;
+	for (int k = 0; k < 8; k++) {
+		vec3 mean = m[k].rgb / max(m[k].w, 1e-6);
+		vec3 var = abs(s[k] / max(m[k].w, 1e-6) - mean * mean);
+		float sigma2 = var.r + var.g + var.b;
+		float w = 1.0 / (1.0 + pow(255.0 * sigma2, 0.5 * q));
+		acc += mean * w;
+		wsum += w;
+		if (sigma2 < calm_sigma) { calm_sigma = sigma2; calm = mean; }
+	}
+	// Onde todos os setores variam muito, os pesos somem: fica o setor mais calmo.
+	// Sem "* COLOR": na entrada do fragment o COLOR já é a textura (vezes o modulate); aqui a cor sai como a da arte.
+	COLOR = vec4(wsum > 1e-30 ? acc / wsum : calm, 1.0);
 }
 """
+
+## A arte já pintada, na capa: o tom escuro da capa, uma trama de tela leve e um grão fino (sem suavizar, que apagaria
+## as bordas das manchas).
+const ART_SHADER := """
+shader_type canvas_item;
+uniform float grain = 0.02;
+uniform float weave = 0.035;
+// O modulate (os esmaeceres da arte e da camada), guardado antes de o fragment misturar a textura no COLOR.
+varying vec4 modulate;
+void vertex() {
+	modulate = COLOR;
+}
+// hash12 (Dave Hoskins): sem os padrões de listras do fract(sin()) em coordenadas grandes.
+float hash(vec2 p) {
+	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
+}
+float vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+void fragment() {
+	vec3 c = texture(TEXTURE, UV).rgb;
+	// O tom da capa: a cor ao quadrado, mais escura e contrastada que a arte, de propósito (os degradês das bordas, o
+	// nome do deck e as luzinhas foram acertados em cima dele).
+	c = c * c;
+	// Trama de tela: fios na horizontal e na vertical, presos à tela.
+	vec2 f = FRAGCOORD.xy;
+	float threads = (vnoise(vec2(f.x * 0.09, f.y * 0.55)) + vnoise(vec2(f.x * 0.55 + 31.0, f.y * 0.09))) * 0.5;
+	c *= 1.0 + (threads - 0.5) * weave;
+	c += (hash(f) - 0.5) * grain;
+	COLOR = vec4(c, 1.0) * modulate;
+}
+"""
+## A arte pintada fica com 1,5 vez o tamanho da original (a capa ainda amplia um pouco o resultado, sem perder as bordas).
+const PAINT_SCALE := 1.5
+## Quantas artes pintadas ficam guardadas, para voltar a um deck sem pintar de novo.
+const PAINT_CACHE := 6
 
 ## Luzinhas subindo sobre a arte: poucas, pequenas e lentas, só um toque de ambiente.
 const MOTES := 14
@@ -54,7 +142,11 @@ var _pips: HBoxContainer
 var _meta: Label
 var _time: float = 0.0
 var _motes: CPUParticles2D
+## As artes pintadas (textura original -> o viewport que a pintou), da mais antiga para a mais nova.
+var _paintings: Dictionary = {}
+var _bakery: Node
 static var _art_material: ShaderMaterial
+static var _paint_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -81,6 +173,10 @@ func _ready() -> void:
 	bottom.name = "FadeBottom"
 	var top := _overlay(HomeStyle.fade([[0.0, Color(HomeStyle.BG, 0.55)], [0.14, Color(HomeStyle.BG, 0.0)], [1.0, Color(HomeStyle.BG, 0.0)]], Vector2(0, 0), Vector2(0, 1)))
 	top.name = "FadeTop"
+	# Os viewports que pintam as artes (não desenham na tela: só guardam o quadro pintado).
+	_bakery = Node.new()
+	_bakery.name = "Paintings"
+	add_child(_bakery)
 	_motes = _build_motes()
 	add_child(_motes)
 	_build_info()
@@ -238,10 +334,24 @@ func set_art(key: String, texture: Texture2D) -> void:
 	if key != _key or _layers.is_empty() or texture == null:
 		return
 	var layer: Control = _layers[-1]
-	var art: TextureRect = layer.get_node("Art")
-	if art.texture == texture:
+	if _source(layer) == texture:
 		return
-	art.texture = texture
+	layer.set_meta("source", texture)
+	var fresh: bool = not _paintings.has(texture)
+	var painted: Texture2D = _painted(texture)
+	if fresh and is_inside_tree():
+		# A pintura sai no próximo quadro desenhado: até lá fica o que já estava (o fundo provisório, ou a pintura da
+		# versão pequena da arte), sem piscar a original sem o filtro.
+		RenderingServer.frame_post_draw.connect(_show_painting.bind(layer, texture, painted), CONNECT_ONE_SHOT)
+	else:
+		_show_painting(layer, texture, painted)
+
+
+func _show_painting(layer: Control, source: Texture2D, painted: Texture2D) -> void:
+	if not is_instance_valid(layer) or _source(layer) != source:
+		return
+	var art: TextureRect = layer.get_node("Art")
+	art.texture = painted
 	layer.set_meta("has_art", true)
 	if is_inside_tree() and layer.modulate.a > 0.99:
 		art.modulate.a = 0.0
@@ -250,9 +360,52 @@ func set_art(key: String, texture: Texture2D) -> void:
 		art.modulate.a = 1.0
 
 
-## A textura da arte à mostra agora (null enquanto só há o fundo provisório).
+## A arte original do deck à mostra agora (null enquanto só há o fundo provisório; na tela ela aparece pintada).
 func art_texture() -> Texture2D:
-	return (_layers[-1].get_node("Art") as TextureRect).texture if not _layers.is_empty() else null
+	return _source(_layers[-1]) if not _layers.is_empty() else null
+
+
+static func _source(layer: Control) -> Texture2D:
+	return layer.get_meta("source") if layer.has_meta("source") else null
+
+
+## A arte pintada de uma textura: a guardada, ou um viewport novo que a pinta no próximo quadro (um só) e guarda.
+func _painted(source: Texture2D) -> Texture2D:
+	if _paintings.has(source):
+		var keep: SubViewport = _paintings[source]
+		# A mais usada vai para o fim (a primeira da lista é a que sai quando enche).
+		_paintings.erase(source)
+		_paintings[source] = keep
+		return keep.get_texture()
+	var bake := SubViewport.new()
+	bake.size = Vector2i((source.get_size() * PAINT_SCALE).round())
+	bake.disable_3d = true
+	bake.transparent_bg = false
+	bake.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var canvas := TextureRect.new()
+	canvas.texture = source
+	canvas.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	canvas.stretch_mode = TextureRect.STRETCH_SCALE
+	canvas.size = Vector2(bake.size)
+	canvas.material = _paint_shader()
+	bake.add_child(canvas)
+	_bakery.add_child(bake)
+	_paintings[source] = bake
+	while _paintings.size() > PAINT_CACHE:
+		var oldest: Texture2D = _paintings.keys()[0]
+		var gone: SubViewport = _paintings[oldest]
+		_paintings.erase(oldest)
+		_forget_painting(gone)
+	return bake.get_texture()
+
+
+## Uma pintura que saiu da lista: some quando nenhuma camada a mostra mais (a anterior pode estar apagando).
+func _forget_painting(bake: SubViewport) -> void:
+	for layer: Control in _layers:
+		if (layer.get_node("Art") as TextureRect).texture == bake.get_texture():
+			layer.tree_exited.connect(bake.queue_free)
+			return
+	bake.queue_free()
 
 
 func current_key() -> String:
@@ -278,6 +431,15 @@ func _new_layer(colors: PackedStringArray) -> Control:
 	art.material = _material()
 	layer.add_child(art)
 	return layer
+
+
+static func _paint_shader() -> ShaderMaterial:
+	if _paint_material == null:
+		var shader := Shader.new()
+		shader.code = PAINT_SHADER
+		_paint_material = ShaderMaterial.new()
+		_paint_material.shader = shader
+	return _paint_material
 
 
 static func _material() -> ShaderMaterial:
