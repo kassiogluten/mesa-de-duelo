@@ -1,4 +1,5 @@
-# Testes da vitrine de novidades da tela inicial (os itens da versão mais nova com o print) e das luzinhas da capa.
+# Testes da vitrine de novidades da tela inicial (os itens da versão mais nova com o print) e da capa (as luzinhas e a
+# arte pintada).
 extends "res://tests/test_case.gd"
 
 const FIXTURE := "res://tests/fixtures/novidades.json"
@@ -132,3 +133,45 @@ func test_cover_motes_follow_the_effects_level() -> void:
 	cover.drift = true
 	check(motes.emitting, "e voltam")
 	cover.queue_free()
+
+
+func test_cover_shows_the_art_painted_once_and_keeps_the_last_ones() -> void:
+	done = false
+	var cover := HomeCover.new()
+	cover.size = Vector2(1920, 1080)
+	_tree().root.add_child(cover)
+	var image := Image.create(64, 48, false, Image.FORMAT_RGB8)
+	image.fill(Color(0.4, 0.5, 0.6))
+	var art := ImageTexture.create_from_image(image)
+	cover.show_deck("a", "Deck A", "60 cartas", PackedStringArray(["U"]))
+	cover.set_art("a", art)
+	var shown: TextureRect = cover.find_child("Art", true, false).get_child(0).get_node("Art")
+	check(shown.texture == null, "a arte original não aparece sem a pintura (nada de piscar sem o filtro)")
+	check_eq(cover.art_texture(), art as Texture2D, "a capa sabe qual é a arte do deck")
+	await RenderingServer.frame_post_draw
+	await _tree().process_frame
+	check(shown.texture is ViewportTexture, "no quadro seguinte, a arte pintada")
+	check_eq(Vector2i(shown.texture.get_size()), Vector2i(96, 72), "pintada com 1,5 vez o tamanho da original")
+	var painters: Node = cover.find_child("Paintings", true, false)
+	check_eq(painters.get_child_count(), 1, "um viewport pinta a arte")
+	check_eq((painters.get_child(0) as SubViewport).render_target_update_mode, SubViewport.UPDATE_ONCE, "e desenha um quadro só")
+	# Outro deck e a volta ao primeiro: a pintura guardada vale de novo, sem pintar outra vez.
+	var other := ImageTexture.create_from_image(image)
+	cover.show_deck("b", "Deck B", "60 cartas", PackedStringArray(["R"]))
+	cover.set_art("b", other)
+	await RenderingServer.frame_post_draw
+	cover.show_deck("a", "Deck A", "60 cartas", PackedStringArray(["U"]))
+	cover.set_art("a", art)
+	var back: TextureRect = (cover.find_child("Art", true, false).get_children().filter(func(n: Node) -> bool: return n.has_node("Art"))[-1] as Control).get_node("Art")
+	check(back.texture is ViewportTexture, "voltar a um deck mostra a pintura guardada na hora")
+	check_eq(painters.get_child_count(), 2, "sem pintar a mesma arte de novo")
+	for i: int in HomeCover.PAINT_CACHE + 2:
+		var extra := ImageTexture.create_from_image(image)
+		cover.show_deck("x%d" % i, "Deck", "", PackedStringArray())
+		cover.set_art("x%d" % i, extra)
+		await RenderingServer.frame_post_draw
+	await _tree().process_frame
+	await _tree().process_frame
+	check(painters.get_child_count() <= HomeCover.PAINT_CACHE + 1, "guarda só as últimas artes pintadas")
+	cover.queue_free()
+	done = true
