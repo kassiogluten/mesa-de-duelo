@@ -2,6 +2,21 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.252.0] - 2026-11-25
+
+### Novo
+
+- **Zoom e ângulo da câmera na partida.** A roda do mouse aproxima e afasta a mesa na direção do ponto sob o mouse (as teclas + e − também, pelo meio da tela), até um limite de perto e de longe que não deixa a vista sair da mesa. A tecla V troca entre quatro ângulos prontos, com uma transição suave: o padrão, pela esquerda, pela direita e de cima, que mostra melhor o campo dos oponentes no Commander (Shift+V volta). O 0 volta à vista padrão. O botão com a câmera na barra do alto mostra o ângulo de agora e abre uma lista com os ângulos, o zoom e a volta à vista padrão, cada um com a sua tecla. Em qualquer vista, a sua mão, a pilha e o seu comandante ficam no mesmo lugar da tela, os retratos dos oponentes acompanham o lugar deles (sem sair da tela), e os cliques, o arrasto, as setas de alvo e os selos continuam certos; os efeitos que mexem na câmera partem da vista escolhida e voltam para ela. O ângulo e o zoom ficam guardados para a próxima partida.
+- **Atalhos de teclado no menu da partida.** O menu da partida ganhou o item Atalhos de teclado, que abre a mesma lista do "?", agora com os atalhos da câmera.
+- **Opções com abas, como num jogo.** O link Opções da tela inicial abre uma janela grande com abas do lado: Imagem (a qualidade dos efeitos com setas, os efeitos contínuos nas permanentes, menos movimento nas telas e as Cartas da mesa), Som (o volume num deslizante e os sons da interface), Mesa (o ângulo e o zoom em que a partida começa), Teclado (todos os atalhos da partida) e Conta e relatos. Cada opção tem o nome, uma explicação curta e vale na hora.
+- **Sons da interface.** Um toque baixo ao passar o mouse nos botões e ao clicar, e um som ao abrir e fechar as janelas e ao responder uma pergunta, no volume dos efeitos. Dá para desligar em Opções, aba Som.
+
+### Mudou
+
+- **Arte da capa com cara de pintura.** Na tela inicial, a arte do seu deck ocupa boa parte da tela, bem maior que a imagem que vem da carta, e por isso aparecia borrada e com quadradinhos. Agora ela passa por um filtro de pintura: as áreas viram pinceladas lisas de contorno nítido, com uma trama de tela leve por cima, e a capa lê como a capa de um jogo, não como uma foto esticada. As cores, a deriva lenta da arte e as luzinhas continuam iguais. O filtro roda uma vez para cada arte, na troca de deck (as últimas ficam guardadas), e não pesa na tela inicial, nem com os efeitos no Leve.
+- **Jogar online e Meus decks com o visual das outras telas.** No lugar da cor chapada, um fundo com uma luz quente que respira devagar e uma poeira dourada subindo; o cabeçalho tem o Voltar, a etiqueta dourada e o título em branco; as salas e os decks ficam em linhas de cantos quase retos, com selos no mesmo estilo; as escolhas lado a lado (duração, sala pública ou privada) marcam a escolhida com o filete dourado. As telas do menu passam de uma para a outra aparecendo do escuro, e os campos de texto, as caixas de marcar, os deslizantes e as listas abertas ganharam o mesmo acabamento em todo lugar.
+- **Partida com o visual das janelas.** As pílulas do alto, os selos dos assentos, a caixa de ação e os painéis da mesa ficaram de cantos quase retos; o botão principal ganhou a base de tecla que afunda ao apertar; o menu da partida, a janela de zona, o histórico, a escolha do nível de passar e o "Atacar quem?" ganharam o filete dourado no alto. O menu da partida e a janela de zona agora entram e saem com movimento e som, como as perguntas.
+
 ## [0.251.0] - 2026-11-24
 
 ### Novo

@@ -663,3 +663,20 @@ Pedido em 23/11/2026. Levantamento do log detalhado que o Arena grava no PC de q
 - [ ] **Cores que cada terra gera.** Marca discreta das cores de mana na terra (útil nas terras de duas ou mais cores e nas que mudam).
 - [ ] **Aviso de jogada ruim.** Antes de confirmar, avisar quando a jogada não faz nada útil (mágica sem alvo que valha, habilidade sem efeito), com "jogar mesmo assim".
 - [ ] **Clique só depois da animação.** Não liberar os botões de ação enquanto a mesa ainda está mostrando os passos da jogada anterior (o Arena segura pelo `pendingMessageCount`).
+
+## 152. Mesa no PC: cartas da mão nítidas e fáceis de ler
+
+Pedido em 24/11/2026. Na mesa no PC (`godot-table/`), as cartas da sua mão continuam com a leitura prejudicada: o texto e o custo ficam pouco nítidos. Descobrir o que tira a nitidez e deixar a carta da mão tão legível quanto a imagem original, nem que seja tirando efeitos dela.
+
+- [x] Medir antes de mexer: prints recortados da mesma carta da mão (texto pequeno, símbolos de mana) em 1920×1080 e 1280×720, ao lado da imagem original do Scryfall no mesmo tamanho, parada e com o mouse em cima (a carta sobe e cresce, `CardNode.LIFT_SCALE`).
+- [x] Testar uma causa de cada vez e anotar o que muda no print:
+  - a resolução da mesa no Automático (`RenderScale`: em placa integrada a mesa 3D desce de resolução e é ampliada com FSR, e a mão vai junto);
+  - o antisserrilhado de tela (`screen_space_aa=2` no `project.godot`), que borra o texto miúdo, e o MSAA;
+  - o pós-processamento (brilho/glow, tonemap Filmic, contraste e saturação em `table/table_environment.gd`, vinheta) passando por cima da carta impressa;
+  - o filtro da textura (mipmap e anisotrópico em `table/card.gdshader`) e o tamanho da imagem baixada (`version=normal`, 488×680: pode ser pouco para a carta ampliada; comparar com `large`);
+  - o sombreamento que ainda sobra na carta impressa (`printed`: o escurecimento dos claros, a borda e o brilho de "pode jogar" por cima da arte).
+- [x] Conferir se deixar a carta da mão fosca (sem reflexo, verniz, foil, brilho e sem a luz da cena, só a imagem) ajuda em algo; se ajudar, deixar assim na mão e reservar os efeitos para o campo e a pilha.
+- [ ] **Em andamento (escolhido em 25/11/2026):** desenhar a mão por cima da mesa 3D em 2D (a imagem na resolução da tela, fora do FSR e do pós-processamento), mantendo o leque, o arrasto, o custo e o "pode jogar".
+- [ ] Ver o mesmo para a carta ampliada ao passar o mouse e para a pilha no painel, e conferir o custo no FPS da placa integrada.
+
+Medido em 25/11/2026 na UHD 770: o FSR do Automático e o branco do papel a 0,74 (`PRINT_PEAK`) são as maiores perdas, e a mão já era "fosca"; nenhum ajuste no 3D chega à imagem original (no máximo ~97% de semelhança, papel cinza e borrado com o FSR), e a mão em 2D chega a ~100% por uns 0,5 ms. O `glow_bloom` 0 é ganho sem custo; o MSAA 4x custa 5,4 ms sem melhorar a carta.

@@ -1687,6 +1687,17 @@ Decidido: **não** separar as telas do app em páginas próprias. A partida, a m
 - [x] Convites (`?sala=`, `?criar-sala=1`, `src/app/startupLinks.ts`) continuam funcionando, inclusive vindos de links antigos.
 - [x] Testes de navegador do voltar (sair de Meus decks volta ao início; na partida, pergunta) e do recarregar em cada rota. `tests/app-routes.browser.mjs` (Meus decks, editor, Novidades, Laboratório, mesa livre, `/partida` sem partida) e `tests/router.test.mjs` (o roteador, inclusive a pergunta da partida, que no navegador precisa do servidor).
 
+## 153. ✅ Mesa no PC: arte da capa da tela inicial sem cara de imagem esticada
+
+Pedido em 24/11/2026, entregue em 25/11/2026. A capa (`godot-table/menu/home_cover.gd`) estica o `art_crop` do Scryfall (626×457) cerca de 2,5× em 1920×1080 e 2,8× em 2560×1080, com blocos do JPEG e borrado visíveis. Agora a arte passa por um filtro de pintura e lê como a capa de um jogo.
+
+- [x] Medido antes em 1920×1080, 2560×1080 e 1366×768 com quatro artes (escura, clara e detalhada, hachuras finas, rosto), com recortes em tamanho real (`tools/preview_cover_art.gd`).
+- [x] Imagem maior não ajuda: o `art_crop` já é a maior resolução que o Scryfall dá (o `png` recortado tem o mesmo tamanho e pesa 6 a 16× mais; o `large` é menor).
+- [x] Comparados filtro de pintura (Kuwahara), foco no meio com trama de tela e moldura; escolhido o filtro de pintura, o único que trata o centro da arte e mantém a capa ocupando a tela.
+- [x] O filtro roda uma vez por arte, num viewport de 1,5× que desenha um quadro só (11 a 13 ms de GPU na troca de deck); as 6 últimas artes pintadas ficam guardadas; a arte sem filtro nunca aparece na troca. Por quadro, só a trama e o grão (+0,5 ms), igual no nível Leve (`tools/measure_cover_art.gd`).
+- [x] O tom escuro de antes (a cor da arte ao quadrado) ficou como estava, agora escrito de propósito no shader.
+- [x] A deriva lenta, as luzinhas e a vitrine de novidades continuam iguais (`tests/test_home_showcase.gd`); prints antes e depois na Novidades em imagens.
+
 ## 151. ✅ Mesa no PC: zoom e ângulo da câmera escolhidos pelo jogador
 
 Pedido e entregue em 24/11/2026. A câmera da partida fica dentro de um suporte, a vista que o jogador escolhe (`godot-table/table/table_camera.gd`); ela continua no lugar de sempre dentro dele, então os efeitos que a mexem (momentos de impacto, combate) partem da vista escolhida e voltam para ela. O que acompanha a câmera (a mão, a carta arrastada, a pilha no painel) é montado como na vista padrão e levado pelo suporte; com o zoom, também encolhe em direção ao olho (`near_scale`), para aparecer igual na tela sem entrar no tampo.

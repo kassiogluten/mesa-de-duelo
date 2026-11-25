@@ -1,4 +1,31 @@
 {
+  "0.252.0": {
+    "Zoom e ângulo da câmera na partida": [
+      { "img": "0.252.0/vista-botao.webp", "legenda": "O botão da câmera na barra do alto, aberto: os quatro ângulos (o de agora marcado), o zoom com − e + e a volta à vista padrão, cada um com a sua tecla." },
+      { "img": "0.252.0/vista-de-cima.webp", "legenda": "A vista de cima: a mesa vista mais do alto, com a mão, a pilha e a seta do alvo no mesmo lugar." },
+      { "img": "0.252.0/vista-esquerda.webp", "legenda": "A vista pela esquerda: a mesa girada um pouco, com a mão parada na base da tela." },
+      { "img": "0.252.0/vista-zoom.webp", "legenda": "O zoom todo puxando para o campo do oponente: a mão e a pilha continuam à vista, e o retrato dele fica na borda da tela." }
+    ],
+    "Atalhos de teclado no menu da partida": [
+      { "img": "0.252.0/atalhos.webp", "legenda": "A lista dos atalhos de teclado, com os da câmera: + e − para o zoom, V para o ângulo e 0 para a vista padrão." }
+    ],
+    "Arte da capa com cara de pintura": [
+      { "img": "0.252.0/capa-pintada-rosto.webp", "legenda": "O rosto da arte do Teorema de Jace no tamanho real da tela: à esquerda como era, borrado e com quadradinhos de cor; à direita com o filtro de pintura, em pinceladas lisas de contorno nítido." },
+      { "img": "0.252.0/capa-pintada-penas.webp", "legenda": "As penas da arte dos Elementais Izzet, antes e agora: o borrado da imagem ampliada vira pinceladas." }
+    ],
+    "Opções com abas, como num jogo": [
+      { "img": "0.252.0/opcoes.webp", "legenda": "A janela de Opções na aba Imagem: as abas do lado, a qualidade dos efeitos com setas e cada opção com a explicação embaixo." }
+    ],
+    "Jogar online e Meus decks com o visual das outras telas": [
+      { "img": "0.252.0/online-antes.webp", "legenda": "Antes: a tela Jogar online com o fundo chapado e os títulos em dourado." },
+      { "img": "0.252.0/online-agora.webp", "legenda": "Agora: o fundo com luz e poeira dourada, o cabeçalho com a etiqueta e as escolhas marcadas com o filete dourado." },
+      { "img": "0.252.0/decks-agora.webp", "legenda": "Meus decks no mesmo estilo, com o cabeçalho comum e as linhas de cantos quase retos." }
+    ],
+    "Partida com o visual das janelas": [
+      { "img": "0.252.0/menu-partida.webp", "legenda": "O menu da partida com o filete dourado no alto e as pílulas de cantos quase retos." },
+      { "img": "0.252.0/caixa-de-acao.webp", "legenda": "A caixa de ação com o botão principal na base de tecla." }
+    ]
+  },
   "0.251.0": {
     "Vitrine de novidades na tela inicial": [
       { "img": "0.251.0/vitrine.webp", "legenda": "A vitrine abaixo de Voltar à partida: a imagem da novidade, o nome da versão, o título, o começo do texto e um pontinho para cada novidade." }
