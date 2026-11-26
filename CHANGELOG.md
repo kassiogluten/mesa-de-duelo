@@ -8,6 +8,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.254.0] - 2026-11-25
+
+### Novo
+
+- **Boas-vindas na tela inicial.** Quem chega pela primeira vez encontra no alto da tela o que é a Mesa de Duelo e quatro decks prontos para começar (goblins, dragões, vampiros e anjos), cada um com uma frase dizendo como ele joga. A Horda Goblin já vem escolhida, e o botão Jogar contra o computador começa a partida num toque. Logo abaixo ficam os atalhos para quem já joga: ver todos os decks prontos, importar a sua lista ou jogar com amigos. Depois da primeira partida, a tela volta a ser a de sempre, com o Jogar de novo.
+
+### Mudou
+
+- **Primeira partida com computadores mais leves.** Na primeira partida, os computadores jogam com decks de até o bracket 2, qualquer que seja o seu deck. Escolhendo outro máximo em Bracket máximo dos bots, vale o que você escolheu.
+- **Sem o tour na primeira visita.** Os três balões que explicavam a tela não abrem mais sozinhos: quem guia agora são as boas-vindas. O tour continua no menu ⋯, em Como jogar.
+- **Meus decks vazio em uma linha.** Enquanto as boas-vindas estão à vista, a caixa grande de quem ainda não tem deck vira uma linha com Montar um deck e Importar uma lista.
+
 ## [0.253.0] - 2026-11-25
 
 ### Novo

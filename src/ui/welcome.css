@@ -1,0 +1,69 @@
+/* Boas-vindas de quem ainda não jogou: faixa no topo da tela inicial, com a arte do deck escolhido ao fundo. */
+.welcome {
+  position: relative; isolation: isolate; overflow: hidden; padding: 30px 32px 22px; border-radius: 18px;
+  background: var(--azul-0d1626, #0d1626); box-shadow: inset 0 0 0 1px #f2b54c33, 0 14px 34px #0006;
+}
+.welcome[hidden] { display: none; }
+.welcome-art { position: absolute; inset: 0 0 auto; height: 260px; z-index: -1; background: center 30% / cover no-repeat; opacity: .5; transition: background-image .3s; }
+.welcome-art::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, var(--azul-0d1626, #0d1626) 0%, color-mix(in srgb, var(--azul-0d1626, #0d1626) 80%, transparent) 45%, color-mix(in srgb, var(--azul-0d1626, #0d1626) 30%, transparent) 100%),
+    linear-gradient(180deg, transparent 40%, var(--azul-0d1626, #0d1626));
+}
+.home-intro .welcome-eyebrow { margin: 0 0 8px; color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.welcome h2 { margin: 0; max-width: 640px; font: 700 clamp(30px, 3.4vw, 42px)/1.08 var(--display); letter-spacing: -.02em; }
+.home-intro .welcome-lede { max-width: 560px; margin: 10px 0 0; color: var(--azul-d8dfec, #d8dfec); font-size: 16px; line-height: 1.5; }
+.welcome-pick { margin-top: 26px; }
+.welcome-pick h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 12px; font: 600 17px var(--display); }
+.welcome-pick small { color: var(--muted); font: 500 13px var(--body, inherit); }
+.welcome-decks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.welcome-deck {
+  position: relative; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 0; border-radius: 14px; text-align: left; cursor: pointer;
+  background: var(--azul-090d18, #090d18); color: var(--ink); font: inherit; box-shadow: inset 0 0 0 1px #ffffff1a;
+  transition: transform .18s var(--ease-out, ease), box-shadow .18s;
+}
+.welcome-deck-art { position: relative; display: block; aspect-ratio: 16 / 10; background: var(--azul-142138, #142138) center 25% / cover no-repeat; }
+.welcome-deck-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, color-mix(in srgb, var(--azul-090d18, #090d18) 90%, transparent)); }
+.welcome-deck .tile-colors { z-index: 1; }
+.welcome-deck-info { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 16px; }
+.welcome-deck-name { font: 600 18px/1.15 var(--display); }
+.welcome-deck-plan { color: var(--azul-d8dfec, #d8dfec); font-size: 13.5px; line-height: 1.45; }
+/* A borda fica num ::before por cima da arte (a sombra interna do botão ficaria atrás dela). */
+.welcome-deck::before { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; box-shadow: inset 0 0 0 1px #ffffff1a; pointer-events: none; }
+.welcome-deck.on { box-shadow: 0 0 0 4px #f2b54c2e, 0 18px 40px #f2b54c1f; }
+.welcome-deck.on::before { box-shadow: inset 0 0 0 2px var(--gold); }
+.welcome-deck .tile-check { z-index: 3; }
+.welcome-deck:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.welcome-deck:hover .tile-check.empty, .welcome-deck:focus-visible .tile-check.empty { border-color: var(--gold); color: rgba(242, 181, 76, .6); }
+.welcome-deck:hover .tile-check.empty::before, .welcome-deck:focus-visible .tile-check.empty::before { content: '✓'; font-size: 13px; font-weight: 700; }
+@media (hover: hover) and (pointer: fine) { .welcome-deck:hover { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .welcome-deck, .welcome-art { transition: none; } .welcome-deck:hover { transform: none; } }
+.welcome-go { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; margin-top: 22px; }
+.home-intro .welcome-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 0; color: var(--muted); font-size: 14px; }
+.welcome-summary .link-btn, .welcome-more .link-btn { font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #ffe2a066; }
+.home-intro .welcome-more { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin: 20px 0 0; padding-top: 14px; border-top: 1px solid #ffffff14; color: var(--muted); font-size: 14px; }
+
+/* "Meus decks" vazio, em uma linha, enquanto as boas-vindas estão à vista. */
+.personal-empty.compact { min-height: 0; padding: 12px 16px; gap: 4px 12px; flex-wrap: wrap; border-style: dashed; background: none; }
+.personal-empty.compact p { margin: 0 4px 0 0; color: var(--muted); font-size: 14px; }
+
+@media (max-width: 1050px) {
+  .welcome-decks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .welcome { padding: 22px 16px 18px; border-radius: 16px; }
+  .welcome h2 { font-size: 28px; }
+  .home-intro .welcome-lede { font-size: 14.5px; }
+  .welcome-pick { margin-top: 18px; }
+  .welcome-pick small { display: none; }
+  .welcome-decks { gap: 10px; }
+  .welcome-deck-info { padding: 9px 11px 12px; gap: 4px; }
+  .welcome-deck-name { font-size: 15.5px; }
+  .welcome-deck-plan { font-size: 12.5px; }
+  .welcome-deck .tile-colors .pip { font-size: 13px; }
+}
+/* No celular o botão Jogar já fica preso no rodapé, com o deck escolhido: o da faixa sairia repetido. */
+@media (max-width: 700px), (max-height: 500px) {
+  .welcome-go .replay-btn { display: none; }
+  .welcome-go { margin-top: 14px; }
+}

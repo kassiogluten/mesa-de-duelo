@@ -18,6 +18,7 @@ import { botBracketButtonsHTML, botBracketHelp, chosenDeckHTML, commanderAiPanel
 import { createRoomsPoller } from './lobbyRooms';
 import { attachTileMenus } from './tileMenus';
 import { createFirstVisitTour } from './firstVisitTour';
+import { WELCOME_DECKS, welcomeDecks, welcomeDecksHTML } from './welcomeView';
 import { mountDeckLayout } from './deckLayout';
 import './deckFilters.css';
 import './lobby.css';
@@ -90,6 +91,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   try { const saved = JSON.parse(load(KEYS.commanderOpponents) ?? 'null'); if (Array.isArray(saved)) commanderOpponents = commanderOpponents.map((fallback, i) => typeof saved[i] === 'string' ? saved[i] : fallback); } catch { /* Ignore invalid optional preferences. */ }
   const rememberedDeck = () => format ? load(PREFIXES.deck + format) ?? (format === 'free' ? load(KEYS.deckLegacy) : null) ?? '' : '';
   let youId = rememberedDeck();
+  // Quem ainda não jogou chega com o primeiro deck das boas-vindas escolhido, sem guardar: o Jogar já nasce aceso.
+  if (!youId && format === 'commander' && !load(KEYS.played)) youId = WELCOME_DECKS[0]!.id;
   let oppId = load(KEYS.opp) ?? 'random';
   // Bracket máximo dos computadores (Commander e Precon): sem escolha guardada, segue o do deck do jogador.
   const savedBotBracket = load(KEYS.botBracket);
@@ -111,6 +114,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   let preflight = 0;
   const key = (deck: DeckData) => JSON.stringify([url(), format, deck.cards, deck.sideboard ?? [], deck.commanders ?? []]);
   const selected = () => allDecks().find(d => d.id === youId);
+  /** As boas-vindas: até a primeira partida, contra o computador no Commander (trocando o formato ou o oponente, saem). */
+  const welcomeShown = () => !load(KEYS.played) && !waitingRoom && mode === 'ai' && format === 'commander' && welcomeDecks(allDecks()).length > 0;
   const netURL = () => (root.querySelector('#netUrl') as HTMLInputElement).value.trim() || FORGE_URL;
   const url = () => mode === 'net' ? netURL() : FORGE_URL;
   const netName = () => (root.querySelector('#netName') as HTMLInputElement).value.trim() || 'Jogador';
@@ -149,7 +154,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const myBracket = () => { const deck = selected(); return deck && !deck.precon ? deckBracket(deck) : deck?.bracket; };
   /** Precon com "só da série" marcado: a série do deck do jogador. */
   const botSeries = () => format === 'precon' && sameSeries ? selected()?.precon?.series : undefined;
-  const botChoice = (): BotChoice => ({ format, botBracket, myBracket: myBracket(), series: botSeries() });
+  // Na primeira partida, sem máximo escolhido, os bots ficam até o bracket 2 (os decks das boas-vindas vão até o 4).
+  const botChoice = (): BotChoice => ({ format, botBracket: botBracket ?? (load(KEYS.played) ? null : 2), myBracket: myBracket(), series: botSeries() });
   const botBracketMax = (decks: DeckData[]) => bracketMaxFor(decks, botChoice());
   const botPool = (decks: DeckData[]) => poolFor(decks, botChoice());
   /** Depois de mudar o máximo ou a série: os decks escolhidos que ficaram de fora voltam para "Deck aleatório", com aviso. */
@@ -219,7 +225,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     // Os decks prontos do formato escolhido vêm primeiro; os outros compatíveis (como os do Livre no Sacola 50) depois.
     const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d)).sort((a, b) => Number(b.format === format) - Number(a.format === format));
     $('#personalCount').textContent = personal.length ? String(personal.length) : '';
-    $('#personalTiles').innerHTML = personalShelfHTML(mine, personal.length, { ...tileContext(), filtering: filtering() });
+    $('#personalTiles').innerHTML = personalShelfHTML(mine, personal.length, { ...tileContext(), filtering: filtering(), compact: welcomeShown() });
     // No Precon só valem os precons da mesa: a prateleira dos seus decks some e os precons vêm agrupados por série.
     const precon = format === 'precon';
     $('.deck-shelf:not(.ready-shelf)').hidden = precon;
@@ -316,6 +322,16 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       const again = $<HTMLButtonElement>('#replayStart');
       again.disabled = start.disabled;
       again.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : 'Jogar de novo';
+    }
+    const welcome = $('#welcome');
+    welcome.hidden = !welcomeShown();
+    if (!welcome.hidden) {
+      $('#welcomeDecks').innerHTML = welcomeDecksHTML(welcomeDecks(allDecks()), youId);
+      $('#welcomeArt').style.backgroundImage = art ? `url("${art}")` : '';
+      $('#welcomeSummary').textContent = summary;
+      const go = $<HTMLButtonElement>('#welcomeStart');
+      go.disabled = start.disabled;
+      go.textContent = busy ? 'Preparando…' : 'Jogar contra o computador';
     }
     $('#setupSummary').textContent = summary || 'Escolha o formato';
     $('#setupSummaryAction').textContent = setupOpen ? 'Fechar' : 'Mudar';
@@ -420,6 +436,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const deck = mode === 'net' && chosen && !fitsIn(chosen, format!) ? undefined : chosen;
     if (busy || !format || (!deck && mode !== 'net')) return;
     ++preflight;
+    // O deck das boas-vindas já vem escolhido: quem joga sem tocar em outro também conta como "escolheu um deck".
+    if (deck) countFunnel('deck');
     save(KEYS.played, '1');
     if (mode === 'free') { setStatus(''); opts.onFreePlay(deck!, format); return; }
     const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, roomVisibility = visibility, chosenCode = roomCode(), opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
@@ -509,12 +527,22 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (action === 'fit-formats' && !busy && !waitingRoom && !room) { const deck = selected(); if (deck && misfit(deck)) void pickFormat(deck, format!); }
     if (action === 'cancel-lookup' && !busy) { room = null; refresh(); }
     if (action === 'rooms-refresh' && !busy && !waitingRoom) void rooms.load(true);
+    if (action?.startsWith('welcome-') && !busy) welcomeAction(action);
     const joinCode = target.closest<HTMLButtonElement>('[data-join-room]')?.dataset.joinRoom;
     if (joinCode && !busy && !waitingRoom) findRoom(joinCode, true);
     const watchCode = target.closest<HTMLButtonElement>('[data-watch-room]')?.dataset.watchRoom;
     if (watchCode) void watch(watchCode, true);
     if (action === 'cancel-room') { opts.onCancelRoom(); waitingRoom = null; refresh(); }
   });
+  /** Os atalhos das boas-vindas: ajustar a partida, ver todos os decks prontos ou jogar com amigos. */
+  function welcomeAction(action: string) {
+    const scrollTo = (selector: string) => $(selector).scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    if (action === 'welcome-all') { scrollTo('.ready-shelf'); return; }
+    if (action === 'welcome-friends') root.querySelector<HTMLButtonElement>('[data-setting=opponent][data-value=net]')?.click();
+    setupOpen = true; refresh();
+    scrollTo(action === 'welcome-friends' ? '#netPanel' : '.match-sidebar');
+    root.querySelector<HTMLElement>(action === 'welcome-friends' ? '#netName' : '.match-setup [data-setting]')?.focus({ preventScroll: true });
+  }
   /** Trocar de aba desfaz a sala encontrada pelo código: cada aba tem o seu caminho até o botão de baixo. */
   function selectNetTab(next: NetTab, focus = false) {
     if (next !== netTab) { netTab = next; save(KEYS.netTab, netTab); room = null; preflight++; setStatus(''); refresh(); }

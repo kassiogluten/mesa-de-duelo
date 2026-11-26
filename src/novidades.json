@@ -1,4 +1,16 @@
 {
+  "0.254.0": {
+    "Boas-vindas na tela inicial": [
+      { "img": "0.254.0/boas-vindas.webp", "legenda": "A faixa de boas-vindas no computador: o que é a mesa, os quatro decks para começar com o jeito de jogar de cada um, a Horda Goblin já escolhida e o botão Jogar contra o computador." },
+      { "img": "0.254.0/boas-vindas-celular.webp", "legenda": "No celular, os quatro decks em duas colunas e o deck escolhido no rodapé, junto do Jogar." }
+    ],
+    "Primeira partida com computadores mais leves": [
+      { "img": "0.254.0/bots-bracket-2.webp", "legenda": "Antes da primeira partida, o Bracket máximo dos bots já vem no 2." }
+    ],
+    "Meus decks vazio em uma linha": [
+      { "img": "0.254.0/meus-decks-vazio.webp", "legenda": "Meus decks sem nenhum deck, numa linha só, com Montar um deck e Importar uma lista." }
+    ]
+  },
   "0.253.0": {
     "Preço em reais nos decks prontos de Sacola 50": [
       { "img": "0.253.0/selo-e-dica.webp", "legenda": "O **Delver Azul** com o preço das 75 cartas em reais e a dica aberta: quanto custam com o sideboard, quanto fica só o deck principal e a data da cotação na LigaMagic." }

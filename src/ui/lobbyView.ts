@@ -7,6 +7,7 @@ import { commanderLineHTML } from './deckFilters';
 import { siteFooterHTML } from './siteFooter';
 import { ICON_EYE_LOBBY, ICON_MORE, ICON_REFRESH, ICON_PENCIL } from './icons';
 import { AI_STYLES } from '../aiStyle';
+import { PERSONAL_EMPTY_COMPACT, WELCOME_HTML } from './welcomeView';
 
 /** O que a tela inicial desenha a partir do estado: o esqueleto, os cards dos decks e os textos de cada painel. */
 export const formatName = (f: DeckFormat | null) => f ? FORMAT_LABEL[f] : 'Escolha o formato';
@@ -17,7 +18,7 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 export function lobbyHTML() {
   return `<div class="lobby library-home"><div class="mat" aria-hidden="true"></div>
     <header class="home-top"></header>
-    <main class="home-content"><div class="home-intro"><h1 class="sr-only">Jogar</h1><section class="replay" id="replay" aria-labelledby="replayTitle" hidden><span class="replay-art" id="replayArt" aria-hidden="true"></span><div class="replay-info"><p class="replay-eyebrow">Sua última partida</p><h2 id="replayTitle"></h2><p class="replay-summary" id="replaySummary"></p></div><button type="button" class="arena-btn primary big replay-btn" id="replayStart" data-lobby="start">Jogar de novo</button></section></div>
+    <main class="home-content"><div class="home-intro"><h1 class="sr-only">Jogar</h1>${WELCOME_HTML}<section class="replay" id="replay" aria-labelledby="replayTitle" hidden><span class="replay-art" id="replayArt" aria-hidden="true"></span><div class="replay-info"><p class="replay-eyebrow">Sua última partida</p><h2 id="replayTitle"></h2><p class="replay-summary" id="replaySummary"></p></div><button type="button" class="arena-btn primary big replay-btn" id="replayStart" data-lobby="start">Jogar de novo</button></section></div>
     <div class="play-layout">
       <button type="button" class="setup-summary" data-lobby="setup-toggle" aria-expanded="false" aria-controls="matchSetup"><span class="setup-summary-text"><small>Partida</small><strong id="setupSummary"></strong></span><span class="setup-summary-action" id="setupSummaryAction" aria-hidden="true">Mudar</span></button>
       <aside class="match-sidebar" aria-label="Configuração da partida">
@@ -83,9 +84,9 @@ export function preconGroupsHTML(decks: DeckData[], ctx: TileContext) {
   const series = [...new Map(decks.map(d => [d.precon!.series, d.precon!])).values()].sort((a, b) => b.year - a.year || a.series.localeCompare(b.series, 'pt'));
   return series.map(p => `<section class="precon-series" aria-label="${esc(p.series)}"><h3 class="precon-series-title">${esc(p.series)} <span>${p.year}</span></h3><div class="deck-tiles">${deckTilesHTML(decks.filter(d => d.precon!.series === p.series), ctx)}</div></section>`).join('');
 }
-/** A prateleira "Meus decks": os cards e o de criar, ou o que fazer quando ela está vazia. */
-export function personalShelfHTML(shown: DeckData[], owned: number, ctx: TileContext & { filtering: boolean }) {
-  return shown.length ? deckTilesHTML(shown, ctx) + NEW_DECK_TILE : !owned ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${ctx.filtering ? 'Nenhum dos seus decks corresponde à busca e às cores.' : `Você ainda não tem um deck válido para ${formatName(ctx.format)}.`}</p><button class="ghost-btn" data-lobby="${ctx.filtering ? 'clear' : 'incompatible'}">${ctx.filtering ? 'Limpar filtros' : 'Mostrar decks incompatíveis'}</button></div>`;
+/** A prateleira "Meus decks": os cards e o de criar, ou o que fazer quando ela está vazia (`compact`: em uma linha, com as boas-vindas à vista). */
+export function personalShelfHTML(shown: DeckData[], owned: number, ctx: TileContext & { filtering: boolean; compact?: boolean }) {
+  return shown.length ? deckTilesHTML(shown, ctx) + NEW_DECK_TILE : !owned && ctx.compact ? PERSONAL_EMPTY_COMPACT : !owned ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${ctx.filtering ? 'Nenhum dos seus decks corresponde à busca e às cores.' : `Você ainda não tem um deck válido para ${formatName(ctx.format)}.`}</p><button class="ghost-btn" data-lobby="${ctx.filtering ? 'clear' : 'incompatible'}">${ctx.filtering ? 'Limpar filtros' : 'Mostrar decks incompatíveis'}</button></div>`;
 }
 /** Os botões do bracket máximo dos bots: "Qualquer" e os brackets que algum deck pronto tem. */
 export function botBracketButtonsHTML(offered: Bracket[], max: Bracket | null, disabled: boolean) {

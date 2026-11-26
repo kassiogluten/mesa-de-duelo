@@ -116,9 +116,9 @@ export const KEYS = {
   netTab: 'mesa:netTab',
   /** Endereço do servidor escolhido à mão. Tela inicial (contra outra pessoa) e Salas. */
   forgeUrl: 'mesa:forgeUrl',
-  /** '1' depois da primeira partida: mostra o atalho de jogar de novo. Tela inicial. */
+  /** '1' depois da primeira partida: some com as boas-vindas e mostra o atalho de jogar de novo. Tela inicial. */
   played: 'mesa:played',
-  /** '1' depois que o tour da primeira visita abriu (ele volta pelo menu ⋯, Como jogar). Tela inicial. */
+  /** '1' depois que o tour da tela inicial abriu (pelo menu ⋯, Como jogar; na primeira visita quem guia são as boas-vindas). Tela inicial. */
   tour: 'mesa:tour',
   /** Exibição dos decks da tela inicial: grade (com as colunas) ou lista (JSON). Tela inicial. */
   deckLayoutHome: 'mesa:deckLayout:home',

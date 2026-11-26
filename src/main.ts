@@ -416,8 +416,6 @@ else if (links.room) lobby.openRoomLink(links.room);
 else if (links.createRoom) lobby.openCreateRoom();
 else if (savedFree && (initial.screen === 'lobby' || initial.screen === 'free')) { freeTable.resume(savedFree); show('free'); }
 else if (initial.screen === 'decks' || initial.screen === 'lab' || initial.screen === 'deck') openRoute(initial);
-// Primeira visita neste aparelho: o tour da tela inicial (escolher o deck, ajustar a partida, Jogar).
-else if (initial.screen === 'lobby' && !load(KEYS.played) && !load(KEYS.tour)) lobby.startTour();
 // /partida sem partida para voltar e /mesa-livre sem jogo guardado caem no início. Voltando à partida, quem acerta o
 // endereço é a própria volta (a mesa ou, se o servidor não responder, o início).
 if (!saved) router.sync(screenPath());
