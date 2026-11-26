@@ -1,7 +1,7 @@
 // Números do deck (curva, tipos, cores) e a capa e as cores mostradas na lista de decks.
 import { cardInfo, type CardInfo, type CardType, type Color } from '../cards';
 import { cacheGet } from '../scryfall';
-import { countEntries, deckPriceDescription, deckPriceText, hasCommandZone, type DeckData, type DeckEntry } from '../decks';
+import { countEntries, deckPriceDescription, deckPriceStale, deckPriceText, hasCommandZone, type DeckData, type DeckEntry } from '../decks';
 import { esc } from './cardtext';
 import { manaBaseHTML } from './manaBase';
 import { BRACKET_DESCRIPTION, BRACKET_NAME, bracketLabel, deckBracket, type Bracket } from '../brackets';
@@ -76,9 +76,9 @@ export function bracketBadgeHTML(deck: DeckData, className: string) {
 }
 
 /** Preço do deck com a dica explicando o valor. Fora de um botão, o valor recebe foco para a dica abrir no toque e no teclado. */
-export function deckPriceHTML(deck: DeckData, className: string, focusable: boolean) {
+export function deckPriceHTML(deck: DeckData, className: string, focusable: boolean, today?: Date) {
   const text = deckPriceText(deck);
   if (!text) return '';
   const tip = `price-tip-${esc(deck.id)}`;
-  return `<span class="deck-price ${className}"${focusable ? ` tabindex="0" aria-describedby="${tip}"` : ''}>${text}<span class="deck-price-tip" id="${tip}" role="tooltip">${esc(deckPriceDescription(deck))}</span></span>`;
+  return `<span class="deck-price ${className}${deckPriceStale(deck, today) ? ' deck-price-stale' : ''}"${focusable ? ` tabindex="0" aria-describedby="${tip}"` : ''}>${text}<span class="deck-price-tip" id="${tip}" role="tooltip">${esc(deckPriceDescription(deck, today))}</span></span>`;
 }

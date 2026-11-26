@@ -1,4 +1,10 @@
 {
+  "0.258.0": {
+    "Preço em reais em todos os decks prontos": [
+      { "img": "0.258.0/meus-decks.webp", "legenda": "Em Meus decks, os decks prontos de Commander com o preço em reais ao lado das cartas e do bracket." },
+      { "img": "0.258.0/dica.webp", "legenda": "A dica do preço de um deck de Pauper: as 75 cartas com o sideboard, só o deck principal e a data da cotação na LigaMagic." }
+    ]
+  },
   "0.257.0": {
     "Preço da carta nos detalhes": [
       { "img": "0.257.0/preco-nos-detalhes.webp", "legenda": "Contramágica aberta nos detalhes da carta, no navegador: embaixo do texto, o menor preço em reais na LigaMagic e a data da cotação." },

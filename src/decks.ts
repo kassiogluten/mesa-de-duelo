@@ -1,3 +1,4 @@
+import { brlText, priceDate, STALE_DAYS } from './cardPrices';
 import { KEYS, PREFIXES } from './storage';
 import starterDecks from '../shared/starter-decks.json' with { type: 'json' };
 import { isBracket, type Bracket } from './brackets';
@@ -75,10 +76,13 @@ export interface DeckData {
   importSource?: string;
   importHistory?: string[];
   unresolved?: string[];
-  /** Soma do preço das cartas em dólar na data registrada (só nos decks prontos). */
+  /** Soma do preço das cartas em dólar no Scryfall (decks prontos antigos); guardada, mas a mesa mostra só o preço em reais. */
   price?: { usd: number; date: string };
-  /** Preço em reais (decks prontos de Sacola 50): com o sideboard (`total`) e só o deck principal, da fonte e na data registradas. */
-  priceBrl?: { total: number; semSideboard: number; fonte: string; date: string };
+  /**
+   * Preço em reais (decks prontos), pelo menor preço de cada carta na LigaMagic: com o sideboard (`total`) e só o deck
+   * principal, na data registrada; `semPreco` lista as cartas sem cotação, que ficam fora da soma.
+   */
+  priceBrl?: { total: number; semSideboard: number; fonte: string; date: string; semPreco?: string[] };
   /** Bracket escolhido para o deck de Commander (nos prontos, conferido à mão); pode ficar abaixo do mínimo das cartas. */
   bracket?: Bracket;
   /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander nem em Oathbreaker. */
@@ -97,17 +101,24 @@ export const countEntries = (entries: DeckEntry[]) => entries.reduce((s, e) => s
 export const deckSize = (d: DeckData) => countEntries(d.cards);
 export const totalDeckSize = (d: DeckData) => deckSize(d) + countEntries(d.commanders ?? []);
 export const deckEntries = (d: DeckData) => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])];
-const money = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const brDate = (iso: string) => iso.split('-').reverse().join('/');
-/** "R$ 85,88" (com o sideboard) nos decks prontos com preço em reais, "US$ 1.605,93" nos com preço em dólar; vazio nos outros. */
-export const deckPriceText = (d: DeckData) => !d.builtin ? '' : d.priceBrl ? `R$ ${money(d.priceBrl.total)}` : d.price ? `US$ ${money(d.price.usd)}` : '';
+/** "R$ 85,88" (com o sideboard) nos decks prontos com preço; vazio nos outros e nos decks da pessoa. */
+export const deckPriceText = (d: DeckData) => d.builtin && d.priceBrl ? brlText(d.priceBrl.total) : '';
+/** A cotação do deck tem mais de 30 dias (aparece apagada, como a das cartas). */
+export const deckPriceStale = (d: DeckData, today = new Date()) => {
+  if (!d.priceBrl) return false;
+  const [y = 0, m = 1, day = 1] = d.priceBrl.date.split('-').map(Number);
+  return new Date(y, m - 1, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate() - STALE_DAYS);
+};
 /** O que o preço significa, para a dica sobre o valor. */
-export const deckPriceDescription = (d: DeckData) => {
-  if (d.priceBrl) {
-    const side = countEntries(d.sideboard ?? []), main = totalDeckSize(d);
-    return `Quanto custam as ${main + side} cartas${side ? ' com o sideboard' : ''} em reais, pelo menor preço de cada uma na LigaMagic em ${brDate(d.priceBrl.date)}.${side ? ` Só as ${main} do deck principal: R$ ${money(d.priceBrl.semSideboard)}.` : ''} É uma referência: o preço muda com o tempo.`;
-  }
-  return d.price ? `Quanto custam as ${totalDeckSize(d)} cartas em dólar, pela edição mais barata de cada uma, no Scryfall em ${brDate(d.price.date)}. É uma referência: o preço muda com o tempo.` : '';
+export const deckPriceDescription = (d: DeckData, today?: Date) => {
+  const p = d.priceBrl;
+  if (!p) return '';
+  const side = countEntries(d.sideboard ?? []), main = totalDeckSize(d), missing = p.semPreco ?? [];
+  return `Quanto custam as ${main + side} cartas${side ? ' com o sideboard' : ''}, pelo menor preço de cada uma na LigaMagic, entre todas as edições, em ${priceDate(p.date)}.`
+    + (side ? ` Só as ${main} do deck principal: ${brlText(p.semSideboard)}.` : '')
+    + (missing.length ? ` Sem cotação, fora da soma: ${missing.join(', ')}.` : '')
+    + ' É uma referência: o preço muda com o tempo.'
+    + (deckPriceStale(d, today) ? ' Esta cotação tem mais de 30 dias.' : '');
 };
 export const allDecks = (): DeckData[] => [...loadUserDecks(), ...DEFAULT_DECKS];
 

@@ -66,7 +66,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 81.57,
+      "semSideboard": 81.57,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-izzet",
@@ -151,7 +157,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 782.61,
+      "semSideboard": 782.61,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-landfall",
@@ -228,7 +240,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 659.6,
+      "semSideboard": 659.6,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-dimir",
@@ -321,7 +339,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 1291.74,
+      "semSideboard": 1291.74,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-ninjas",
@@ -410,7 +434,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 652.66,
+      "semSideboard": 652.66,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-coelhos",
@@ -463,7 +493,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 862.79,
+      "semSideboard": 862.79,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-dragoes",
@@ -544,7 +580,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 2302.31,
+      "semSideboard": 2302.31,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-azorius-controle",
@@ -641,7 +683,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 2014.49,
+      "semSideboard": 2014.49,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-jund",
@@ -742,7 +790,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 1098.08,
+      "semSideboard": 1098.08,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-prowess",
@@ -839,7 +893,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 973.28,
+      "semSideboard": 973.28,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-4c",
@@ -952,7 +1012,13 @@
       }
     ],
     "format": "standard",
-    "sideboard": []
+    "sideboard": [],
+    "priceBrl": {
+      "total": 1169.67,
+      "semSideboard": 1169.67,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-lifegain",
@@ -1082,7 +1148,13 @@
         "name": "Space-Time Anomaly",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 910.36,
+      "semSideboard": 852.5,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-dimir-reanimator",
@@ -1216,7 +1288,13 @@
         "name": "Spell Snare",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 2623.42,
+      "semSideboard": 2480.16,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-jeskai-artifacts",
@@ -1366,7 +1444,13 @@
         "name": "Torpor Orb",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 1824.54,
+      "semSideboard": 1439.44,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-azorius-momo",
@@ -1484,7 +1568,13 @@
         "name": "Disdainful Stroke",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 2199.73,
+      "semSideboard": 1663.78,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "padrao-rakdos-lizards",
@@ -1630,7 +1720,13 @@
         "name": "The Legend of Roku",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 1061.68,
+      "semSideboard": 959.28,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-brasa",
@@ -1708,7 +1804,13 @@
         "name": "Electrickery",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 529.05,
+      "semSideboard": 246.78,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-floresta",
@@ -1782,7 +1884,13 @@
         "name": "Spidersilk Armor",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 208.12,
+      "semSideboard": 59.36,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-terror",
@@ -1880,7 +1988,13 @@
         "name": "Steel Sabotage",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 589.31,
+      "semSideboard": 403.94,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-fadas",
@@ -2002,7 +2116,13 @@
         "name": "Arms of Hadar",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 974.64,
+      "semSideboard": 730.52,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-afinidade",
@@ -2128,7 +2248,13 @@
         "name": "Unexpected Fangs",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 797.13,
+      "semSideboard": 554.68,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-espiao",
@@ -2246,7 +2372,13 @@
         "name": "Writhing Chrysalis",
         "count": 4
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 768.03,
+      "semSideboard": 573.92,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-tempestade",
@@ -2364,7 +2496,13 @@
         "name": "Weather the Storm",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 799.2,
+      "semSideboard": 534.75,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-incendio",
@@ -2498,7 +2636,13 @@
         "name": "Weather the Storm",
         "count": 3
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 450.19,
+      "semSideboard": 278.2,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-jardins",
@@ -2624,7 +2768,13 @@
         "name": "Faerie Macabre",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 521.34,
+      "semSideboard": 370.18,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-neblina",
@@ -2762,7 +2912,13 @@
         "name": "Bojuka Bog",
         "count": 1
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 609.7,
+      "semSideboard": 357.49,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-familiares",
@@ -2876,7 +3032,13 @@
         "name": "Envelop",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 687.4,
+      "semSideboard": 339.82,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "pauper-esquadrao",
@@ -2974,7 +3136,13 @@
         "name": "Standard Bearer",
         "count": 2
       }
-    ]
+    ],
+    "priceBrl": {
+      "total": 460.2,
+      "semSideboard": 191.59,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
+    }
   },
   {
     "id": "sacola-delver",
@@ -3078,10 +3246,10 @@
       }
     ],
     "priceBrl": {
-      "total": 85.88,
-      "semSideboard": 71.08,
+      "total": 68.26,
+      "semSideboard": 53.46,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3185,7 +3353,7 @@
       "total": 112.2,
       "semSideboard": 108.63,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3282,10 +3450,10 @@
       }
     ],
     "priceBrl": {
-      "total": 72.42,
-      "semSideboard": 53.23,
+      "total": 74.86,
+      "semSideboard": 55.67,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3397,7 +3565,7 @@
       "total": 21.71,
       "semSideboard": 19.61,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3501,7 +3669,7 @@
       "total": 73.88,
       "semSideboard": 48.38,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3589,7 +3757,7 @@
       "total": 63.96,
       "semSideboard": 56.67,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3730,10 +3898,10 @@
       }
     ],
     "priceBrl": {
-      "total": 74.75,
-      "semSideboard": 53.34,
+      "total": 74.81,
+      "semSideboard": 53.4,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -3861,7 +4029,7 @@
       "total": 55.84,
       "semSideboard": 49.82,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4006,10 +4174,10 @@
       }
     ],
     "priceBrl": {
-      "total": 12.72,
-      "semSideboard": 10.29,
+      "total": 12.74,
+      "semSideboard": 10.31,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4125,7 +4293,7 @@
       "total": 66.89,
       "semSideboard": 28.22,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4249,7 +4417,7 @@
       "total": 48.6,
       "semSideboard": 44.17,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4353,7 +4521,7 @@
       "total": 44.46,
       "semSideboard": 43.55,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4457,7 +4625,7 @@
       "total": 107.09,
       "semSideboard": 99.45,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4561,7 +4729,7 @@
       "total": 90.47,
       "semSideboard": 85.29,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4678,10 +4846,10 @@
       }
     ],
     "priceBrl": {
-      "total": 162.71,
-      "semSideboard": 34.92,
+      "total": 162.75,
+      "semSideboard": 34.96,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4810,10 +4978,10 @@
       }
     ],
     "priceBrl": {
-      "total": 81.27,
-      "semSideboard": 62.06,
+      "total": 79.93,
+      "semSideboard": 60.72,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -4914,10 +5082,10 @@
       }
     ],
     "priceBrl": {
-      "total": 44.45,
-      "semSideboard": 40.75,
+      "total": 44.4,
+      "semSideboard": 40.7,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5025,7 +5193,7 @@
       "total": 82.33,
       "semSideboard": 67.42,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5142,10 +5310,10 @@
       }
     ],
     "priceBrl": {
-      "total": 15.99,
-      "semSideboard": 13.7,
+      "total": 16.03,
+      "semSideboard": 13.74,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5261,7 +5429,7 @@
       "total": 41.14,
       "semSideboard": 34.6,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5357,7 +5525,7 @@
       "total": 43.44,
       "semSideboard": 18.91,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5470,10 +5638,10 @@
       }
     ],
     "priceBrl": {
-      "total": 48.64,
+      "total": 48.4,
       "semSideboard": 33.84,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5601,7 +5769,7 @@
       "total": 84.76,
       "semSideboard": 81.97,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5701,7 +5869,7 @@
       "total": 25.0,
       "semSideboard": 19.44,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5810,10 +5978,10 @@
       }
     ],
     "priceBrl": {
-      "total": 48.12,
-      "semSideboard": 45.41,
+      "total": 48.15,
+      "semSideboard": 45.44,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -5945,7 +6113,7 @@
       "total": 47.17,
       "semSideboard": 32.35,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -6061,7 +6229,7 @@
       "total": 78.92,
       "semSideboard": 60.33,
       "fonte": "LigaMagic, menor preço",
-      "date": "2026-11-25"
+      "date": "2026-11-26"
     }
   },
   {
@@ -6370,6 +6538,12 @@
     "price": {
       "usd": 29.93,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 139.1,
+      "semSideboard": 139.1,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -6674,6 +6848,12 @@
     "price": {
       "usd": 28.19,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 140.24,
+      "semSideboard": 140.24,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -6974,6 +7154,12 @@
     "price": {
       "usd": 25.98,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 130.31,
+      "semSideboard": 130.31,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -7278,6 +7464,12 @@
     "price": {
       "usd": 25.91,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 113.26,
+      "semSideboard": 113.26,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -7668,6 +7860,12 @@
     "price": {
       "usd": 57.11,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 403.92,
+      "semSideboard": 403.92,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -8036,6 +8234,12 @@
     "price": {
       "usd": 594.44,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2419.87,
+      "semSideboard": 2419.87,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -8416,6 +8620,12 @@
     "price": {
       "usd": 701.08,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2695.67,
+      "semSideboard": 2695.67,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -8716,6 +8926,12 @@
     "price": {
       "usd": 279.43,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1452.67,
+      "semSideboard": 1452.67,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -9076,6 +9292,12 @@
     "price": {
       "usd": 879.59,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 4842.01,
+      "semSideboard": 4842.01,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -9434,6 +9656,12 @@
     "price": {
       "usd": 88.77,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 594.44,
+      "semSideboard": 594.44,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -9750,6 +9978,12 @@
     "price": {
       "usd": 464.28,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1923.54,
+      "semSideboard": 1923.54,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -10114,6 +10348,15 @@
     "price": {
       "usd": 529.31,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2397.49,
+      "semSideboard": 2397.49,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26",
+      "semPreco": [
+        "Welcome to . . ."
+      ]
     }
   },
   {
@@ -10458,6 +10701,12 @@
     "price": {
       "usd": 376.12,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1637.47,
+      "semSideboard": 1637.47,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -10844,6 +11093,12 @@
     "price": {
       "usd": 85.58,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 327.33,
+      "semSideboard": 327.33,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -11188,6 +11443,12 @@
     "price": {
       "usd": 384.63,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1360.56,
+      "semSideboard": 1360.56,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -11556,6 +11817,12 @@
     "price": {
       "usd": 282,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1267.72,
+      "semSideboard": 1267.72,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -11904,6 +12171,12 @@
     "price": {
       "usd": 432.83,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1963.83,
+      "semSideboard": 1963.83,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -12228,6 +12501,12 @@
     "price": {
       "usd": 817.4,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3402.06,
+      "semSideboard": 3402.06,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -12628,6 +12907,12 @@
     "price": {
       "usd": 1203.91,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 5026.55,
+      "semSideboard": 5026.55,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -12992,6 +13277,12 @@
     "price": {
       "usd": 774.12,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3421.75,
+      "semSideboard": 3421.75,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -13372,6 +13663,12 @@
     "price": {
       "usd": 301.54,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1244.11,
+      "semSideboard": 1244.11,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -13740,6 +14037,12 @@
     "price": {
       "usd": 536.69,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2560.23,
+      "semSideboard": 2560.23,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -14108,6 +14411,12 @@
     "price": {
       "usd": 623.83,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2796.09,
+      "semSideboard": 2796.09,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -14482,6 +14791,12 @@
     "price": {
       "usd": 115.96,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 525.13,
+      "semSideboard": 525.13,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -14870,6 +15185,12 @@
     "price": {
       "usd": 729.72,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3132.08,
+      "semSideboard": 3132.08,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -15268,6 +15589,12 @@
     "price": {
       "usd": 61.7,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 382.76,
+      "semSideboard": 382.76,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -15636,6 +15963,12 @@
     "price": {
       "usd": 205.25,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 907.87,
+      "semSideboard": 907.87,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -16000,6 +16333,12 @@
     "price": {
       "usd": 910.69,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 4099.03,
+      "semSideboard": 4099.03,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -16380,6 +16719,12 @@
     "price": {
       "usd": 1357.57,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 6879.73,
+      "semSideboard": 6879.73,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -16772,6 +17117,12 @@
     "price": {
       "usd": 1242.59,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 5832.47,
+      "semSideboard": 5832.47,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -17132,6 +17483,12 @@
     "price": {
       "usd": 781.67,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3795.22,
+      "semSideboard": 3795.22,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -17448,6 +17805,12 @@
     "price": {
       "usd": 598.36,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2304.33,
+      "semSideboard": 2304.33,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -17812,6 +18175,12 @@
     "price": {
       "usd": 334.22,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1767.15,
+      "semSideboard": 1767.15,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -18096,6 +18465,12 @@
     "price": {
       "usd": 529.94,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1796.98,
+      "semSideboard": 1796.98,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -18456,6 +18831,12 @@
     "price": {
       "usd": 425.16,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1909.74,
+      "semSideboard": 1909.74,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -18820,6 +19201,12 @@
     "price": {
       "usd": 678.79,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3083.18,
+      "semSideboard": 3083.18,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -19182,6 +19569,12 @@
     "price": {
       "usd": 100.28,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 420.44,
+      "semSideboard": 420.44,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -19590,6 +19983,12 @@
     "price": {
       "usd": 325.01,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1613.88,
+      "semSideboard": 1613.88,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -19970,6 +20369,12 @@
     "price": {
       "usd": 801.8,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3867.7,
+      "semSideboard": 3867.7,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -20340,6 +20745,12 @@
     "price": {
       "usd": 74.06,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 411.0,
+      "semSideboard": 411.0,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -20728,6 +21139,12 @@
     "price": {
       "usd": 163.98,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 757.9,
+      "semSideboard": 757.9,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -21128,6 +21545,12 @@
     "price": {
       "usd": 1094.24,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 4930.11,
+      "semSideboard": 4930.11,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -21486,6 +21909,12 @@
     "price": {
       "usd": 80.95,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 344.11,
+      "semSideboard": 344.11,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -21834,6 +22263,12 @@
     "price": {
       "usd": 154.23,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 618.63,
+      "semSideboard": 618.63,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -22202,6 +22637,12 @@
     "price": {
       "usd": 524.19,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2120.23,
+      "semSideboard": 2120.23,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -22562,6 +23003,12 @@
     "price": {
       "usd": 398.7,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1431.4,
+      "semSideboard": 1431.4,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -22938,6 +23385,12 @@
     "price": {
       "usd": 1338.59,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 6923.49,
+      "semSideboard": 6923.49,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -23310,6 +23763,12 @@
     "price": {
       "usd": 842.06,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 3724.09,
+      "semSideboard": 3724.09,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -23674,6 +24133,12 @@
     "price": {
       "usd": 213.15,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 870.7,
+      "semSideboard": 870.7,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -24042,6 +24507,12 @@
     "price": {
       "usd": 461.11,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1950.98,
+      "semSideboard": 1950.98,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -24422,6 +24893,12 @@
     "price": {
       "usd": 336.01,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1765.64,
+      "semSideboard": 1765.64,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -24790,6 +25267,12 @@
     "price": {
       "usd": 601.35,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2232.76,
+      "semSideboard": 2232.76,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -25130,6 +25613,12 @@
     "price": {
       "usd": 328.84,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1708.64,
+      "semSideboard": 1708.64,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -25478,6 +25967,12 @@
     "price": {
       "usd": 228.53,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 974.13,
+      "semSideboard": 974.13,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -25856,6 +26351,12 @@
     "price": {
       "usd": 76.3,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 356.52,
+      "semSideboard": 356.52,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -26220,6 +26721,12 @@
     "price": {
       "usd": 571.69,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2466.83,
+      "semSideboard": 2466.83,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -26616,6 +27123,12 @@
     "price": {
       "usd": 558.39,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 2274.98,
+      "semSideboard": 2274.98,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -26964,6 +27477,12 @@
     "price": {
       "usd": 222.14,
       "date": "2026-10-29"
+    },
+    "priceBrl": {
+      "total": 1202.79,
+      "semSideboard": 1202.79,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -27332,6 +27851,12 @@
     "price": {
       "usd": 922.14,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 3484.82,
+      "semSideboard": 3484.82,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -27728,6 +28253,12 @@
     "price": {
       "usd": 759.24,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 3119.96,
+      "semSideboard": 3119.96,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -28076,6 +28607,12 @@
     "price": {
       "usd": 485.85,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 2176.09,
+      "semSideboard": 2176.09,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -28460,6 +28997,12 @@
     "price": {
       "usd": 1007.91,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 4881.48,
+      "semSideboard": 4881.48,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -28832,6 +29375,12 @@
     "price": {
       "usd": 127.59,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 680.27,
+      "semSideboard": 680.27,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -29172,6 +29721,12 @@
     "price": {
       "usd": 464.88,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1926.19,
+      "semSideboard": 1926.19,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -29528,6 +30083,12 @@
     "price": {
       "usd": 427.16,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1880.18,
+      "semSideboard": 1880.18,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -29896,6 +30457,12 @@
     "price": {
       "usd": 424.04,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1758.73,
+      "semSideboard": 1758.73,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -30236,6 +30803,12 @@
     "price": {
       "usd": 1605.93,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 9151.16,
+      "semSideboard": 9151.16,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -30630,6 +31203,12 @@
     "price": {
       "usd": 38.57,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 294.84,
+      "semSideboard": 294.84,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -30950,6 +31529,12 @@
     "price": {
       "usd": 915.59,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 4233.96,
+      "semSideboard": 4233.96,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -31334,6 +31919,12 @@
     "price": {
       "usd": 201.46,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 783.51,
+      "semSideboard": 783.51,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -31678,6 +32269,12 @@
     "price": {
       "usd": 392.47,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 2086.99,
+      "semSideboard": 2086.99,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -32026,6 +32623,12 @@
     "price": {
       "usd": 294.95,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1398.49,
+      "semSideboard": 1398.49,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -32398,6 +33001,12 @@
     "price": {
       "usd": 910.19,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 4178.02,
+      "semSideboard": 4178.02,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -32742,6 +33351,12 @@
     "price": {
       "usd": 142.63,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 653.17,
+      "semSideboard": 653.17,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -33090,6 +33705,12 @@
     "price": {
       "usd": 340.2,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1297.76,
+      "semSideboard": 1297.76,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -33438,6 +34059,12 @@
     "price": {
       "usd": 274.58,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1080.0,
+      "semSideboard": 1080.0,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -33770,6 +34397,12 @@
     "price": {
       "usd": 808.04,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 3896.41,
+      "semSideboard": 3896.41,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -34134,6 +34767,12 @@
     "price": {
       "usd": 259.09,
       "date": "2026-10-23"
+    },
+    "priceBrl": {
+      "total": 1049.18,
+      "semSideboard": 1049.18,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -34506,6 +35145,12 @@
     "price": {
       "usd": 172.45,
       "date": "2026-11-01"
+    },
+    "priceBrl": {
+      "total": 902.87,
+      "semSideboard": 902.87,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -34810,6 +35455,12 @@
     "price": {
       "usd": 502.32,
       "date": "2026-11-01"
+    },
+    "priceBrl": {
+      "total": 1756.27,
+      "semSideboard": 1756.27,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -35178,6 +35829,12 @@
     "price": {
       "usd": 493.24,
       "date": "2026-11-01"
+    },
+    "priceBrl": {
+      "total": 2308.39,
+      "semSideboard": 2308.39,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -35526,6 +36183,12 @@
     "price": {
       "usd": 372.61,
       "date": "2026-11-01"
+    },
+    "priceBrl": {
+      "total": 2170.31,
+      "semSideboard": 2170.31,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -35918,6 +36581,12 @@
     "price": {
       "usd": 214.79,
       "date": "2026-11-01"
+    },
+    "priceBrl": {
+      "total": 1275.36,
+      "semSideboard": 1275.36,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -36318,6 +36987,12 @@
     "price": {
       "usd": 541.88,
       "date": "2026-11-01"
+    },
+    "priceBrl": {
+      "total": 2700.63,
+      "semSideboard": 2700.63,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -36561,6 +37236,12 @@
     "price": {
       "usd": 2372.94,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 8791.54,
+      "semSideboard": 8791.54,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -36816,6 +37497,12 @@
     "price": {
       "usd": 1045.92,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 4512.38,
+      "semSideboard": 4512.38,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -37051,6 +37738,12 @@
     "price": {
       "usd": 2522.18,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 8141.75,
+      "semSideboard": 8141.75,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -37306,6 +37999,12 @@
     "price": {
       "usd": 9389.15,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 57496.01,
+      "semSideboard": 57496.01,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -37485,6 +38184,12 @@
     "price": {
       "usd": 62.71,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 207.33,
+      "semSideboard": 207.33,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -37700,6 +38405,12 @@
     "price": {
       "usd": 895.9,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 3845.26,
+      "semSideboard": 3845.26,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -37895,6 +38606,12 @@
     "price": {
       "usd": 96.69,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 373.04,
+      "semSideboard": 373.04,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -38130,6 +38847,12 @@
     "price": {
       "usd": 71.42,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 207.42,
+      "semSideboard": 207.42,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -38381,6 +39104,12 @@
     "price": {
       "usd": 1844.93,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 6537.58,
+      "semSideboard": 6537.58,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -38632,6 +39361,12 @@
     "price": {
       "usd": 1723.12,
       "date": "2026-11-02"
+    },
+    "priceBrl": {
+      "total": 7168.56,
+      "semSideboard": 7168.56,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -38986,6 +39721,12 @@
     "price": {
       "usd": 163.13,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 865.59,
+      "semSideboard": 865.59,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -39292,6 +40033,12 @@
     "price": {
       "usd": 199.79,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 1010.92,
+      "semSideboard": 1010.92,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -39630,6 +40377,12 @@
     "price": {
       "usd": 143.58,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 978.4,
+      "semSideboard": 978.4,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -39976,6 +40729,12 @@
     "price": {
       "usd": 145.21,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 833.31,
+      "semSideboard": 833.31,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -40358,6 +41117,12 @@
     "price": {
       "usd": 64.26,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 418.79,
+      "semSideboard": 418.79,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -40744,6 +41509,12 @@
     "price": {
       "usd": 94.03,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 602.83,
+      "semSideboard": 602.83,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -41070,6 +41841,12 @@
     "price": {
       "usd": 83.55,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 429.6,
+      "semSideboard": 429.6,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -41428,6 +42205,12 @@
     "price": {
       "usd": 63.1,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 360.87,
+      "semSideboard": 360.87,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -41826,6 +42609,12 @@
     "price": {
       "usd": 60.03,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 363.48,
+      "semSideboard": 363.48,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -42232,6 +43021,12 @@
     "price": {
       "usd": 79.18,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 372.31,
+      "semSideboard": 372.31,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -42642,6 +43437,12 @@
     "price": {
       "usd": 140.21,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 770.83,
+      "semSideboard": 770.83,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -43032,6 +43833,12 @@
     "price": {
       "usd": 81.51,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 458.12,
+      "semSideboard": 458.12,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -43430,6 +44237,12 @@
     "price": {
       "usd": 119.68,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 666.95,
+      "semSideboard": 666.95,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -43768,6 +44581,12 @@
     "price": {
       "usd": 73.4,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 176.14,
+      "semSideboard": 176.14,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -44122,6 +44941,12 @@
     "price": {
       "usd": 62.63,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 202.08,
+      "semSideboard": 202.08,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -44468,6 +45293,12 @@
     "price": {
       "usd": 64.49,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 214.36,
+      "semSideboard": 214.36,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -44834,6 +45665,12 @@
     "price": {
       "usd": 53.35,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 162.21,
+      "semSideboard": 162.21,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -45188,6 +46025,12 @@
     "price": {
       "usd": 60.43,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 192.66,
+      "semSideboard": 192.66,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -45542,6 +46385,12 @@
     "price": {
       "usd": 96.72,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 164.2,
+      "semSideboard": 164.2,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -45900,6 +46749,12 @@
     "price": {
       "usd": 130.1,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 384.23,
+      "semSideboard": 384.23,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -46266,6 +47121,12 @@
     "price": {
       "usd": 63.33,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 197.83,
+      "semSideboard": 197.83,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -46640,6 +47501,12 @@
     "price": {
       "usd": 112.49,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 395.72,
+      "semSideboard": 395.72,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -46998,6 +47865,12 @@
     "price": {
       "usd": 146.2,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 390.6,
+      "semSideboard": 390.6,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -47352,6 +48225,12 @@
     "price": {
       "usd": 55.2,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 147.96,
+      "semSideboard": 147.96,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -47722,6 +48601,12 @@
     "price": {
       "usd": 119.41,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 293.83,
+      "semSideboard": 293.83,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -48100,6 +48985,12 @@
     "price": {
       "usd": 123.64,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 280.43,
+      "semSideboard": 280.43,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -48474,6 +49365,12 @@
     "price": {
       "usd": 157.46,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 412.96,
+      "semSideboard": 412.96,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -48836,6 +49733,12 @@
     "price": {
       "usd": 130.96,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 599.35,
+      "semSideboard": 599.35,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -49198,6 +50101,12 @@
     "price": {
       "usd": 85.09,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 343.43,
+      "semSideboard": 343.43,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -49568,6 +50477,12 @@
     "price": {
       "usd": 72.92,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 294.91,
+      "semSideboard": 294.91,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -49930,6 +50845,12 @@
     "price": {
       "usd": 46.03,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 156.43,
+      "semSideboard": 156.43,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -50304,6 +51225,12 @@
     "price": {
       "usd": 127.67,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 741.97,
+      "semSideboard": 741.97,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -50686,6 +51613,12 @@
     "price": {
       "usd": 52.24,
       "date": "2026-11-04"
+    },
+    "priceBrl": {
+      "total": 290.32,
+      "semSideboard": 290.32,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -51470,6 +52403,12 @@
     "price": {
       "usd": 1279.28,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 6158.0,
+      "semSideboard": 6158.0,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -51842,6 +52781,12 @@
     "price": {
       "usd": 474.55,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 1883.04,
+      "semSideboard": 1883.04,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -52214,6 +53159,12 @@
     "price": {
       "usd": 509.64,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 1890.33,
+      "semSideboard": 1890.33,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -52530,6 +53481,12 @@
     "price": {
       "usd": 681.07,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 2916.59,
+      "semSideboard": 2916.59,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -52902,6 +53859,12 @@
     "price": {
       "usd": 262.38,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 1222.79,
+      "semSideboard": 1222.79,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -53284,6 +54247,12 @@
     "price": {
       "usd": 88.67,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 476.13,
+      "semSideboard": 476.13,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -53658,6 +54627,12 @@
     "price": {
       "usd": 76.02,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 487.59,
+      "semSideboard": 487.59,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -54060,6 +55035,12 @@
     "price": {
       "usd": 130.8,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 659.33,
+      "semSideboard": 659.33,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -54446,6 +55427,12 @@
     "price": {
       "usd": 94.49,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 572.48,
+      "semSideboard": 572.48,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -54826,6 +55813,12 @@
     "price": {
       "usd": 197.03,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 970.22,
+      "semSideboard": 970.22,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -54990,6 +55983,12 @@
     "price": {
       "usd": 268.16,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 1197.15,
+      "semSideboard": 1197.15,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -55358,6 +56357,12 @@
     "price": {
       "usd": 159.48,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 794.2,
+      "semSideboard": 794.2,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -55762,6 +56767,12 @@
     "price": {
       "usd": 290.98,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 1380.96,
+      "semSideboard": 1380.96,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   },
   {
@@ -56142,6 +57153,12 @@
     "price": {
       "usd": 231.23,
       "date": "2026-11-13"
+    },
+    "priceBrl": {
+      "total": 1192.41,
+      "semSideboard": 1192.41,
+      "fonte": "LigaMagic, menor preço",
+      "date": "2026-11-26"
     }
   }
 ]

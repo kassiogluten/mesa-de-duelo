@@ -680,3 +680,10 @@ Pedido em 24/11/2026. Na mesa no PC (`godot-table/`), as cartas da sua mão cont
 - [ ] Ver o mesmo para a carta ampliada ao passar o mouse e para a pilha no painel, e conferir o custo no FPS da placa integrada.
 
 Medido em 25/11/2026 na UHD 770: o FSR do Automático e o branco do papel a 0,74 (`PRINT_PEAK`) são as maiores perdas, e a mão já era "fosca"; nenhum ajuste no 3D chega à imagem original (no máximo ~97% de semelhança, papel cinza e borrado com o FSR), e a mão em 2D chega a ~100% por uns 0,5 ms. O `glow_bloom` 0 é ganho sem custo; o MSAA 4x custa 5,4 ms sem melhorar a carta.
+
+## 154. Mesa no PC: preço dos decks prontos
+
+Pedido em 26/11/2026. Os decks prontos têm o preço em reais (LigaMagic, `priceBrl` em `shared/starter-decks.json`), e a mesa do navegador já o mostra na tela inicial, em Meus decks e na tela do deck. Na mesa no PC (`godot-table/`), os ladrilhos dos decks da tela inicial (`menu/deck_tile.gd`) têm só a arte e o nome.
+
+- [ ] Mostrar o preço (as cartas com o sideboard) no ladrilho e onde a mesa no PC mostrar os detalhes do deck, com a explicação do valor (só o deck principal, as cartas sem cotação e a data), como na mesa do navegador.
+- [ ] Cotação de mais de 30 dias apagada, como o preço das cartas (`cards/card_prices.gd`).

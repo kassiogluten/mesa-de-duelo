@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.258.0] - 2026-11-26
+
+### Mudou
+
+- **Preço em reais em todos os decks prontos.** Todos os decks prontos, de todos os formatos, mostram quanto custam em reais, pelo menor preço de cada carta na LigaMagic: na escolha de deck da tela inicial, em Meus decks e na tela do deck. O preço em dólar saiu. Nos decks com sideboard, o valor é o das 75 cartas, e a dica sobre ele diz também quanto fica só o deck principal; ela traz a data da cotação e as cartas que ficaram sem preço, fora da soma. Uma cotação com mais de 30 dias aparece apagada, como a das cartas.
+
 ## [0.257.0] - 2026-11-26
 
 ### Novo

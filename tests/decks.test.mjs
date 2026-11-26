@@ -360,7 +360,7 @@ test('Oathbreaker local rules: a planeswalker and a signature spell, 60 cards, s
   assert.ok(validateDeckLocal(d, 'free').issues.some(i => i.code === 'commander_format'));
   const ready = decks.DEFAULT_DECKS.filter(d => d.format === 'oathbreaker');
   assert.equal(ready.length, 10);
-  for (const deck of ready) { assert.equal(decks.totalDeckSize(deck), 60, deck.id); assert.equal(deck.commanders.length, 2, deck.id); assert.ok(deck.price, deck.id); }
+  for (const deck of ready) { assert.equal(decks.totalDeckSize(deck), 60, deck.id); assert.equal(deck.commanders.length, 2, deck.id); assert.ok(deck.priceBrl, deck.id); }
   // Os prontos de Oathbreaker só aparecem no Oathbreaker, nem no Livre nem no Commander.
   assert.ok(ready.every(deck => decks.readyDeckFits(deck, 'oathbreaker') && !decks.readyDeckFits(deck, 'free') && !decks.readyDeckFits(deck, 'commander')));
   assert.equal(decks.scryfallFormat('oathbreaker'), 'oathbreaker');
@@ -374,7 +374,7 @@ test('Precon lists only the 47 official precons as they came in the box, under C
   for (const deck of precons) {
     assert.equal(deck.format, 'commander', deck.id);
     assert.equal(decks.totalDeckSize(deck), 100, deck.id);
-    assert.ok(deck.bracket && deck.price && deck.precon.name && deck.precon.set && deck.precon.year >= 2013, deck.id);
+    assert.ok(deck.bracket && deck.priceBrl && deck.precon.name && deck.precon.set && deck.precon.year >= 2013, deck.id);
     // Os precons ficam só no Commander Precon: no Commander, a lista de decks prontos não os mostra.
     assert.ok(decks.readyDeckFits(deck, 'precon') && !decks.readyDeckFits(deck, 'commander'), deck.id);
   }
@@ -394,28 +394,33 @@ test('Precon lists only the 47 official precons as they came in the box, under C
   assert.ok(decks.hasCommandZone('precon') && decks.commanderRules('precon') && !decks.commanderRules('oathbreaker'));
 });
 
-test('starter deck price shows only when recorded, and not on personal decks', () => {
+test('starter deck price shows in reais only when recorded, and not on personal decks', () => {
   const urza = decks.DEFAULT_DECKS.find(d => d.id === 'commander-urza');
-  assert.equal(decks.deckPriceText(urza), 'US$ 1.605,93');
-  assert.match(decks.deckPriceDescription(urza), /^Quanto custam as 100 cartas em dólar, pela edição mais barata de cada uma, no Scryfall em 23\/10\/2026\./);
-  assert.match(deckPriceHTML(urza, 'x', true), /tabindex="0" aria-describedby="price-tip-commander-urza">US\$ 1\.605,93<span class="deck-price-tip" id="price-tip-commander-urza" role="tooltip">/);
-  assert.doesNotMatch(deckPriceHTML(urza, 'x', false), /tabindex/);
+  const day = new Date(2026, 10, 26);
+  assert.equal(decks.deckPriceText(urza), `R$ ${urza.priceBrl.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+  assert.doesNotMatch(decks.deckPriceText(urza), /US\$/);
+  assert.match(decks.deckPriceDescription(urza, day), /^Quanto custam as 100 cartas, pelo menor preço de cada uma na LigaMagic, entre todas as edições, em 26\/11\/2026\. É uma referência: o preço muda com o tempo\.$/);
+  assert.match(deckPriceHTML(urza, 'x', true, day), /^<span class="deck-price x" tabindex="0" aria-describedby="price-tip-commander-urza">R\$ [\d.]+,\d\d<span class="deck-price-tip" id="price-tip-commander-urza" role="tooltip">/);
+  assert.doesNotMatch(deckPriceHTML(urza, 'x', false, day), /tabindex/);
   assert.equal(deckPriceHTML({ ...urza, builtin: false }, 'x', true), '');
-  assert.equal(decks.deckPriceText({ ...urza, price: undefined }), '');
+  assert.equal(decks.deckPriceText({ ...urza, priceBrl: undefined }), '');
   assert.equal(decks.deckPriceText({ ...urza, builtin: false }), '');
-  // Todo deck pronto de Commander tem preço.
-  for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) assert.ok(deck.price, deck.id);
-  for (const deck of decks.DEFAULT_DECKS.filter(d => d.price)) assert.ok(deck.price.usd > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.price.date), deck.id);
+  // Cotação de mais de 30 dias: apagada e avisada na dica, como a das cartas.
+  const old = new Date(2026, 11, 27);
+  assert.ok(decks.deckPriceStale(urza, old) && !decks.deckPriceStale(urza, day));
+  assert.match(deckPriceHTML(urza, 'x', true, old), /class="deck-price x deck-price-stale"/);
+  assert.match(decks.deckPriceDescription(urza, old), /Esta cotação tem mais de 30 dias\.$/);
+  // Todo deck pronto tem preço em reais.
+  for (const deck of decks.DEFAULT_DECKS) assert.ok(deck.priceBrl, deck.id);
+  for (const deck of decks.DEFAULT_DECKS) assert.ok(deck.priceBrl.total >= deck.priceBrl.semSideboard && deck.priceBrl.semSideboard > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.priceBrl.date), deck.id);
 });
 
-test('Sacola 50 starter decks show the price in reais, with and without the sideboard in the tip', () => {
+test('the price tip separates the sideboard and names the cards without a quote', () => {
   const delver = decks.DEFAULT_DECKS.find(d => d.id === 'sacola-delver');
-  assert.equal(decks.deckPriceText(delver), 'R$ 85,88');
-  assert.equal(decks.deckPriceDescription(delver), 'Quanto custam as 75 cartas com o sideboard em reais, pelo menor preço de cada uma na LigaMagic em 25/11/2026. Só as 60 do deck principal: R$ 71,08. É uma referência: o preço muda com o tempo.');
-  assert.match(deckPriceHTML(delver, 'x', true), />R\$ 85,88<span class="deck-price-tip"/);
-  assert.equal(decks.deckPriceText({ ...delver, builtin: false }), '');
+  assert.match(decks.deckPriceDescription(delver), /^Quanto custam as 75 cartas com o sideboard, pelo menor preço de cada uma na LigaMagic, entre todas as edições, em \d\d\/\d\d\/\d{4}\. Só as 60 do deck principal: R\$ [\d.]+,\d\d\. É uma referência/);
   assert.doesNotMatch(decks.deckPriceDescription({ ...delver, sideboard: [] }), /sideboard|Só as/);
-  for (const deck of decks.DEFAULT_DECKS.filter(d => d.priceBrl)) assert.ok(deck.priceBrl.total >= deck.priceBrl.semSideboard && deck.priceBrl.semSideboard > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.priceBrl.date), deck.id);
+  const dinos = decks.DEFAULT_DECKS.find(d => d.id === 'commander-dinossauros');
+  assert.match(decks.deckPriceDescription(dinos), /Sem cotação, fora da soma: Welcome to \. \. \.\./);
 });
 
 
