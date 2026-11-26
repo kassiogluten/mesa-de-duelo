@@ -416,10 +416,6 @@ func _play_now(event: Dictionary, leaving: CardNode) -> void:
 		"turn":
 			var mine: bool = int(event.get("actor", -1)) == _you
 			hud.banner(PhaseText.turn_banner_text(_state), PhaseTrack.MINE if mine else PhaseTrack.THEIRS)
-			# De vez em quando, um bicho atravessa a mesa na virada do turno.
-			var critter: String = _critters.on_turn(Time.get_ticks_msec() / 1000.0, randf())
-			if critter != "":
-				get_tree().create_timer(1.2).timeout.connect(func() -> void: Critters.spawn(self, critter, speed))
 		"draw":
 			var actor: int = int(event.get("actor", _you))
 			if bool(event.get("searched", false)):

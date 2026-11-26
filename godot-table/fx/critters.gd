@@ -1,17 +1,13 @@
-# Os bichos que atravessam a mesa: quando entra uma criatura do tipo deles (o esquilo correndo aos pulos pela borda de
-# baixo, o rato disparando e parando para farejar, a aranha descendo num fio, o morcego voando no alto) e, raramente, de
-# vez em quando na virada do turno. E a mesa rangendo com o campo lotado. Bichos feitos de formas simples, de brinquedo.
+# Os bichos que atravessam a mesa, só quando entra uma criatura do tipo deles: o esquilo correndo aos pulos pela borda
+# de baixo, o rato disparando e parando para farejar, a aranha descendo num fio, o morcego voando no alto. E a mesa
+# rangendo com o campo lotado. Bichos feitos de formas simples, de brinquedo.
 class_name Critters
 extends RefCounted
 
 ## Subtipo da criatura (como o Forge escreve) → bicho.
 const KINDS := {"Squirrel": "squirrel", "Rat": "rat", "Spider": "spider", "Bat": "bat"}
-const ALL: PackedStringArray = ["squirrel", "rat", "spider", "bat"]
 ## Um bicho por vez: o próximo só depois deste tempo (segundos).
 const COOLDOWN := 20.0
-## Sem criatura do tipo, na virada do turno: a chance de um bicho passar e o tempo mínimo desde o último.
-const IDLE_CHANCE := 0.06
-const IDLE_GAP := 180.0
 ## Os bichos são de brinquedo, mas maiores que um bicho de verdade ao lado das cartas, para se verem da câmera.
 const SIZE := 1.9
 
@@ -35,14 +31,6 @@ func on_entered(card: Dictionary, now: float) -> String:
 		return ""
 	_last = now
 	return kind
-
-
-## Virada de turno: um bicho qualquer de vez em quando (`roll` de 0 a 1 decide a chance e qual), ou "".
-func on_turn(now: float, roll: float) -> String:
-	if now - _last < IDLE_GAP or roll >= IDLE_CHANCE:
-		return ""
-	_last = now
-	return ALL[mini(int(roll / IDLE_CHANCE * ALL.size()), ALL.size() - 1)]
 
 
 ## Solta o bicho na mesa. Cada um tem o caminho dele e some sozinho.

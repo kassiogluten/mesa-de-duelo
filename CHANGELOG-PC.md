@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.256.0] - 2026-11-25
+
+### Mudou
+
+- **Bichos só com a criatura deles.** O esquilo, o rato, a aranha e o morcego atravessam a mesa apenas quando entra em jogo uma criatura do tipo deles; não passam mais sozinhos, de vez em quando, na virada do turno.
+
 ## [0.255.0] - 2026-11-25
 
 ### Mudou

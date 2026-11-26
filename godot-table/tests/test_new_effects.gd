@@ -165,7 +165,7 @@ func test_crowded_field_creaks_with_a_gap() -> void:
 	check_eq(small["creak"], -1, "campo pequeno não range")
 
 
-func test_critters_come_with_their_creatures_and_rarely_alone() -> void:
+func test_critters_come_only_with_their_creatures() -> void:
 	check_eq(Critters.kind_for({"creature": true, "typeLine": "Creature — Squirrel"}), "squirrel", "esquilo")
 	check_eq(Critters.kind_for({"creature": true, "typeLine": "Creature — Vampire Bat"}), "bat", "morcego")
 	check_eq(Critters.kind_for({"creature": true, "typeLine": "Creature — Bear"}), "", "urso não tem bicho")
@@ -173,10 +173,7 @@ func test_critters_come_with_their_creatures_and_rarely_alone() -> void:
 	check_eq(critters.on_entered({"creature": true, "typeLine": "Creature — Rat"}, 100.0), "rat", "o rato passa")
 	check_eq(critters.on_entered({"creature": true, "typeLine": "Creature — Rat"}, 105.0), "", "um bicho por vez")
 	check_eq(critters.on_entered({"creature": true, "typeLine": "Creature — Rat"}, 100.0 + Critters.COOLDOWN), "rat", "depois do intervalo, de novo")
-	var idle := Critters.new()
-	check_eq(idle.on_turn(1000.0, 0.5), "", "na maioria das viradas, nada")
-	check(idle.on_turn(1000.0, 0.01) in Critters.ALL, "às vezes um bicho")
-	check_eq(idle.on_turn(1001.0, 0.01), "", "e não logo de novo")
+	check_eq(critters.on_entered({"creature": true, "typeLine": "Creature — Human Soldier"}, 500.0), "", "sem criatura do tipo, nenhum bicho")
 
 
 func test_game_changers_follow_the_shared_list() -> void:
