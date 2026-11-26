@@ -12,15 +12,16 @@ const SHORTCUTS: Array = [
 	["F", "control", "Controle total: para em toda etapa. De novo, volta ao jeito de passar de antes."],
 	["I", "inspect", "Abre a carta sob o mouse de perto (o clique direito também)."],
 	["+  −", "zoom_in", "Aproxima e afasta a mesa (a roda do mouse também, na direção do mouse)."],
-	["V", "view_next", "Troca o ângulo da câmera: padrão, pela esquerda, pela direita, de cima (Shift+V volta)."],
-	["0", "view_reset", "Volta à vista padrão (sem zoom, ângulo padrão)."],
+	["Q  E", "view_left", "Giram a mesa para a esquerda e para a direita (arrastar com o botão do meio do mouse gira e inclina)."],
+	["0", "view_reset", "Volta à vista padrão (sem zoom e sem giro)."],
 	["?", "help", "Mostra ou esconde esta lista."],
 ]
 
 
 ## A ação de uma tecla apertada ("" se não é atalho): primary, confirm, cancel, cycle, cycle_back, undo, control,
-## inspect, help, zoom_in, zoom_out, view_next, view_prev ou view_reset. Com Ctrl, Alt ou Meta, nada (os atalhos do
-## sistema ficam livres); repetição da tecla segurada, nada, menos no zoom (segurar o + continua aproximando).
+## inspect, help, zoom_in, zoom_out, view_left, view_right ou view_reset. Com Ctrl, Alt ou Meta, nada (os atalhos do
+## sistema ficam livres); repetição da tecla segurada, nada, menos no zoom e no giro (segurar o + continua aproximando,
+## segurar o Q continua girando).
 static func action_for(keycode: int, unicode: int, shift: bool, modifiers: bool, echo: bool = false) -> String:
 	if modifiers:
 		return ""
@@ -29,6 +30,10 @@ static func action_for(keycode: int, unicode: int, shift: bool, modifiers: bool,
 		return "zoom_in"
 	if unicode == 45 or keycode == KEY_KP_SUBTRACT or keycode == KEY_MINUS:
 		return "zoom_out"
+	if keycode == KEY_Q:
+		return "view_left"
+	if keycode == KEY_E:
+		return "view_right"
 	if echo:
 		return ""
 	if unicode == 63 or keycode == KEY_QUESTION or keycode == KEY_F1 or (keycode == KEY_SLASH and shift):
@@ -48,8 +53,6 @@ static func action_for(keycode: int, unicode: int, shift: bool, modifiers: bool,
 			return "control"
 		KEY_I:
 			return "inspect"
-		KEY_V:
-			return "view_prev" if shift else "view_next"
 		KEY_0, KEY_KP_0:
 			return "view_reset"
 	return ""

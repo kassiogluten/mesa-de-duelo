@@ -1,6 +1,7 @@
 # Prévia da vista da mesa (table/table_camera.gd): monta a mesa com o HUD sem servidor (um duelo, ou o Commander com 4)
-# e salva um print de cada ângulo pronto, do zoom de perto (puxando para o campo do oponente) e de longe, com uma mágica
-# na pilha mirando a criatura do oponente, para conferir a mão, a pilha, as setas, os selos e os retratos em cada vista.
+# e salva um print de algumas vistas (sem giro, girada 45° e 90°, de cima), do zoom de perto (puxando para o campo do
+# oponente) e de longe, com uma mágica na pilha mirando a criatura do oponente, para conferir a mão, a pilha, as setas,
+# os selos e os retratos em cada vista.
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_view.gd -- <duelo|commander> <pasta>
 extends SceneTree
 
@@ -55,29 +56,30 @@ func _initialize() -> void:
 	_table.set_target_marks([{"key": 11, "text": "1", "color": Color(1.0, 0.8, 0.3)}])
 	await create_timer(1.5).timeout
 	var rig: TableCamera = _table.view_rig
-	for i: int in TableCamera.ANGLES.size():
-		rig.set_angle(i)
+	for view: Array in [["padrao", 0.0, 0.0], ["giro-45", 45.0, 0.0], ["giro-90", -90.0, 0.0], ["cima", 0.0, 89.0]]:
+		rig.reset()
+		rig.orbit_by(deg_to_rad(float(view[1])), deg_to_rad(float(view[2])))
 		await create_timer(1.2).timeout
-		await _shot("%s-%s" % [mode, Txt.of((TableCamera.ANGLES[i] as Array)[0])])
-	rig.set_angle(0)
+		await _shot("%s-%s" % [mode, Txt.of(view[0])])
+	rig.reset()
 	# Zoom todo puxando para o campo do oponente (o ponto sob o mouse fica parado).
 	var size: Vector2 = root.get_visible_rect().size
-	for _step: int in 6:
+	for _step: int in 10:
 		rig.zoom_by(1.0, Vector2(size.x * 0.62, size.y * 0.3))
 	await create_timer(1.2).timeout
 	await _shot("%s-perto" % mode)
 	rig.reset()
-	for _step: int in 3:
+	for _step: int in 4:
 		rig.zoom_by(-1.0)
 	await create_timer(1.2).timeout
 	await _shot("%s-longe" % mode)
 	# A vista de cima com um pouco de zoom.
-	rig.set_angle(3)
+	rig.orbit_by(0.0, deg_to_rad(89.0))
 	rig.zoom_by(2.0)
 	await create_timer(1.2).timeout
 	await _shot("%s-cima-zoom" % mode)
 	# O botão da vista aberto, recortado em volta do painel.
-	rig.set_angle(3)
+	rig.orbit_by(deg_to_rad(30.0), 0.0)
 	await create_timer(1.0).timeout
 	var picker: ViewPicker = _hud._bar.view_picker
 	picker.set_open(true)

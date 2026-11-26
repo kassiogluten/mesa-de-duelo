@@ -1,6 +1,6 @@
 # Os controles da vista da mesa na partida (table/table_camera.gd): a roda do mouse aproxima e afasta na direção do
-# mouse, + e − pelo meio da tela, V troca o ângulo (Shift+V volta) e 0 volta à vista padrão; liga a vista ao botão da
-# barra do alto e aos retratos dos oponentes, que acompanham o lugar deles na mesa.
+# mouse, + e − pelo meio da tela, arrastar com o botão do meio gira e inclina, Q e E giram e 0 volta à vista padrão;
+# liga a vista ao botão da barra do alto e aos retratos dos oponentes, que acompanham o lugar deles na mesa.
 class_name ViewControls
 extends RefCounted
 
@@ -12,10 +12,19 @@ static func attach(table: TableView, hud: Hud) -> void:
 	table.view_rig.moved.connect(func(_done: bool) -> void: hud.follow_view())
 
 
-## Trata a roda do mouse e as teclas da câmera; devolve true se o evento era delas.
+## Trata a roda do mouse, o arrasto com o botão do meio e as teclas da câmera; devolve true se o evento era deles.
 static func handle(rig: TableCamera, event: InputEvent) -> bool:
 	if rig == null:
 		return false
+	var motion := event as InputEventMouseMotion
+	if motion:
+		if motion.button_mask & MOUSE_BUTTON_MASK_MIDDLE:
+			rig.drag(motion.relative)
+			return true
+		return false
+	var middle := event as InputEventMouseButton
+	if middle and middle.button_index == MOUSE_BUTTON_MIDDLE:
+		return true
 	var wheel := event as InputEventMouseButton
 	if wheel and wheel.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 		# O touchpad manda frações de um clique (factor); a roda comum manda 1 (ou 0, em alguns sistemas).
@@ -29,10 +38,10 @@ static func handle(rig: TableCamera, event: InputEvent) -> bool:
 			rig.zoom_by(1.0)
 		"zoom_out":
 			rig.zoom_by(-1.0)
-		"view_next":
-			rig.cycle_angle(1)
-		"view_prev":
-			rig.cycle_angle(-1)
+		"view_left":
+			rig.orbit_by(-TableCamera.KEY_STEP)
+		"view_right":
+			rig.orbit_by(TableCamera.KEY_STEP)
 		"view_reset":
 			rig.reset()
 		_:

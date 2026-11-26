@@ -74,7 +74,7 @@ func test_options_screen_has_every_tab() -> void:
 	check(screen.find_child("Volume", true, false) != null, "Som: o volume")
 	check(screen.find_child("UiSounds", true, false) is CheckBox, "Som: os sons da interface")
 	screen.show_tab("mesa")
-	check(screen.find_child("CameraAngle", true, false) != null, "Mesa: o ângulo da câmera")
+	check(screen.find_child("CameraYaw", true, false) != null, "Mesa: o giro da câmera")
 	screen.show_tab("teclado")
 	check(screen.find_child("Body", true, false).get_child_count() >= 2, "Teclado: a lista dos atalhos")
 	screen.show_tab("conta")

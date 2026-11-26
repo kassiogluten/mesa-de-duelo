@@ -58,6 +58,9 @@ func test_untap_only_when_the_turn_starts_and_tap_not_when_attacking() -> void:
 	open["tapped"] = false
 	check(bool(StateFx.changes(_snap(tapped), _snap(open), {}, true)["untap"]), "desvirou no começo do turno")
 	check(not bool(StateFx.changes(_snap(tapped), _snap(open), {}, false)["untap"]), "desvirar no meio do turno (efeito) não é a etapa")
+	check(bool(StateFx.changes(_snap(tapped), _snap(open), {}, false)["untapped"]), "mas desvirou: tem o som")
+	check(bool(StateFx.changes(_snap(tapped), _snap(open), {}, true)["untapped"]), "na etapa também")
+	check(not bool(StateFx.changes(_snap(open), _snap(tapped), {}, false)["untapped"]), "virar não é desvirar")
 	check(bool(StateFx.changes(_snap(open), _snap(tapped), {}, false)["tap"]), "virou para mana")
 	var bear: Dictionary = _card("Grizzly Bears")
 	var attacking: Dictionary = bear.duplicate()

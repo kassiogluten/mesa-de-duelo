@@ -1,5 +1,6 @@
-# O botão da vista na barra do alto da partida: o ícone de câmera com o ângulo de agora, que abre um painel com os
-# ângulos prontos (o de agora marcado), o zoom (− e +) e a volta à vista padrão, cada um com a tecla ao lado.
+# O botão da vista na barra do alto da partida: o ícone de câmera com a vista de agora (Padrão ou Girada), que abre um
+# painel com o giro (← e →, e como girar e inclinar com o mouse), o zoom (− e +) e a volta à vista padrão, cada um com
+# a tecla ao lado.
 class_name ViewPicker
 extends Button
 
@@ -29,7 +30,7 @@ func _ready() -> void:
 	add_theme_color_override("icon_hover_color", HudStyle.GOLD)
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	focus_mode = Control.FOCUS_NONE
-	tooltip_text = "Vista da mesa: a roda do mouse aproxima e afasta, V troca o ângulo, 0 volta à padrão."
+	tooltip_text = "Vista da mesa: a roda do mouse aproxima e afasta, arrastar com o botão do meio gira e inclina, 0 volta à padrão."
 	pressed.connect(func() -> void: set_open(not _panel.visible))
 	_catcher = Control.new()
 	_catcher.top_level = true
@@ -90,9 +91,16 @@ func _build_list() -> void:
 	title.add_theme_constant_override("outline_size", 0)
 	title.text = "  VISTA DA MESA"
 	_list.add_child(title)
-	for i: int in TableCamera.ANGLES.size():
-		var index: int = i
-		_list.add_child(_row(Txt.of((TableCamera.ANGLES[i] as Array)[1]), "V", i == rig.angle, func() -> void: rig.set_angle(index)))
+	_list.add_child(_turn_row())
+	var hint := HudStyle.label(HudStyle.SIZE_CAPTION, HudStyle.TEXT_DIM)
+	hint.add_theme_constant_override("outline_size", 0)
+	hint.text = "Arraste com o botão do meio do mouse para girar e inclinar."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size = Vector2(PANEL_WIDTH - 36, 0)
+	var hint_row := MarginContainer.new()
+	hint_row.add_theme_constant_override("margin_left", 36)
+	hint_row.add_child(hint)
+	_list.add_child(hint_row)
 	var line := HSeparator.new()
 	line.add_theme_constant_override("separation", 6)
 	_list.add_child(line)
@@ -130,6 +138,31 @@ func _row(label: String, key: String, current: bool, run: Callable, disabled: bo
 	name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(name)
 	line.add_child(_key(key))
+	return row
+
+
+## O giro: Q (←), quantos graus e para que lado, e E (→).
+func _turn_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(36, 0)
+	row.add_child(gap)
+	var label := HudStyle.label(HudStyle.SIZE_BODY, HudStyle.TEXT)
+	label.add_theme_constant_override("outline_size", 0)
+	var degrees: int = roundi(rad_to_deg(rig.yaw))
+	label.text = "Giro %d° %s" % [absi(degrees), "à esquerda" if degrees < 0 else "à direita"] if degrees != 0 else "Sem giro"
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	for entry: Array in [["←", -1.0, rig.yaw <= -TableCamera.MAX_YAW + 0.001, "Girar para a esquerda (Q)"], ["→", 1.0, rig.yaw >= TableCamera.MAX_YAW - 0.001, "Girar para a direita (E)"]]:
+		var side: float = entry[1]
+		var button := HudStyle.button(Txt.of(entry[0]), false)
+		button.custom_minimum_size = Vector2(40, 34)
+		button.focus_mode = Control.FOCUS_NONE
+		button.disabled = bool(entry[2])
+		button.tooltip_text = Txt.of(entry[3])
+		button.pressed.connect(func() -> void: rig.orbit_by(side * TableCamera.KEY_STEP))
+		row.add_child(button)
 	return row
 
 

@@ -2,6 +2,19 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.255.0] - 2026-11-25
+
+### Mudou
+
+- **Girar e inclinar a mesa à vontade.** No lugar dos quatro ângulos prontos, a mesa gira livre em volta do meio até 90° para cada lado e inclina da vista de sempre até olhar de cima: arraste com o botão do meio do mouse (a roda apertada), ou use Q e E para girar. O 0 volta à vista padrão, e o botão da vista no alto mostra o giro, com setas para girar. Nas opções, o giro com que a partida começa.
+- **Zoom mais amplo.** A roda do mouse agora aproxima bem mais, até ler uma carta no campo, e afasta mais, para ver a mesa inteira girada ou de cima.
+- **Virar e desvirar com som.** As permanentes viram e desviram mais devagar, num giro que dá para acompanhar, e cada virada soa baixinho como papel deslizando no feltro. Quando várias terras viram juntas para pagar, o som não embola, e o desvirar do começo do turno toca um som só para todas.
+
+### Corrigido
+
+- **Permanentes apertadas uma sobre a outra.** Com o campo cheio e as cartas se apertando na fileira, cada carta agora se inclina de leve e fica por cima da vizinha da direita, como cartas espalhadas na mesa, em vez de uma atravessar a outra. A fileira continua rente ao feltro, sem subir.
+- **Montes de fichas baixos.** Um monte grande de fichas iguais (40 Tesouros, por exemplo) não vira mais uma torre: fica baixo, como um maço de cartas, e as cartas vizinhas passam por cima dele sem levantar a fileira.
+
 ## [0.252.0] - 2026-11-25
 
 ### Novo

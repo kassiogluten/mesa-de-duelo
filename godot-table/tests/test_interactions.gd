@@ -31,7 +31,7 @@ func test_key_map() -> void:
 	check_eq(KeyMap.action_for(KEY_F1, 0, false, false), "help", "F1")
 	check_eq(KeyMap.action_for(KEY_Z, 122, false, true), "", "Ctrl+Z fica para o sistema")
 	check_eq(KeyMap.action_for(KEY_SPACE, 32, false, false, true), "", "Espaço segurado não repete")
-	check_eq(KeyMap.action_for(KEY_Q, 113, false, false), "", "tecla sem atalho")
+	check_eq(KeyMap.action_for(KEY_X, 120, false, false), "", "tecla sem atalho")
 	for raw: Variant in KeyMap.SHORTCUTS:
 		check((raw as Array).size() == 3, "cada atalho da ajuda tem tecla, ação e texto")
 

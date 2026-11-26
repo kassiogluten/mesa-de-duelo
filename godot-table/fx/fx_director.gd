@@ -86,6 +86,8 @@ func _ready() -> void:
 		add_child(_probe)
 	if table:
 		CardTrails.attach(self, table)
+		# O som de virar e desvirar sai dos toques do estado (fx/state_fx.gd), que só conhecem a mesa.
+		table.set_meta(&"sounds", sounds)
 
 
 func _exit_tree() -> void:

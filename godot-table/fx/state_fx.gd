@@ -58,18 +58,20 @@ static func snapshot(card: Dictionary, keys: PackedStringArray) -> Dictionary:
 	}
 
 
-## Compara a carta antes e agora e diz o que mudou: {dizzy: "arrived"|"cleared"|"", untap, tap, pt: Vector2i, loyalty:
+## Compara a carta antes e agora e diz o que mudou: {dizzy: "arrived"|"cleared"|"", untap (na etapa de desvirar),
+## untapped (desvirou, na etapa ou por efeito), tap, pt: Vector2i, loyalty:
 ## Vector2i(antes, agora) ou null, level, badges: as chaves de selo novas}. `skip`: marcadores que chegam por evento
 ## nesta carta (o efeito do marcador já mostra o P/T e a lealdade). `new_turn`: começou o turno de quem a controla.
 static func changes(before: Dictionary, now: Dictionary, skip: Dictionary, new_turn: bool) -> Dictionary:
-	var out: Dictionary = {"dizzy": "", "untap": false, "tap": false, "pt": Vector2i.ZERO, "loyalty": null, "level": false, "badges": PackedStringArray()}
+	var out: Dictionary = {"dizzy": "", "untap": false, "untapped": false, "tap": false, "pt": Vector2i.ZERO, "loyalty": null, "level": false, "badges": PackedStringArray()}
 	if before.is_empty():
 		out["dizzy"] = "arrived" if bool(now["dizzy"]) else ""
 		return out
 	if bool(now["dizzy"]) != bool(before["dizzy"]):
 		out["dizzy"] = "arrived" if bool(now["dizzy"]) else "cleared"
-	if bool(before["tapped"]) and not bool(now["tapped"]) and new_turn:
-		out["untap"] = true
+	if bool(before["tapped"]) and not bool(now["tapped"]):
+		out["untap"] = new_turn
+		out["untapped"] = true
 	elif not bool(before["tapped"]) and bool(now["tapped"]) and not bool(now["attacking"]):
 		out["tap"] = true
 	# A mesma face: transformar (o nome muda) e desvirar para cima têm o efeito deles.
@@ -108,6 +110,7 @@ func refresh() -> void:
 	var arrived: Array = []
 	var cleared: Array = []
 	var untaps: Array = []
+	var untapped: Array = []
 	var taps: Array = []
 	var pulses: Array = []
 	var others: Array = []
@@ -132,6 +135,8 @@ func refresh() -> void:
 					arrived.append(node)
 				"cleared":
 					cleared.append(node)
+			if bool(change["untapped"]):
+				untapped.append(node)
 			if bool(change["untap"]):
 				untaps.append(node)
 			elif bool(change["tap"]):
@@ -148,6 +153,12 @@ func refresh() -> void:
 	sickness.keep(dizzy)
 	if first:
 		return
+	var sounds: Sounds = table.get_meta(&"sounds", null) as Sounds if table.has_meta(&"sounds") else null
+	TapFx.turn_sound(sounds, untapped, true)
+	var tapped: Array = []
+	for pair: Variant in taps:
+		tapped.append((pair as Array)[0])
+	TapFx.turn_sound(sounds, tapped, false)
 	_play(arrived, cleared, untaps, taps, pulses, others, new_turn)
 
 

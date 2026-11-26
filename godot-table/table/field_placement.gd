@@ -34,8 +34,22 @@ var _staggered: Dictionary = {}
 var _marked_before: Dictionary = {}
 
 
-## Quanto cada cópia de um monte ×N fica acima da de baixo (um pouco mais que a espessura de uma carta).
-const COPY_RISE := 0.012
+## Quanto cada cópia de um monte ×N fica acima da de baixo: a espessura de uma carta de papel, como no grimório
+## (PaperPhysics.PILE_STEP), e o monte inteiro no máximo PILE_HEIGHT (o ×N diz quantas são). Basta para nada se
+## atravessar, porque a carta desenha a face de cima na altura dela; 40 Tesouros dão um monte baixo, não uma torre, e a
+## vizinha da esquerda passa por cima dele subindo pouco.
+static func copy_rise(count: int) -> float:
+	return minf(PaperPhysics.PILE_STEP, PILE_HEIGHT / maxf(count - 1, 1))
+
+
+## Fileira apertada (row_pose): quanto a borda da carta passa acima da vizinha da direita que ela cobre, e a inclinação
+## máxima. A carta desenha a face de cima na altura dela (a espessura fica para baixo), então basta uma folga mínima.
+const OVERLAP_CLEAR := 0.005
+const MAX_TILT := deg_to_rad(4.0)
+## Quanto cada anexo fica abaixo da carta a que está preso.
+const ATTACH_DROP := 0.003
+## A altura máxima de um monte ×N no campo (unidades da mesa, antes da escala): a de umas 11 cartas.
+const PILE_HEIGHT := 0.044
 
 
 func _init(table: TableView) -> void:
@@ -144,23 +158,90 @@ func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
 		_place_separator("sep:%d:%s" % [int(player["id"]), row], items, frame, z)
 		# Os selos crescem um pouco nas cartas menores e mais longe da câmera, para continuarem legíveis.
 		var boost: float = (1.0 + maxf(0.0, -z) * 0.07) / sqrt(scale)
-		for raw: Variant in items:
-			var item: Dictionary = raw
+		var pose: Dictionary = row_pose(items, ctx)
+		for i: int in items.size():
+			var item: Dictionary = items[i]
+			var lift: float = float((pose["lifts"] as Array)[i]) * scale
+			var slope: float = float(pose["slope"]) if bool((pose["tilted"] as Array)[i]) else 0.0
 			var cards: Array = item["cards"]
 			var squeeze: float = item["squeeze"]
 			for k: int in cards.size():
 				var card: Dictionary = cards[k]
 				var tapped: bool = bool(card.get("tapped", false))
 				var x: float = float(frame["cx"]) + (float(item["x"]) + k * FieldLayout.copy_step(cards.size(), tapped) * squeeze) * scale
-				# Cada cópia apoiada na de baixo (a espessura de uma carta), sem se atravessarem.
-				var t := Transform3D(field_basis(tapped, scale), Vector3(x, FIELD_Y + COPY_RISE * scale * k + 0.008, z))
+				# Cada cópia apoiada na de baixo (a espessura de uma carta), sem se atravessarem. Inclinada, a borda esquerda
+				# fica nessa altura e o meio (onde a carta gira) sobe a metade da largura na inclinação.
+				var half: float = (FieldLayout.CARD.y if tapped else FieldLayout.CARD.x) / 2.0 * scale
+				var t := Transform3D(tilt_basis(slope) * field_basis(tapped, scale), Vector3(x, FIELD_Y + copy_rise(cards.size()) * scale * k + 0.008 + lift + slope * half, z))
 				var top: bool = k == cards.size() - 1
 				out.append({"card": card, "t": t, "base": t, "sleeve": sleeve, "side": int(frame["side"]), "boost": boost,
 					"badges": BadgeSpec.for_pile(cards, ctx) if top else {},
 					"below": int((cards[k - 1] as Dictionary)["id"]) if k > 0 else -1})
 				if k == 0:
-					_layout_attachments(card, t, scale, squeeze, out)
-					_layout_exiled(card, t, scale, squeeze, out)
+					_layout_attachments(card, t, scale, squeeze, out, slope)
+					_layout_exiled(card, t, scale, squeeze, out, slope)
+
+
+## Fileira apertada, os montes encostando: o da esquerda fica sempre por cima do da direita, sem as cartas se
+## atravessarem e sem empilhar a fileira inteira numa rampa. Quem encosta num vizinho à direita inclina de leve (a borda
+## esquerda no feltro, a direita subindo: como cartas espalhadas, cada uma apoiada na seguinte), todas no mesmo ângulo,
+## o bastante para a borda passar OVERLAP_CLEAR acima da vizinha. Só sobe (`lifts`) quem cobre as cópias de um monte ×N
+## (cada cópia fica mais alta que a de baixo; o monte tem no máximo PILE_HEIGHT) ou leva anexos, que ficam um pouco
+## abaixo dela.
+## Devolve {slope: a inclinação (subida por unidade de largura), tilted: [bool], lifts: [altura da borda esquerda]},
+## em unidades da mesa antes da escala.
+static func row_pose(items: Array, ctx: Dictionary) -> Dictionary:
+	var n: int = items.size()
+	var lifts: Array = []
+	lifts.resize(n)
+	lifts.fill(0.0)
+	var tilted: Array = []
+	tilted.resize(n)
+	tilted.fill(false)
+	var nearest: float = INF
+	for i: int in n - 1:
+		var right: float = _item_right(items[i])
+		for j: int in range(i + 1, n):
+			if right > _item_left(items[j]) + 0.001:
+				tilted[i] = true
+				nearest = minf(nearest, _item_left(items[j]) - _item_left(items[i]))
+	var slope: float = 0.0
+	if nearest < INF:
+		slope = minf(OVERLAP_CLEAR / maxf(nearest, 0.01), tan(MAX_TILT))
+	var attachments: Dictionary = ctx.get("attachments", {})
+	for i: int in range(n - 2, -1, -1):
+		if not tilted[i]:
+			continue
+		var a: Dictionary = items[i]
+		var a_left: float = _item_left(a)
+		var a_right: float = _item_right(a)
+		var atts: int = (attachments.get(int(((a["cards"] as Array)[0] as Dictionary)["id"]), []) as Array).size()
+		var lift: float = 0.0
+		for j: int in range(i + 1, n):
+			var b: Dictionary = items[j]
+			var b_left: float = _item_left(b)
+			if a_right <= b_left + 0.001:
+				continue
+			# Cada cópia do monte da direita que fica debaixo deste: a borda esquerda dela, mais alta que a de baixo.
+			var b_cards: Array = b["cards"]
+			var step: float = FieldLayout.copy_step(b_cards.size(), bool(b["tapped"])) * float(b["squeeze"])
+			var covered: int = clampi(int(ceil((a_right - b_left) / maxf(step, 0.0001))), 1, b_cards.size())
+			for k: int in covered:
+				var under: float = float(lifts[j]) + copy_rise(b_cards.size()) * k + OVERLAP_CLEAR + ATTACH_DROP * atts
+				lift = maxf(lift, under - slope * (b_left + k * step - a_left))
+		lifts[i] = lift
+	return {"slope": slope, "tilted": tilted, "lifts": lifts}
+
+
+## Onde começa, à esquerda, um monte já arrumado na fileira (a carta de baixo), no espaço da fileira.
+static func _item_left(item: Dictionary) -> float:
+	return float(item["x"]) - (FieldLayout.CARD.y if bool(item["tapped"]) else FieldLayout.CARD.x) / 2.0
+
+
+## Onde termina, à direita, um monte já arrumado na fileira (a última cópia ou o último anexo), no espaço da fileira.
+static func _item_right(item: Dictionary) -> float:
+	var card_w: float = FieldLayout.CARD.y if bool(item["tapped"]) else FieldLayout.CARD.x
+	return float(item["x"]) + (float(item["width"]) - card_w) * float(item["squeeze"]) + card_w / 2.0
 
 
 ## Quanto o meio de uma fileira esticada anda para o lado livre (`side`: o sinal e o máximo, de SeatLayout): o bastante para a
@@ -172,15 +253,15 @@ static func stretch_shift(needed: float, width: float, wide: float, side: float)
 
 
 ## Auras e equipamentos presos a `host`: atrás dela, cada um um pouco mais para a direita e para o alto, menores.
-func _layout_attachments(host: Dictionary, host_t: Transform3D, scale: float, squeeze: float, out: Array) -> void:
+func _layout_attachments(host: Dictionary, host_t: Transform3D, scale: float, squeeze: float, out: Array, slope: float = 0.0) -> void:
 	var atts: Array = (view.badge_context()["attachments"] as Dictionary).get(int(host["id"]), [])
 	var rise: float = FieldLayout.ATTACH_RISE * FieldLayout.CARD.y * minf(1.0, 1.5 / maxf(atts.size(), 1))
 	for i: int in atts.size():
 		var card: Dictionary = atts[i]
 		var n: int = i + 1
-		var offset := Vector3(FieldLayout.ATTACH_STEP * FieldLayout.CARD.x * n * squeeze, -0.003 * n, -rise * n) * scale
+		var offset := Vector3(FieldLayout.ATTACH_STEP * FieldLayout.CARD.x * n * squeeze, -ATTACH_DROP * n, -rise * n) * scale
 		var att_scale: float = scale * FieldLayout.ATTACH_SCALE
-		var t := Transform3D(field_basis(bool(card.get("tapped", false)), att_scale), host_t.origin + offset)
+		var t := Transform3D(tilt_basis(slope) * field_basis(bool(card.get("tapped", false)), att_scale), host_t.origin + offset + Vector3(0, slope * offset.x, 0))
 		t.origin.y = maxf(t.origin.y, FIELD_Y)
 		out.append({"card": card, "t": t, "base": t, "sleeve": view.sleeve_of(int(card.get("controller", 0))), "side": 0, "boost": 1.0,
 			"badges": {}, "host": int(host["id"])})
@@ -188,7 +269,7 @@ func _layout_attachments(host: Dictionary, host_t: Transform3D, scale: float, sq
 
 ## As cartas exiladas por `host` (Oblivion Ring) e pelo que está preso a ela: por baixo dela, saindo pela borda de baixo,
 ## um pouco para a esquerda, esmaecidas. São cópias de vista (a chave é "exu:<id>"): a carta mesmo continua no exílio.
-func _layout_exiled(host: Dictionary, host_t: Transform3D, scale: float, squeeze: float, out: Array) -> void:
+func _layout_exiled(host: Dictionary, host_t: Transform3D, scale: float, squeeze: float, out: Array, slope: float = 0.0) -> void:
 	var under: Array = (view.badge_context().get("exiled_under", {}) as Dictionary).get(int(host["id"]), [])
 	var tapped: bool = bool(host.get("tapped", false))
 	var usable: Dictionary = view.badge_context().get("usable", {})
@@ -199,7 +280,7 @@ func _layout_exiled(host: Dictionary, host_t: Transform3D, scale: float, squeeze
 		if tapped:
 			off.y *= FieldLayout.CARD.x / FieldLayout.CARD.y
 		var offset := Vector3(off.x * squeeze, -0.003 * (j + 1), off.y) * scale
-		var t := Transform3D(field_basis(tapped, scale * FieldLayout.EXILED_SCALE), host_t.origin + offset)
+		var t := Transform3D(tilt_basis(slope) * field_basis(tapped, scale * FieldLayout.EXILED_SCALE), host_t.origin + offset + Vector3(0, slope * offset.x, 0))
 		t.origin.y = maxf(t.origin.y, FIELD_Y)
 		# A que acabou de ser exilada sai de baixo da permanente.
 		var from := Transform3D(t.basis, Vector3(host_t.origin.x, t.origin.y, host_t.origin.z))
@@ -333,6 +414,11 @@ func _schedule_advance(id: int, delay: float) -> void:
 		var node: CardNode = table.card_node(id)
 		if node:
 			node.move_to(t))
+
+
+## A inclinação da carta apertada na fileira (row_pose): a borda direita sobe `slope` por unidade de largura.
+static func tilt_basis(slope: float) -> Basis:
+	return Basis.IDENTITY if slope == 0.0 else Basis(Vector3.BACK, atan(slope))
 
 
 static func field_basis(tapped: bool, scale: float) -> Basis:

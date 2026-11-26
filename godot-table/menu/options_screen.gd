@@ -182,10 +182,11 @@ func _sound() -> void:
 func _table() -> void:
 	var prefs: Dictionary = Prefs.load_all()
 	_group("Câmera da partida")
-	var angles: Array = TableCamera.ANGLES.map(func(entry: Array) -> Array: return [entry[0], entry[1]])
-	var angle: HBoxContainer = UiKit.stepper(angles, Txt.of(prefs.get("camera_angle", "padrao")), func(value: String) -> void: Prefs.save("camera_angle", value))
-	angle.name = "CameraAngle"
-	_body.add_child(UiKit.option_row("Ângulo", angle, "O ângulo em que a próxima partida começa. Na partida, a tecla V troca."))
+	var turn: HBoxContainer = UiKit.slider(float(prefs.get("camera_yaw", 0.0)), -rad_to_deg(TableCamera.MAX_YAW), rad_to_deg(TableCamera.MAX_YAW), 1.0,
+		func(v: float) -> void: Prefs.save("camera_yaw", v),
+		func(v: float) -> String: return "%d°" % roundi(v))
+	turn.name = "CameraYaw"
+	_body.add_child(UiKit.option_row("Giro", turn, "Quanto a mesa começa girada. Na partida, arraste com o botão do meio do mouse para girar e inclinar, ou use Q e E."))
 	var zoom: HBoxContainer = UiKit.slider(100.0 / float(prefs.get("camera_zoom", 1.0)), roundf(100.0 / TableCamera.ZOOM_FAR), roundf(100.0 / TableCamera.ZOOM_NEAR), 1.0,
 		func(v: float) -> void: Prefs.save("camera_zoom", clampf(100.0 / v, TableCamera.ZOOM_NEAR, TableCamera.ZOOM_FAR)),
 		func(v: float) -> String: return "%d%%" % roundi(v))

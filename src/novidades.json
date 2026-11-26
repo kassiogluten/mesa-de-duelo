@@ -1,4 +1,17 @@
 {
+  "0.255.0": {
+    "Girar e inclinar a mesa à vontade": [
+      { "img": "0.255.0/mesa-girada.webp", "legenda": "A mesa girada 45°: o campo de lado, a mão e o retrato do oponente no lugar de sempre na tela." },
+      { "img": "0.255.0/mesa-de-cima.webp", "legenda": "Inclinada até o fim: a mesa vista de cima." },
+      { "img": "0.255.0/painel-da-vista.webp", "legenda": "O botão da vista mostra \"Girada\" e abre o painel com o giro, as setas para girar, o zoom e a volta à vista padrão." }
+    ],
+    "Permanentes apertadas uma sobre a outra": [
+      { "img": "0.255.0/fileira-apertada.webp", "legenda": "Fileira de terrenos lotada: cada carta, inclinada de leve, fica por cima da que está à direita dela, e a fileira continua rente ao feltro." }
+    ],
+    "Montes de fichas baixos": [
+      { "img": "0.255.0/montes-de-fichas.webp", "legenda": "Pista ×5, Comida ×12 e Tesouro ×40 apertados na fileira: montes baixos, cada um por cima do da direita, com o ×N de todos à vista." }
+    ]
+  },
   "0.254.0": {
     "Boas-vindas na tela inicial": [
       { "img": "0.254.0/boas-vindas.webp", "legenda": "A faixa de boas-vindas no computador: o que é a mesa, os quatro decks para começar com o jeito de jogar de cada um, a Horda Goblin já escolhida e o botão Jogar contra o computador." },

@@ -46,9 +46,10 @@ func test_camera_keys() -> void:
 	check_eq(KeyMap.action_for(KEY_MINUS, 45, false, false), "zoom_out", "−")
 	check_eq(KeyMap.action_for(KEY_KP_SUBTRACT, 45, false, false), "zoom_out", "− do teclado numérico")
 	check_eq(KeyMap.action_for(KEY_EQUAL, 43, true, false, true), "zoom_in", "segurar o + continua aproximando")
-	check_eq(KeyMap.action_for(KEY_V, 118, false, false), "view_next", "V troca o ângulo")
-	check_eq(KeyMap.action_for(KEY_V, 86, true, false), "view_prev", "Shift+V volta")
-	check_eq(KeyMap.action_for(KEY_V, 118, false, false, true), "", "V segurado não fica girando")
+	check_eq(KeyMap.action_for(KEY_Q, 113, false, false), "view_left", "Q gira para a esquerda")
+	check_eq(KeyMap.action_for(KEY_E, 101, false, false), "view_right", "E gira para a direita")
+	check_eq(KeyMap.action_for(KEY_E, 101, false, false, true), "view_right", "segurar o E continua girando")
+	check_eq(KeyMap.action_for(KEY_V, 118, false, false), "", "o V não troca mais de ângulo pronto")
 	check_eq(KeyMap.action_for(KEY_0, 48, false, false), "view_reset", "0 volta à vista padrão")
 	check_eq(KeyMap.action_for(KEY_KP_0, 48, false, false), "view_reset", "0 do teclado numérico")
 	check_eq(KeyMap.action_for(KEY_MINUS, 45, false, true), "", "Ctrl+− fica para o sistema")
@@ -68,9 +69,11 @@ func test_hand_stays_put_on_screen_in_every_view() -> void:
 	var before: Array = _hand_on_screen(table)
 	check_eq(before.size(), 5, "as cinco cartas da mão")
 	var rig: TableCamera = table.view_rig
-	for i: int in TableCamera.ANGLES.size():
+	var views: Array = [[0.0, TableCamera.DEFAULT_PITCH], [-TableCamera.MAX_YAW, TableCamera.DEFAULT_PITCH], [TableCamera.MAX_YAW * 0.4, 1.2], [0.0, TableCamera.MAX_PITCH]]
+	for i: int in views.size():
 		for zoom: float in [TableCamera.ZOOM_NEAR, 1.0, TableCamera.ZOOM_FAR]:
-			rig.angle = i
+			rig.yaw = (views[i] as Array)[0]
+			rig.pitch = (views[i] as Array)[1]
 			rig.zoom = zoom
 			rig.snap()
 			var now: Array = _hand_on_screen(table)
@@ -120,25 +123,46 @@ func test_pan_room_grows_with_zoom() -> void:
 	check_eq(TableCamera.clamp_pan(Vector3(0, 0, 9), TableCamera.ZOOM_NEAR), Vector3(0, 0, TableCamera.PAN_NEAR), "para o seu lado, menos")
 
 
-func test_angles_cycle_and_keep_the_zoom() -> void:
+func test_free_turn_stops_at_90_degrees_and_keeps_the_zoom() -> void:
 	var table := _table()
 	var rig: TableCamera = table.view_rig
 	rig.zoom_by(1.0)
 	var zoom: float = rig.zoom
-	rig.cycle_angle(1)
-	check_eq(rig.angle_name(), "Pela esquerda", "V: o próximo ângulo")
-	rig.cycle_angle(-1)
-	rig.cycle_angle(-1)
-	check_eq(rig.angle_name(), "De cima", "Shift+V volta, dando a volta")
-	check_eq(rig.zoom, zoom, "trocar o ângulo mantém o zoom")
-	check(rig.moving(), "a troca é com transição")
+	rig.orbit_by(-TableCamera.KEY_STEP)
+	check(rig.yaw < 0.0, "Q: a câmera vai para a esquerda")
+	check_eq(rig.angle_name(), "Girada", "o botão mostra a vista girada")
+	check(rig.moving(), "o giro é com transição")
+	rig.orbit_by(-10.0)
+	check_eq(rig.yaw, -TableCamera.MAX_YAW, "o giro para em 90° para a esquerda")
+	rig.orbit_by(20.0)
+	check_eq(rig.yaw, TableCamera.MAX_YAW, "e em 90° para a direita")
+	rig.drag(Vector2(0, 10000))
+	check_eq(rig.pitch, TableCamera.MAX_PITCH, "arrastar para baixo inclina até olhar de cima")
+	rig.drag(Vector2(0, -10000))
+	check_eq(rig.pitch, TableCamera.DEFAULT_PITCH, "e para cima volta só até a inclinação de sempre")
+	rig.drag(Vector2(100, 0))
+	check(rig.yaw < TableCamera.MAX_YAW, "arrastar para a direita gira a mesa junto com o mouse")
+	check_eq(rig.zoom, zoom, "girar mantém o zoom")
+	rig.snap()
+	# Girada 90°, a câmera fica do lado da mesa, na mesma distância do meio.
+	rig.yaw = TableCamera.MAX_YAW
+	rig.pitch = TableCamera.DEFAULT_PITCH
+	rig.zoom = 1.0
+	rig.pan = Vector3.ZERO
+	rig.snap()
+	var eye: Vector3 = (rig.goal() as Dictionary)["eye"]
+	check(eye.x > 5.0 and absf(eye.z - TableCamera.PIVOT.z) < 0.01, "a 90°, a câmera olha a mesa pelo lado direito")
+	check(is_equal_approx(eye.distance_to(TableCamera.PIVOT), TableCamera.DISTANCE), "na distância de sempre")
+	rig.reset()
+	rig.snap()
+	check(rig.is_default(), "0 volta à vista padrão")
 	_cleanup(table)
 
 
 func test_effects_return_to_the_chosen_view() -> void:
 	var table := _table()
 	var rig: TableCamera = table.view_rig
-	rig.set_angle(3)
+	rig.orbit_by(0.6, 0.4)
 	rig.zoom_by(2.0)
 	rig.snap()
 	var target := Vector3(1.5, 0.2, -2.0)
@@ -152,17 +176,21 @@ func test_effects_return_to_the_chosen_view() -> void:
 	_cleanup(table)
 
 
-func test_prefs_restore_angle_and_zoom() -> void:
+func test_prefs_restore_turn_and_zoom() -> void:
 	var table := _table()
 	var rig: TableCamera = table.view_rig
-	rig.load_prefs({"camera_angle": "cima", "camera_zoom": 0.8})
-	check_eq(rig.angle_name(), "De cima", "o ângulo guardado")
+	rig.load_prefs({"camera_yaw": -30.0, "camera_pitch": 75.0, "camera_zoom": 0.8})
+	check(is_equal_approx(rig.yaw, deg_to_rad(-30.0)), "o giro guardado")
+	check(is_equal_approx(rig.pitch, deg_to_rad(75.0)), "a inclinação guardada")
 	check(is_equal_approx(rig.zoom, 0.8), "o zoom guardado")
 	check(rig.pan.is_zero_approx(), "a vista começa no meio")
 	check(not rig.moving(), "já no lugar, sem transição")
-	rig.load_prefs({"camera_angle": "nenhum", "camera_zoom": 9.0})
-	check_eq(rig.angle, 0, "ângulo desconhecido: o padrão")
+	rig.load_prefs({"camera_yaw": 400.0, "camera_pitch": 10.0, "camera_zoom": 9.0})
+	check_eq(rig.yaw, TableCamera.MAX_YAW, "giro fora do limite fica no limite")
+	check_eq(rig.pitch, TableCamera.DEFAULT_PITCH, "inclinação abaixo da de sempre fica na de sempre")
 	check_eq(rig.zoom, TableCamera.ZOOM_FAR, "zoom fora do limite fica no limite")
+	rig.load_prefs({"camera_angle": "cima"})
+	check(rig.is_default(), "o ângulo pronto de antes não vale mais: a vista padrão")
 	_cleanup(table)
 
 

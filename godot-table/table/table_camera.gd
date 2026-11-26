@@ -1,28 +1,31 @@
 # A vista da mesa que o jogador escolhe: o zoom (roda do mouse, puxando para o ponto sob o mouse, e as teclas + e −) e
-# o ângulo pronto (padrão, pela esquerda, pela direita, de cima), com transição suave. É o suporte da câmera: ela fica
-# dentro dele no lugar de sempre (TableView.CAMERA_POS), então os efeitos que a mexem partem da vista escolhida e voltam
-# para ela, e a mão, que acompanha a câmera, fica no mesmo lugar da tela em qualquer vista.
+# o giro livre em volta do meio da mesa (arrastando com o botão do meio do mouse, e Q e E): girar até 90° para cada lado
+# e inclinar da vista de sempre até olhar de cima, com transição suave. É o suporte da câmera: ela fica dentro dele no
+# lugar de sempre (TableView.CAMERA_POS), então os efeitos que a mexem partem da vista escolhida e voltam para ela, e a
+# mão, que acompanha a câmera, fica no mesmo lugar da tela em qualquer vista.
 class_name TableCamera
 extends Node3D
 
 ## A vista andou (a cada quadro da transição): o que acompanha a câmera (a mão, a pilha, o seu comandante, os retratos)
 ## vai junto. `done`: chegou na vista escolhida.
 signal moved(done: bool)
-## O jogador trocou o ângulo ou o zoom (o botão da vista mostra o de agora).
+## O jogador girou, inclinou ou mudou o zoom (o botão da vista mostra o de agora).
 signal changed
 
-## Os ângulos prontos: [chave, nome, olho, ponto olhado]. O padrão é o da mesa de sempre; os dos lados giram em volta
-## do meio da mesa (15°) e se afastam um pouco; o de cima sobe e se afasta para o campo dos oponentes caber inteiro.
-const ANGLES: Array = [
-	["padrao", "Padrão", Vector3(0, 8.4, 6.3), Vector3(0, 0, 0.6)],
-	["esquerda", "Pela esquerda", Vector3(-1.56, 8.9, 6.44), Vector3(0, 0, 0.6)],
-	["direita", "Pela direita", Vector3(1.56, 8.9, 6.44), Vector3(0, 0, 0.6)],
-	["cima", "De cima", Vector3(0, 10.8, 4.23), Vector3(0, 0, 0.3)],
-]
+## O ponto em volta do qual a mesa gira, a distância e a inclinação da vista de sempre (da câmera de TableView).
+const PIVOT := TableView.CAMERA_LOOK
+static var DISTANCE: float = (TableView.CAMERA_POS - TableView.CAMERA_LOOK).length()
+static var DEFAULT_PITCH: float = atan2(TableView.CAMERA_POS.y - TableView.CAMERA_LOOK.y, TableView.CAMERA_POS.z - TableView.CAMERA_LOOK.z)
+## O giro (para cada lado) e a inclinação até olhar de cima (quase 90°: reto para baixo a câmera perderia o "para cima").
+const MAX_YAW := deg_to_rad(90.0)
+const MAX_PITCH := deg_to_rad(89.0)
+## Quanto gira cada pixel arrastado com o botão do meio, e cada toque de Q ou E (segurar continua girando).
+const DRAG_SPEED := deg_to_rad(0.3)
+const KEY_STEP := deg_to_rad(10.0)
 ## O zoom é quanto a distância da câmera ao meio da mesa encolhe (1 é a de sempre): de perto e de longe, e o passo de
 ## cada clique da roda ou tecla.
-const ZOOM_NEAR := 0.6
-const ZOOM_FAR := 1.15
+const ZOOM_NEAR := 0.35
+const ZOOM_FAR := 1.5
 const ZOOM_STEP := 0.9
 ## Com o zoom todo, quanto a vista pode andar para o lado e para a frente e para trás (unidades da mesa) indo atrás do
 ## mouse: o bastante para chegar nas bordas do campo, sem sair da mesa; sem zoom, a vista fica no meio.
@@ -38,11 +41,17 @@ const POINT_Y := 0.05
 static var HOME := Transform3D(Basis.looking_at(TableView.CAMERA_LOOK - TableView.CAMERA_POS), TableView.CAMERA_POS)
 
 var camera: Camera3D
-## O ângulo escolhido (índice de ANGLES), o zoom e quanto o ponto olhado andou atrás do mouse (no tampo).
-var angle: int = 0
+## A vista escolhida: o giro (radianos; positivo leva a câmera para a direita), a inclinação (radianos acima do tampo),
+## o zoom e quanto o ponto olhado andou atrás do mouse (no tampo).
+var yaw: float = 0.0
+var pitch: float = DEFAULT_PITCH
 var zoom: float = 1.0
 var pan := Vector3.ZERO
-## Onde a câmera está agora na transição (olho e ponto olhado).
+## Onde a vista está agora na transição (os mesmos quatro valores, andando para os escolhidos).
+var _yaw: float = 0.0
+var _pitch: float = DEFAULT_PITCH
+var _zoom: float = 1.0
+var _pan := Vector3.ZERO
 var _eye: Vector3 = TableView.CAMERA_POS
 var _look: Vector3 = TableView.CAMERA_LOOK
 var _moving: bool = false
@@ -52,42 +61,46 @@ func _ready() -> void:
 	set_process(false)
 
 
-## O ângulo e o zoom guardados (game/prefs.gd), já no lugar, sem transição; a vista volta ao meio.
+## O giro, a inclinação e o zoom guardados (game/prefs.gd), já no lugar, sem transição; a vista volta ao meio.
 func load_prefs(prefs: Dictionary = Prefs.load_all()) -> void:
-	angle = index_of(Txt.of(prefs.get("camera_angle", "padrao")))
+	yaw = clampf(deg_to_rad(float(prefs.get("camera_yaw", 0.0))), -MAX_YAW, MAX_YAW)
+	pitch = clampf(deg_to_rad(float(prefs.get("camera_pitch", rad_to_deg(DEFAULT_PITCH)))), DEFAULT_PITCH, MAX_PITCH)
 	zoom = clampf(float(prefs.get("camera_zoom", 1.0)), ZOOM_NEAR, ZOOM_FAR)
 	pan = Vector3.ZERO
 	snap()
 
 
-## O índice do ângulo com essa chave (0, o padrão, se não há).
-static func index_of(key: String) -> int:
-	for i: int in ANGLES.size():
-		if (ANGLES[i] as Array)[0] == key:
-			return i
-	return 0
-
-
-## O nome do ângulo de agora ("Padrão", "De cima"…).
+## O nome da vista de agora: "Padrão" sem giro nem inclinação (o zoom não conta), "Girada" com eles.
 func angle_name() -> String:
-	return Txt.of((ANGLES[angle] as Array)[1])
+	return "Padrão" if is_straight() else "Girada"
 
 
-## Está na vista padrão (sem zoom, ângulo padrão)?
+## Sem giro e na inclinação de sempre?
+func is_straight() -> bool:
+	return absf(yaw) < 0.001 and absf(pitch - DEFAULT_PITCH) < 0.001
+
+
+## Está na vista padrão (sem zoom, sem giro)?
 func is_default() -> bool:
-	return angle == 0 and is_equal_approx(zoom, 1.0) and pan.is_zero_approx()
+	return is_straight() and is_equal_approx(zoom, 1.0) and pan.is_zero_approx()
 
 
-## Troca para o ângulo `index`, mantendo o zoom.
-func set_angle(index: int) -> void:
-	angle = posmod(index, ANGLES.size())
-	pan = clamp_pan(pan, zoom)
+## Gira (`yaw_delta`, radianos; positivo leva a câmera para a direita) e inclina (`pitch_delta`; positivo olha mais de
+## cima), dentro dos limites, mantendo o zoom.
+func orbit_by(yaw_delta: float, pitch_delta: float = 0.0) -> void:
+	var next_yaw: float = clampf(yaw + yaw_delta, -MAX_YAW, MAX_YAW)
+	var next_pitch: float = clampf(pitch + pitch_delta, DEFAULT_PITCH, MAX_PITCH)
+	if is_equal_approx(next_yaw, yaw) and is_equal_approx(next_pitch, pitch):
+		return
+	yaw = next_yaw
+	pitch = next_pitch
 	_retarget()
 
 
-## O próximo ângulo (`step` -1 volta).
-func cycle_angle(step: int = 1) -> void:
-	set_angle(angle + step)
+## Arrastou o mouse `pixels` com o botão do meio: a mesa vai atrás do mouse (para a direita gira para a direita, para
+## baixo inclina para olhar mais de cima).
+func drag(pixels: Vector2) -> void:
+	orbit_by(-pixels.x * DRAG_SPEED, pixels.y * DRAG_SPEED)
 
 
 ## Aproxima (`steps` > 0) ou afasta, com o ponto `screen` (pixels da tela; (-1, -1) para o meio) parado na tela.
@@ -101,7 +114,7 @@ func zoom_by(steps: float, screen: Vector2 = Vector2(-1, -1)) -> void:
 		# O olho e o ponto olhado encolhem em volta do ponto sob o mouse: ele fica parado na tela.
 		var ratio: float = next / zoom
 		var look: Vector3 = (point as Vector3) + ((view["look"] as Vector3) - (point as Vector3)) * ratio
-		pan = Vector3(look.x, 0, look.z) - _base_look()
+		pan = Vector3(look.x, 0, look.z) - PIVOT
 	zoom = next
 	pan = clamp_pan(pan, zoom)
 	_retarget()
@@ -109,7 +122,8 @@ func zoom_by(steps: float, screen: Vector2 = Vector2(-1, -1)) -> void:
 
 ## Volta para a vista padrão.
 func reset() -> void:
-	angle = 0
+	yaw = 0.0
+	pitch = DEFAULT_PITCH
 	zoom = 1.0
 	pan = Vector3.ZERO
 	_retarget()
@@ -123,14 +137,15 @@ static func clamp_pan(offset: Vector3, amount: float) -> Vector3:
 
 ## A vista escolhida (para onde a câmera vai): {eye, look}.
 func goal() -> Dictionary:
-	return view_of(angle, zoom, pan)
+	return view_of(yaw, pitch, zoom, pan)
 
 
-## A vista de um ângulo com um zoom e um deslocamento: o ponto olhado anda, e o olho chega mais perto dele.
-static func view_of(index: int, amount: float, offset: Vector3) -> Dictionary:
-	var entry: Array = ANGLES[posmod(index, ANGLES.size())]
-	var look: Vector3 = (entry[3] as Vector3) + offset
-	return {"eye": look + ((entry[2] as Vector3) - (entry[3] as Vector3)) * amount, "look": look}
+## A vista com um giro, uma inclinação, um zoom e um deslocamento: o ponto olhado anda, e o olho fica na distância de
+## sempre (encolhida pelo zoom), na inclinação e no giro pedidos em volta dele.
+static func view_of(turn: float, tilt: float, amount: float, offset: Vector3) -> Dictionary:
+	var look: Vector3 = PIVOT + offset
+	var arm := Vector3(0, sin(tilt), cos(tilt)) * DISTANCE * amount
+	return {"eye": look + arm.rotated(Vector3.UP, turn), "look": look}
 
 
 ## O suporte que leva a câmera do lugar de sempre até a vista {eye, look}.
@@ -140,17 +155,14 @@ static func rig_for(eye: Vector3, look: Vector3) -> Transform3D:
 
 ## Vai direto para a vista escolhida, sem transição.
 func snap() -> void:
-	var view: Dictionary = goal()
-	_eye = view["eye"]
-	_look = view["look"]
+	_yaw = yaw
+	_pitch = pitch
+	_zoom = zoom
+	_pan = pan
 	_apply()
 	_moving = false
 	set_process(false)
 	moved.emit(true)
-
-
-func _base_look() -> Vector3:
-	return (ANGLES[angle] as Array)[3]
 
 
 func _retarget() -> void:
@@ -163,17 +175,23 @@ func _retarget() -> void:
 
 
 func _process(delta: float) -> void:
-	var view: Dictionary = goal()
+	# Anda no giro, na inclinação e no zoom (não em linha reta entre os olhos): girando muito, a câmera faz a curva em
+	# volta da mesa, sem chegar mais perto no meio do caminho.
 	var follow: float = 1.0 - exp(-SPEED * delta)
-	_eye = _eye.lerp(view["eye"], follow)
-	_look = _look.lerp(view["look"], follow)
-	var done: bool = _eye.distance_to(view["eye"]) < 0.002 and _look.distance_to(view["look"]) < 0.002
+	_yaw = lerpf(_yaw, yaw, follow)
+	_pitch = lerpf(_pitch, pitch, follow)
+	_zoom = lerpf(_zoom, zoom, follow)
+	_pan = _pan.lerp(pan, follow)
+	var done: bool = absf(_yaw - yaw) < 0.0005 and absf(_pitch - pitch) < 0.0005 and absf(_zoom - zoom) < 0.0005 and _pan.distance_to(pan) < 0.002
 	if done:
-		_eye = view["eye"]
-		_look = view["look"]
+		_yaw = yaw
+		_pitch = pitch
+		_zoom = zoom
+		_pan = pan
 		_moving = false
 		set_process(false)
-		Prefs.save("camera_angle", (ANGLES[angle] as Array)[0])
+		Prefs.save("camera_yaw", snappedf(rad_to_deg(yaw), 0.1))
+		Prefs.save("camera_pitch", snappedf(rad_to_deg(pitch), 0.1))
 		Prefs.save("camera_zoom", snappedf(zoom, 0.001))
 	_apply()
 	moved.emit(done)
@@ -183,8 +201,7 @@ func _process(delta: float) -> void:
 ## com o zoom, a câmera desce para perto do tampo, e a mão e a pilha, que ficam a uma distância fixa dela, entrariam na
 ## mesa. Encolhidas em direção ao olho, aparecem iguais na tela e ficam sempre entre a câmera e o tampo. 1 sem zoom.
 func near_scale() -> float:
-	var entry: Array = ANGLES[0]
-	return minf(1.0, _eye.distance_to(_look) / (entry[2] as Vector3).distance_to(entry[3]))
+	return minf(1.0, _eye.distance_to(_look) / DISTANCE)
 
 
 ## A vista está mudando agora (transição em curso)?
@@ -193,6 +210,9 @@ func moving() -> bool:
 
 
 func _apply() -> void:
+	var view: Dictionary = view_of(_yaw, _pitch, _zoom, _pan)
+	_eye = view["eye"]
+	_look = view["look"]
 	transform = rig_for(_eye, _look)
 
 

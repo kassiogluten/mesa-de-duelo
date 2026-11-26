@@ -36,7 +36,7 @@ const SLAP_DIP := 0.004
 const SLAP_ROCK := 0.022
 const SETTLE_TAIL := 0.2
 ## Virar (tap): a duração e o quanto a carta sobe no começo.
-const TURN_TIME := 0.3
+const TURN_TIME := 0.45
 const TURN_LIFT := 0.018
 
 enum Kind { ARC, SLIDE, TURN, AIR }
