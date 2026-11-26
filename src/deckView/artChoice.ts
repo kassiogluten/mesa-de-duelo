@@ -36,6 +36,3 @@ export function printTraits(p: CardPrint): string[] {
   if (p.promo) out.push('Promo');
   return out;
 }
-
-/** "US$ 2,50", ou vazio sem preço. */
-export const printPrice = (p: CardPrint) => p.usd ? `US$ ${Number(p.usd).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';

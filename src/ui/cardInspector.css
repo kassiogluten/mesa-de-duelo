@@ -66,3 +66,8 @@
 /* Estados da permanente (controle trocado, atiçada, regeneração, escolhas) na prévia ao passar o mouse. */
 .ci-status { margin: 0; padding: 8px 12px 10px; list-style: none; display: grid; gap: 4px; font-size: 13px; line-height: 1.4; color: var(--azul-d5dcea, #d5dcea); background: var(--azul-0c1426, #0c1426); border-top: 1px solid var(--line); }
 .ci-status li { padding-left: 10px; border-left: 2px solid var(--gold); }
+/* Preço da carta (menor preço da LigaMagic): a dica é a do preço do deck (.deck-price-tip, no style.css). */
+.ci-price { position: relative; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.ci-price strong { color: var(--gold); font-weight: 700; }
+.ci-price-stale { opacity: .6; }
+.ci-price-stale strong { color: var(--muted); }

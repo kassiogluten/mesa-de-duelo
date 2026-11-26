@@ -5,7 +5,7 @@ const { hypergeometric, between, deckInsights, recommendedLands, landDropChance,
 const { functionBarsHTML, landDropsHTML } = await import('../src/deckView/charts.ts');
 const { CATEGORIES, countCategories } = await import('../src/deckView/functions.ts');
 const { newHand, mulligan, putOnBottom, drawCard, expand } = await import('../src/deckView/sampleHand.ts');
-const { choosePrint, printTraits, printPrice } = await import('../src/deckView/artChoice.ts');
+const { choosePrint, printTraits } = await import('../src/deckView/artChoice.ts');
 const { PUBLIC_CODE } = await import('../src/deckView/api.ts');
 
 const category = id => CATEGORIES.find(c => c.id === id);
@@ -112,10 +112,8 @@ test('trocar a arte grava série e número na linha e junta linhas iguais', () =
   assert.equal(choosePrint(deck, 'sideboard', 'x', null), null);
 });
 
-test('o que distingue cada impressão e o preço', () => {
+test('o que distingue cada impressão', () => {
   assert.deepEqual(printTraits({ set: 'x', cn: '1', image: {}, border: 'borderless', frame: ['showcase'], promo: true }), ['Sem borda', 'Vitrine', 'Promo']);
-  assert.equal(printPrice({ set: 'x', cn: '1', image: {}, usd: '1234.5' }), 'US$ 1.234,50');
-  assert.equal(printPrice({ set: 'x', cn: '1', image: {} }), '');
 });
 
 test('o código do link público tem 8 letras sem as parecidas', () => {

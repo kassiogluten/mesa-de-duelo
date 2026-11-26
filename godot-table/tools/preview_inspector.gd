@@ -1,7 +1,7 @@
 # Prints do inspetor de carta numa mesa de exemplo: virar a dupla face, o tipo mudado, as cartas ligadas com a seta de
-# voltar, o Apontar e o foil pela raridade (no inspetor e na prévia). Usa o catálogo de verdade (servidor local).
+# voltar, o Apontar, o foil pela raridade (no inspetor e na prévia) e o preço da carta. Usa o catálogo de verdade (servidor local).
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_inspector.gd -- <cena> <pasta>
-# Cenas: dfc (antes, no meio do giro e depois), tipo, ligadas (e voltar), mutada, foil (inspetor e prévia).
+# Cenas: dfc (antes, no meio do giro e depois), tipo, ligadas (e voltar), mutada, foil (inspetor e prévia), preco.
 extends SceneTree
 
 var _table: TableView
@@ -64,6 +64,8 @@ func _initialize() -> void:
 			_state = _make_state([_card(40, "Sheoldred, the Apocalypse", {"creature": true, "power": 4, "toughness": 5}),
 				_card(41, "Llanowar Elves", {"creature": true, "power": 1, "toughness": 1}),
 				_card(42, "Thragtusk", {"creature": true, "power": 5, "toughness": 3})], [])
+		"preco":
+			_state = _make_state([_card(50, "Counterspell"), _card(51, "Island", {"land": true})], [])
 	_table.apply_state(_state)
 	await create_timer(3.0).timeout
 	_table.refresh_textures()
@@ -110,6 +112,9 @@ func _initialize() -> void:
 				_inspector.show_preview(_table.card_data(id), _ctx(), _table.card_node(id).image_url)
 				await _shot("foil-previa-%s" % ("mitica" if id == 40 else "rara"), 0.8)
 				_inspector.hide_preview(true)
+		"preco":
+			_open(50)
+			await _shot("preco-nos-detalhes", 1.2)
 	quit()
 
 

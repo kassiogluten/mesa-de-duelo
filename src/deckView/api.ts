@@ -8,7 +8,7 @@ import type { Images } from '../scryfallCards';
 /** Uma impressão da carta que a partida mostra, como o servidor manda (CardPrints.java). */
 export interface CardPrint {
   set: string; cn: string; setName?: string; released?: string; rarity?: string; artist?: string;
-  border?: string; frame?: string[]; fullArt?: boolean; promo?: boolean; finishes?: string[]; usd?: string;
+  border?: string; frame?: string[]; fullArt?: boolean; promo?: boolean; finishes?: string[];
   image: Images; faces?: { name?: string; image: Images }[];
 }
 /** O deck do link /d/CÓDIGO e quem o publicou. */

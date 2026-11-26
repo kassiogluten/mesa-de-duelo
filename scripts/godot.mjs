@@ -24,8 +24,8 @@ function findGodot() {
 }
 
 /** Dados do repositório que o jogo usa, copiados para godot-table/data/ (fora do git) a cada execução: os decks prontos
- *  (shared/) e os sons da mesa (public/audio/*.mp3, os mesmos da mesa do navegador). */
-const SHARED_DATA = ['starter-decks.json'];
+ *  e os preços das cartas (shared/) e os sons da mesa (public/audio/*.mp3, os mesmos da mesa do navegador). */
+const SHARED_DATA = ['starter-decks.json', 'card-prices-brl.json'];
 function syncData() {
   const dir = join(PROJECT, 'data');
   const copy = (from, to) => { if (!existsSync(to) || !readFileSync(to).equals(readFileSync(from))) copyFileSync(from, to); };

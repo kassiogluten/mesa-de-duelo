@@ -1,4 +1,13 @@
 {
+  "0.257.0": {
+    "Preço da carta nos detalhes": [
+      { "img": "0.257.0/preco-nos-detalhes.webp", "legenda": "Contramágica aberta nos detalhes da carta, no navegador: embaixo do texto, o menor preço em reais na LigaMagic e a data da cotação." },
+      { "img": "0.257.0/preco-nos-detalhes-pc.webp", "legenda": "A mesma carta nos detalhes da mesa no PC, com a mesma linha de preço embaixo do texto." }
+    ],
+    "Troca de arte sem o preço em dólar": [
+      { "img": "0.257.0/troca-de-arte.webp", "legenda": "As edições de Contramágica na troca de arte do deck: cada uma mostra a coleção, o número, o ano e o que a distingue, sem o preço em dólar." }
+    ]
+  },
   "0.255.0": {
     "Girar e inclinar a mesa à vontade": [
       { "img": "0.255.0/mesa-girada.webp", "legenda": "A mesa girada 45°: o campo de lado, a mão e o retrato do oponente no lugar de sempre na tela." },

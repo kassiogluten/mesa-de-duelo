@@ -386,6 +386,27 @@ func _fill(details: Dictionary) -> void:
 		_cost.add_child(pip)
 	_cost.visible = _cost.get_child_count() > 0
 	InspectorKit.fill_details(_details, details)
+	if not bool(details.get("hidden", false)):
+		_add_price(CardPrices.of_card(_card))
+
+
+## O menor preço da carta na LigaMagic, com a data, no fim dos detalhes (o .ci-price do navegador); antiga, apagada.
+func _add_price(price: Dictionary) -> void:
+	if price.is_empty():
+		return
+	var stale: bool = bool(price["stale"])
+	_details.add_child(InspectorKit.rule())
+	var line := InspectorKit.rich(16, InspectorKit.MUTED)
+	line.push_font(InspectorKit.bold(), 16)
+	line.push_color(InspectorKit.MUTED if stale else InspectorKit.GOLD)
+	line.add_text("A partir de " + CardPrices.brl_text(float(price["brl"])))
+	line.pop()
+	line.pop()
+	line.add_text(" na LigaMagic · " + CardPrices.date_text(Txt.of(price["date"])) + (" · cotação antiga" if stale else ""))
+	line.modulate.a = 0.6 if stale else 1.0
+	line.tooltip_text = CardPrices.tip(price)
+	line.mouse_filter = Control.MOUSE_FILTER_PASS
+	_details.add_child(line)
 
 
 ## As teclas do inspetor aberto, num rodapé pequeno (só as que valem para esta carta).

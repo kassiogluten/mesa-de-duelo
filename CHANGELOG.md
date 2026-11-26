@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.257.0] - 2026-11-26
+
+### Novo
+
+- **Preço da carta nos detalhes.** Ao abrir os detalhes de uma carta, na partida, na tela do deck ou no construtor, aparece o menor preço dela em reais na LigaMagic, entre todas as edições, com a data da cotação: "A partir de R$ 9,84 na LigaMagic · 26/11/2026". Passe o mouse (ou toque) no valor para ver de onde ele vem. Cotação com mais de 30 dias aparece apagada, como antiga; fichas e cartas ainda sem cotação ficam sem preço.
+
+### Mudou
+
+- **Troca de arte sem o preço em dólar.** As edições na troca de arte do deck não mostram mais o preço em dólar: o preço da carta agora fica nos detalhes dela, em reais.
+
 ## [0.254.0] - 2026-11-25
 
 ### Novo

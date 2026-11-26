@@ -74,6 +74,26 @@ func test_open_inspector_lists_everything() -> void:
 	inspector.queue_free()
 
 
+func test_card_price() -> void:
+	CardPrices.set_table({"counterspell": [9.84, "2026-11-25"], "bonecrusher giant // stomp": [3.5, "2026-10-01"], "aether vial": [1234.5, "2026-11-20"]})
+	check_eq(CardPrices.key("  Lim-Dûl’s   Vault "), "lim-dul's vault", "o nome como a base guarda")
+	check_eq(CardPrices.of("Counterspell", "2026-11-26"), {"brl": 9.84, "date": "2026-11-25", "stale": false}, "preço e data")
+	check_eq(CardPrices.of("Bonecrusher Giant", "2026-11-26").get("stale"), true, "pela primeira face, e antiga depois de 30 dias")
+	check_eq(CardPrices.of("Æther Vial", "2026-11-26").get("brl"), 1234.5, "o Æ vira Ae")
+	check_eq(CardPrices.brl_text(1234.5), "R$ 1.234,50", "em reais")
+	check(CardPrices.of_card(ANGEL).is_empty(), "a ficha fica sem preço")
+	check(CardPrices.of("Black Lotus").is_empty(), "a carta sem cotação também")
+	var tree: SceneTree = Engine.get_main_loop()
+	var inspector := CardInspector.new()
+	tree.root.add_child(inspector)
+	inspector.open({"id": 3, "name": "Counterspell", "manaCost": "{U}{U}", "typeLine": "Instant", "text": "Counter target spell."}, _ctx(), "")
+	check("\n".join(inspector.open_text()).contains("A partir de R$ 9,84 na LigaMagic · 25/11/2026"), "o inspetor mostra o preço com a data")
+	inspector.open(ANGEL, _ctx(), "")
+	check(not "\n".join(inspector.open_text()).contains("LigaMagic"), "e não mostra na ficha")
+	inspector.queue_free()
+	CardPrices.set_table({})
+
+
 func test_mana_symbols() -> void:
 	check_eq(ManaSymbols.parse("{2}{G}{w/u}{T}"), PackedStringArray(["2", "G", "W/U", "T"]), "símbolos do custo")
 	for symbol: String in ["W", "U", "B", "R", "G", "C", "0", "7", "12", "X", "T", "W/U", "G/P", "??"]:

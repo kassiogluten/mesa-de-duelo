@@ -2,6 +2,12 @@
 
 As mudanças que você sente na mesa no PC (o aplicativo para Windows e Linux). O número de cada versão é o mesmo da mesa do navegador; uma versão aparece aqui quando traz alguma coisa para a mesa no PC.
 
+## [0.257.0] - 2026-11-26
+
+### Novo
+
+- **Preço da carta nos detalhes.** Ao abrir os detalhes de uma carta, aparece o menor preço dela em reais na LigaMagic, entre todas as edições, com a data da cotação: "A partir de R$ 9,84 na LigaMagic · 26/11/2026". Com o mouse em cima do valor, uma dica explica de onde ele vem. Cotação com mais de 30 dias aparece apagada, como antiga; fichas e cartas ainda sem cotação ficam sem preço.
+
 ## [0.256.0] - 2026-11-25
 
 ### Mudou

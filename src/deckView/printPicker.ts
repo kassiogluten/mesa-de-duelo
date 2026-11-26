@@ -2,7 +2,7 @@
 import { esc } from '../ui/cardtext';
 import { images } from '../scryfallCards';
 import { cardPrints, type CardPrint } from './api';
-import { printPrice, printTraits } from './artChoice';
+import { printTraits } from './artChoice';
 
 export interface PrintPickerOptions {
   /** Nome que o jogador vê (em português, quando há). */
@@ -33,7 +33,7 @@ export function openPrintPicker(opts: PrintPickerOptions) {
   function option(p: CardPrint | null) {
     const img = p ? images(p.image)?.small : opts.defaultImage;
     const title = p ? `${p.setName ?? p.set.toUpperCase()}` : 'Arte padrão da mesa';
-    const meta = p ? [`${p.set.toUpperCase()} ${p.cn}`, year(p), ...printTraits(p), printPrice(p)].filter(Boolean).join(' · ') : 'A que a mesa mostra sem escolha';
+    const meta = p ? [`${p.set.toUpperCase()} ${p.cn}`, year(p), ...printTraits(p)].filter(Boolean).join(' · ') : 'A que a mesa mostra sem escolha';
     const current = isCurrent(p);
     return `<button type="button" class="dv-print${current ? ' current' : ''}" role="option" aria-selected="${current}" ${p ? `data-set="${esc(p.set)}" data-cn="${esc(p.cn)}"` : 'data-default'} title="${esc(p?.artist ? `Arte de ${p.artist}` : title)}">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : '<span class="dv-print-blank"></span>'}<b>${esc(title)}</b><small>${esc(meta)}</small>${current ? '<i class="dv-print-tag">Escolhida</i>' : ''}</button>`;
   }

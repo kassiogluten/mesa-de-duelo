@@ -1,9 +1,10 @@
-// Prévia e inspetor de carta: imagem (no inspetor, com o foil da raridade), texto, marcadores, estados da permanente e o botão de virar.
+// Prévia e inspetor de carta: imagem (no inspetor, com o foil da raridade e o preço), texto, marcadores, estados da permanente e o botão de virar.
 import { cacheGet, fetchByNames, fetchPrintings, type Printing } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
 import { counterName, keywordName } from './cardLabels';
 import { attachFoil, foilOf, type Foil } from './cardFoil';
+import { brlText, cardPrice, cardPricesLoaded, loadCardPrices, priceDate } from '../cardPrices';
 import './cardInspector.css';
 
 export interface InspectorCard {
@@ -83,7 +84,16 @@ function content(card: InspectorCard, compact: boolean) {
     ${card.prepared ? `<p class="ci-note">Preparada${card.preparedSpell ? `: quem a controla pode conjurar uma cópia de ${esc(card.preparedSpell)}. Conjurar a cópia tira a preparação.` : ''}</p>` : ''}
     ${card.preparedFrom ? `<p class="ci-note">Feitiço preparado de ${esc(card.preparedFrom)}: pode ser conjurado enquanto a criatura estiver preparada.</p>` : ''}
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}
+    ${compact || hidden ? '' : priceHTML(card)}
   </div>${compact && notes.length ? `<ul class="ci-status">${notes.map(note => `<li>${esc(note)}</li>`).join('')}</ul>` : ''}</div>`;
+}
+/** O menor preço da carta na LigaMagic, com a data; vazio na ficha e na carta sem cotação (cardPrices.ts). */
+export function priceHTML(card: InspectorCard, today?: Date) {
+  const price = card.token ? null : cardPrice(card.name, today);
+  if (!price) return '';
+  const date = priceDate(price.date);
+  const tip = `O menor preço desta carta na LigaMagic, entre todas as edições, em ${date}. É uma referência: o preço muda com o tempo.${price.stale ? ' Esta cotação tem mais de 30 dias.' : ''}`;
+  return `<p class="ci-price${price.stale ? ' ci-price-stale' : ''}"><span class="deck-price" tabindex="0" aria-describedby="ci-price-tip"><strong>A partir de ${brlText(price.brl)}</strong> na LigaMagic · ${date}${price.stale ? ' · cotação antiga' : ''}<span class="deck-price-tip" id="ci-price-tip" role="tooltip">${esc(tip)}</span></span></p>`;
 }
 /** A imagem da carta; no modal (`foil`), dentro da moldura que inclina e brilha conforme a raridade (cardFoil.ts). */
 function imageHTML(image: string, name: string, foil: Foil | null) {
@@ -227,4 +237,9 @@ export function inspectCard(card: InspectorCard = hovered ?? {}, trigger?: HTMLE
   el.addEventListener('close', () => { if (modal === el) { modal = null; generation++; } el.remove(); if (!modal?.open && previous?.isConnected) previous.focus({ preventScroll: true }); }, { once: true });
   el.addEventListener('click', e => { if (e.target === el) { const r=el.getBoundingClientRect(); if (e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom) el.close(); } });
   el.showModal(); resolve(el, card, false, ticket);
+  // Os preços chegam na primeira carta aberta: a linha entra sem redesenhar o resto.
+  if (!cardPricesLoaded()) void loadCardPrices().then(() => {
+    if (modal !== el || el.querySelector('.ci-price') || card.faceDown) return;
+    el.querySelector('.ci-details')?.insertAdjacentHTML('beforeend', priceHTML(card));
+  });
 }
