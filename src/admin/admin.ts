@@ -11,10 +11,11 @@ import { reportDetailHTML, reportListHTML, type ReportFilter } from './adminRepo
 import { funnelHTML, type FunnelWeek } from './adminFunnel';
 import { mountAdminNotice } from './adminNotice';
 import { rankingHTML, type RankingState, type SortKey } from './adminRanking';
+import { benchmarksHTML, type BenchmarksState, type BenchmarkRow } from './adminBenchmarks';
 
 /*
  * Área de admin (/admin.html): os relatos guardados na ponte, com estado, nota e issue, as partidas vivas e as
- * concluídas (histórico por mês), o ranking dos jogadores e os links das páginas de teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
+ * concluídas (histórico por mês), o ranking dos jogadores, os resultados do teste de desempenho e os links das páginas de teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
  */
 
 const TEST_PAGES: [string, string, string][] = [
@@ -25,6 +26,7 @@ const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/duel-table.html','Mesa 1×1', 'Partida fixa contra um oponente, com contadores, Classe e perguntas (gatilhos, jeitos de jogar, dano de combate) pelo console.'],
   ['/tests/fixtures/commander-table.html', 'Mesa de Commander', 'Quatro jogadores, para conferir o layout dos assentos, a pilha e o campo cheio.'],
   ['/tests/fixtures/commander-endgame.html', 'Commander: fim de partida', 'Quatro mesas cheias no fim do jogo (fichas, planeswalkers, equipamentos, comandantes em campo) para ajustar o posicionamento. Pelo console: fixture.pilha(), fixture.ataque(), fixture.eliminar().'],
+  ['/desempenho', 'Teste de desempenho', 'Uma partida simulada que roda sozinha (duelo ou Commander com 4) e mede FPS, quadros travados e o degrau dos efeitos; funciona no celular.'],
 ];
 
 const root = document.querySelector<HTMLElement>('#admin')!;
@@ -34,7 +36,7 @@ let selected: string | null = null;
 const details = new Map<string, Stored>();
 let notice = '';
 
-const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : location.hash === '#ranking' ? 'ranking' : location.hash === '#aviso' ? 'aviso' : 'relatos';
+const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : location.hash === '#ranking' ? 'ranking' : location.hash === '#aviso' ? 'aviso' : location.hash === '#desempenho' ? 'desempenho' : 'relatos';
 
 // ---------------------------------------------------------------- entrar
 
@@ -68,9 +70,9 @@ async function start() {
 
 function shell() {
   root.innerHTML = `<header class="adm-top"><a class="adm-brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
-    <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#ranking" data-tab="ranking">Ranking</a><a href="#aviso" data-tab="aviso">Aviso</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
+    <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#ranking" data-tab="ranking">Ranking</a><a href="#aviso" data-tab="aviso">Aviso</a><a href="#desempenho" data-tab="desempenho">Desempenho</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
     <button class="adm-ghost" data-act="logout">Sair</button></header>
-    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admRanking" aria-label="Ranking" hidden></section><section id="admAviso" aria-label="Aviso do servidor" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
+    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admRanking" aria-label="Ranking" hidden></section><section id="admAviso" aria-label="Aviso do servidor" hidden></section><section id="admDesempenho" aria-label="Desempenho" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
   root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova. Cartas e mecânicas com a ponte de verdade (proliferar, improvisar, turno e combate extra) ficam nos Cenários prontos do Laboratório.</p>
     <ul class="adm-pages">${TEST_PAGES.map(([href, title, text]) => `<li><a class="adm-card adm-page" href="${href}" target="_blank" rel="noopener"><strong>${esc(title)}</strong><span>${esc(text)}</span><code>${esc(href)}</code></a></li>`).join('')}</ul>`;
   noticeTab = mountAdminNotice(root.querySelector<HTMLElement>('#admAviso')!, () => login('A sessão acabou. Entre de novo.'));
@@ -87,8 +89,10 @@ function syncTab() {
   root.querySelector<HTMLElement>('#admPartidas')!.hidden = current !== 'partidas';
   root.querySelector<HTMLElement>('#admRanking')!.hidden = current !== 'ranking';
   root.querySelector<HTMLElement>('#admAviso')!.hidden = current !== 'aviso';
+  root.querySelector<HTMLElement>('#admDesempenho')!.hidden = current !== 'desempenho';
   if (current === 'aviso') void noticeTab?.load();
   if (current === 'ranking') void loadRanking(ranking.month);
+  if (current === 'desempenho') void loadBenchmarks();
   clearInterval(matchesTimer);
   // Na aba de partidas, a lista se atualiza sozinha a cada 10 s.
   if (current === 'partidas') { void loadMatches(); void loadFunnel(); void loadHistory(historyMonth); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
@@ -197,6 +201,38 @@ function renderRanking() {
   if (section) section.innerHTML = rankingHTML(ranking);
 }
 
+// ---------------------------------------------------------------- desempenho
+
+const benchmarks: BenchmarksState = { results: [], open: null, notice: '' };
+
+async function loadBenchmarks() {
+  const section = root.querySelector<HTMLElement>('#admDesempenho');
+  if (!section) return;
+  try {
+    const response = await adminFetch('desempenho');
+    if (response.status === 401) { login('A sessão acabou. Entre de novo.'); return; }
+    if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
+    benchmarks.results = (await response.json() as { resultados: BenchmarkRow[] }).resultados;
+    renderBenchmarks();
+  } catch { section.innerHTML = '<p class="adm-error">Não consegui ler os resultados de desempenho na ponte.</p>'; }
+}
+
+function renderBenchmarks() {
+  const section = root.querySelector<HTMLElement>('#admDesempenho');
+  if (section) section.innerHTML = benchmarksHTML(benchmarks);
+}
+
+async function deleteBenchmark(id: string) {
+  if (!confirm('Apagar este resultado de desempenho? Não dá para desfazer.')) return;
+  const response = await adminFetch(`desempenho/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  if (response.status === 401) { login('A sessão acabou. Entre de novo.'); return; }
+  if (!response.ok) { benchmarks.notice = await adminError(response); renderBenchmarks(); return; }
+  benchmarks.results = benchmarks.results.filter(r => r.id !== id);
+  if (benchmarks.open === id) benchmarks.open = null;
+  benchmarks.notice = 'Resultado apagado.';
+  renderBenchmarks();
+}
+
 // ---------------------------------------------------------------- relatos
 
 async function load() {
@@ -267,6 +303,14 @@ root.addEventListener('click', async e => {
   if (sort) { ranking.desc = sort === ranking.sort ? !ranking.desc : sort !== 'name'; ranking.sort = sort; renderRanking(); return; }
   const player = target.closest<HTMLElement>('[data-rank-player]')?.dataset.rankPlayer;
   if (player !== undefined) { ranking.open = ranking.open === player ? null : player; renderRanking(); root.querySelector<HTMLElement>(`[data-rank-player="${CSS.escape(player)}"]`)?.focus(); return; }
+  const benchDelete = target.closest<HTMLElement>('[data-bench-delete]')?.dataset.benchDelete;
+  if (benchDelete) { await deleteBenchmark(benchDelete); return; }
+  const benchOpen = target.closest<HTMLElement>('[data-bench-open]')?.dataset.benchOpen;
+  if (benchOpen) {
+    benchmarks.open = benchmarks.open === benchOpen ? null : benchOpen; benchmarks.notice = ''; renderBenchmarks();
+    root.querySelector<HTMLElement>(`[data-bench-open="${CSS.escape(benchOpen)}"]`)?.focus();
+    return;
+  }
   const row = target.closest<HTMLElement>('[data-code]');
   if (row) { selected = row.dataset.code!; notice = ''; renderList(); root.querySelector('#admDetail')?.scrollIntoView({ block: 'nearest' }); return; }
   const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
@@ -282,6 +326,7 @@ root.addEventListener('click', async e => {
     case 'history': await loadHistory(historyMonth); break;
     case 'history-download': await downloadHistory(); break;
     case 'ranking': await loadRanking(ranking.month); break;
+    case 'benchmarks': benchmarks.notice = ''; await loadBenchmarks(); break;
     case 'back': selected = null; renderList(); break;
     case 'issue':
       // A issue abre no GitHub; aqui o relato já fica como "Virou issue", esperando o número.

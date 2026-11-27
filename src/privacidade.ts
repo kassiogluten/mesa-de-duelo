@@ -64,6 +64,7 @@ app.innerHTML = `
         <li><strong>As jogadas da partida.</strong> Elas ficam na memória do servidor enquanto a partida existe e somem pouco depois do fim.</li>
         <li><strong>O resumo de cada partida concluída:</strong> formato, nomes dos jogadores, nomes dos decks, quem venceu, número de turnos e duração. Esse resumo é usado para acompanhar o funcionamento do jogo e não é mostrado a outros jogadores. Se você estiver com a conta conectada, ele guarda também o código da sua conta e qual deck salvo você usou, para a partida aparecer em <strong>Minhas partidas</strong>.</li>
         <li><strong>Contagem de visitas:</strong> quando você toca em Jogar na página de apresentação, escolhe um deck ou começa uma partida (contra o computador ou numa sala), o jogo avisa o servidor só qual desses passos aconteceu, uma vez por aba. O servidor soma um no número da semana e não guarda mais nada: nem IP, nem nome, nem deck, nem identificador do aparelho (para limitar abusos, só o resumo do IP descrito abaixo fica na memória por alguns minutos). Não há cookies nem ferramentas de outras empresas nisso. Os números servem para saber quantos visitantes conseguem começar a jogar.</li>
+        <li><strong>Teste de desempenho:</strong> quando você roda o <strong>Teste de desempenho</strong> (menu ⋯), o resultado vai para o servidor: a nota, os quadros por segundo de cada parte da partida simulada, a opção de efeitos e o que o navegador conta do aparelho (sistema, navegador, modelo do celular, placa de vídeo, tamanho da tela, núcleos e memória). Não vão nome, conta, IP nem identificador do aparelho. Os resultados servem para saber em quais aparelhos a mesa precisa ficar mais leve; o servidor guarda só os 1.000 mais recentes.</li>
         <li><strong>Registros técnicos:</strong> como em qualquer site, o servidor anota o endereço IP, o horário e o que foi pedido. Esses registros servem para segurança e para encontrar erros, e são apagados pela própria hospedagem depois de algum tempo. Para limitar abusos (como tentar muitos códigos de sala), o servidor guarda, só na memória, um resumo do IP que não permite voltar ao endereço.</li>
       </ul>
       <p>As mensagens entre jogadores na sala são frases prontas; o jogo não tem chat livre.</p>
@@ -119,6 +120,7 @@ app.innerHTML = `
         <li><strong>Sessão de um aparelho:</strong> 180 dias sem usar o jogo, ou até você sair.</li>
         <li><strong>Relatos:</strong> até 90 dias.</li>
         <li><strong>Partida em andamento:</strong> enquanto existir, e pouco tempo depois do fim.</li>
+        <li><strong>Resultados do Teste de desempenho:</strong> os 1.000 mais recentes; os mais antigos saem sozinhos.</li>
         <li><strong>Contagem de visitas por semana:</strong> sem prazo; são só números, sem nada que leve a você.</li>
         <li><strong>Resumo das partidas concluídas:</strong> sem prazo, para acompanhar o funcionamento do jogo ao longo do tempo. Ao apagar a conta, a ligação dele com ela some na hora. Você também pode pedir que as partidas com o seu nome sejam apagadas.</li>
       </ul>

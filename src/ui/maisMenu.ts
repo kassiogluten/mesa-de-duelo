@@ -21,9 +21,12 @@ const ICON_HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s
 /** Faísca: o item Laboratório de efeitos. */
 const ICON_SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7ZM19 15c.3 1.9 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1.1 3-3Z"/></svg>';
 
+/** Velocímetro: o item Teste de desempenho. */
+const ICON_GAUGE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 17a8.5 8.5 0 1 1 15 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m12 14.5 4-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14.5" r="1.6" fill="currentColor"/></svg>';
+
 /**
  * Botão ⋯ do cabeçalho: o que se usa de vez em quando, fora da linha das abas, em grupos (Partidas: Salas, Rever,
- * Torneios, Contador de vida; Laboratório: montar uma mesa e efeitos; Aparência: cartas da mesa e o tema, em amostras numa linha; Ajuda:
+ * Torneios, Contador de vida; Laboratório: montar uma mesa, efeitos e o teste de desempenho; Aparência: cartas da mesa e o tema, em amostras numa linha; Ajuda:
  * Como jogar, relatar e Meus relatos). Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
  */
 export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
@@ -38,6 +41,7 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     + `<p class="mais-grupo" role="presentation">Laboratório</p>`
     + `<button type="button" role="menuitem" data-mais="lab" aria-label="Laboratório: montar uma mesa">${ICON_FLASK}<span>Montar uma mesa</span></button>`
     + `<a role="menuitem" href="/efeitos" data-mais="efeitos" aria-label="Laboratório de efeitos">${ICON_SPARK}<span>Efeitos</span></a>`
+    + `<a role="menuitem" href="/desempenho" data-mais="desempenho" aria-label="Teste de desempenho do aparelho">${ICON_GAUGE}<span>Teste de desempenho</span></a>`
     + `<p class="mais-grupo" role="presentation">Aparência</p><button type="button" role="menuitemcheckbox" aria-checked="true" data-mais="own-art"><span>Cartas da mesa</span></button><button type="button" role="menuitem" data-mais="own-art-gallery" aria-haspopup="dialog">${ICON_CARDS}<span>Ver a série</span></button>`
     + (temasDisponiveis() ? `<div class="mais-tema-linha"><span aria-hidden="true">Tema</span><div class="mais-temas" role="group" aria-label="Tema da mesa">${temaItemsHTML()}</div></div>` : '')
     + `<p class="mais-grupo" role="presentation">Ajuda</p>`

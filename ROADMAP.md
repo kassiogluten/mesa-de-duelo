@@ -441,7 +441,7 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 **Medir primeiro.**
 
 - [ ] Partida de referência gravada (Commander com 4 jogadores, mesa cheia, combate grande) para repetir sempre igual na página de repetição.
-- [ ] Medir no Chrome com a CPU 4× e 6× mais lenta e num celular de entrada de verdade: quadros por segundo, tarefas longas, tempo de cada `state` até a mesa pintar, memória e tamanho da árvore da página (o Lighthouse contou 6.111 elementos, item 106). A parte dos efeitos (quadros longos, tarefas longas e bloqueio com a CPU 1×, 4× e 6×, nas cenas de dano, voos e campo cheio) foi medida em 13/11/2026 pelo item 125 (`scripts/medir-efeitos.mjs`, números em `docs/spec-mesa-webgl.md`); faltam o tempo de cada `state` até pintar, a memória e o celular de verdade.
+- [ ] Medir no Chrome com a CPU 4× e 6× mais lenta e num celular de entrada de verdade: quadros por segundo, tarefas longas, tempo de cada `state` até a mesa pintar, memória e tamanho da árvore da página (o Lighthouse contou 6.111 elementos, item 106). A parte dos efeitos (quadros longos, tarefas longas e bloqueio com a CPU 1×, 4× e 6×, nas cenas de dano, voos e campo cheio) foi medida em 13/11/2026 pelo item 125 (`scripts/medir-efeitos.mjs`, números em `docs/spec-mesa-webgl.md`); faltam o tempo de cada `state` até pintar, a memória e o celular de verdade. Desde 26/11/2026 o celular de verdade pode ser medido pelo Teste de desempenho (`/desempenho`, no menu ⋯: partida simulada de duelo ou Commander com 4, `tests/fixtures/benchmark.ts`), e os resultados de cada aparelho ficam na área de admin, aba Desempenho.
 - [ ] Lista dos maiores culpados, em ordem, antes de mexer.
 
 **Mesa mais leve (sem mudar o que se vê).**

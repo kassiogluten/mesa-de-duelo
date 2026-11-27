@@ -20,9 +20,13 @@ const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.
 const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'torneios', 'contador', 'rever', 'salas', 'vincular', 'baixar', 'admin'] as const;
 const TOOLS = new Set<string>(['admin', ...Object.keys(fixtures)]);
 
-// /efeitos é o Laboratório de efeitos aberto a todos (menu ⋯); na publicação quem faz a troca é o deploy/nginx.conf.
+// /efeitos é o Laboratório de efeitos e /desempenho o Teste de desempenho (/benchmark também), abertos a todos (menu ⋯);
+// na publicação quem faz a troca é o deploy/nginx.conf.
+const SHORT_PAGES: [string, string][] = [['/efeitos', 'effects-lab'], ['/desempenho', 'benchmark'], ['/benchmark', 'benchmark']];
 const efeitos = (req: { url?: string }, _res: unknown, next: () => void) => {
-  if (req.url === '/efeitos' || req.url?.startsWith('/efeitos?')) req.url = `/tests/fixtures/effects-lab.html${req.url.slice('/efeitos'.length)}`;
+  for (const [path, page] of SHORT_PAGES) {
+    if (req.url === path || req.url?.startsWith(`${path}?`)) { req.url = `/tests/fixtures/${page}.html${req.url.slice(path.length)}`; break; }
+  }
   next();
 };
 
@@ -128,7 +132,7 @@ export default defineConfig({
         // não batia com nenhuma e caía na tela inicial. utm_ e fbclid são os que o Workbox já ignora por padrão.
         ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^id$/, /^mesa$/, /^codigo$/],
         // /mesa-pc/ é o zip e o manifesto da mesa no PC: abrir o zip nunca pode cair na tela inicial guardada.
-        navigateFallbackDenylist: [/^\/sobre/, /^\/mesa-pc\//,/^\/efeitos/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
+        navigateFallbackDenylist: [/^\/sobre/, /^\/mesa-pc\//,/^\/efeitos/, /^\/desempenho/, /^\/benchmark/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {

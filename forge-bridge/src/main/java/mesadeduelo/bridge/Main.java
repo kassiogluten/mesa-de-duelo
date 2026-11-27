@@ -98,6 +98,9 @@ public final class Main {
             Funnel funnel = Funnel.inDir(store.dir().getParent());
             server.funnel(funnel);
             admin.funnel(funnel);
+            Benchmarks benchmarks = Benchmarks.inDir(store.dir().getParent());
+            server.benchmarks(benchmarks);
+            admin.benchmarks(benchmarks);
             Accounts accounts = Accounts.fromEnvironment(store.dir().getParent());
             server.accounts(accounts);
             admin.accounts(accounts);

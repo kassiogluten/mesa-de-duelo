@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.259.0] - 2026-11-26
+
+### Novo
+
+- **Teste de desempenho.** No menu **⋯** da tela inicial, **Teste de desempenho** (ou o endereço `/desempenho`) joga sozinho uma partida simulada na mesa de verdade, por cerca de um minuto e meio: abertura, mágicas, combate, campo cheio, limpa campo e fim de jogo. Dá para escolher **Duelo** ou **Commander** com quatro jogadores de campo cheio, a mesa mais pesada. No fim aparece uma nota de 0 a 100 para o aparelho, com o FPS médio, o FPS do 1% de quadros mais lentos, as travadas, até onde os efeitos automáticos precisaram aliviar e os números de cada parte da partida, além de uma dica do que fazer se a mesa pesar. Funciona no celular (com a tela deitada) e no computador; o resultado pode ser copiado e vai para a equipe com o modelo do aparelho, sem nada da sua conta, para sabermos onde a mesa precisa ficar mais leve.
+
+### Mudou
+
+- **Política de privacidade com o Teste de desempenho.** A política explica o que o resultado do Teste de desempenho leva ao servidor (a nota, os quadros por segundo e o que o navegador conta do aparelho, sem nome, conta nem IP) e por quanto tempo fica guardado.
+
 ## [0.258.0] - 2026-11-26
 
 ### Mudou

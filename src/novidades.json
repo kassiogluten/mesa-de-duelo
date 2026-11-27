@@ -1,4 +1,12 @@
 {
+  "0.259.0": {
+    "Teste de desempenho": [
+      { "img": "0.259.0/menu.webp", "legenda": "O Teste de desempenho no grupo Laboratório do menu ⋯ da tela inicial." },
+      { "img": "0.259.0/tela-inicial.webp", "legenda": "A tela do teste no celular: escolha Duelo ou Commander, e embaixo o que se sabe do aparelho." },
+      { "img": "0.259.0/partida-commander.webp", "legenda": "A partida simulada de Commander rodando sozinha num celular deitado, com a parte da partida e o andamento no alto." },
+      { "img": "0.259.0/resultado.webp", "legenda": "O resultado: a nota, o FPS médio, o 1% mais lento, as travadas, o degrau dos efeitos automáticos e cada parte da partida." }
+    ]
+  },
   "0.258.0": {
     "Preço em reais em todos os decks prontos": [
       { "img": "0.258.0/meus-decks.webp", "legenda": "Em Meus decks, os decks prontos de Commander com o preço em reais ao lado das cartas e do bracket." },

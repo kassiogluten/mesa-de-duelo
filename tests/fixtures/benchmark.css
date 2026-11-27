@@ -1,0 +1,58 @@
+/* Teste de desempenho (/desempenho): a tela inicial, a barra por cima da partida simulada e o resultado. */
+html, body { margin: 0; min-height: 100%; background: var(--bg-deep, #060912); color: var(--ink, #eef1f8); font-family: var(--body); }
+#bench { min-height: 100dvh; }
+.bench-page { box-sizing: border-box; max-width: 760px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
+.bench-page h1 { font-family: var(--display); font-size: clamp(26px, 6vw, 36px); margin: 0 0 8px; color: var(--gold-light, #ffe2a0); }
+.bench-lead { color: var(--muted); line-height: 1.5; margin: 0 0 22px; max-width: 60ch; }
+.bench-back { display: inline-block; color: var(--muted); text-decoration: none; font-size: 14px; margin-bottom: 18px; }
+.bench-back:hover { color: var(--gold); }
+
+.bench-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.bench-mode { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--line); transition: border-color .15s, transform .15s; }
+.bench-mode:hover, .bench-mode:focus-visible { border-color: var(--gold); transform: translateY(-2px); }
+.bench-mode:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.bench-mode b { font-family: var(--display); font-size: 19px; color: var(--ink); }
+.bench-mode span { color: var(--muted); font-size: 14px; line-height: 1.4; }
+.bench-mode .bench-go { margin-top: 6px; color: var(--gold); font-weight: 600; font-size: 14px; }
+
+.bench-note { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 8px; }
+.bench-note.warn { color: var(--gold); }
+.bench-device { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+/* Durante a partida: a mesa ocupa tudo e uma faixa fina por cima diz a parte e o quanto falta. */
+.bench-run { position: fixed; inset: 0; background: var(--bg-deep, #060912); }
+.bench-run iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.bench-bar { position: absolute; z-index: 2; top: max(6px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px;
+  padding: 5px 6px 5px 14px; border-radius: 999px; background: rgba(6, 9, 18, .82); border: 1px solid var(--line); font-size: 13px; white-space: nowrap; pointer-events: auto; }
+.bench-bar-track { width: clamp(60px, 16vw, 160px); height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.bench-bar-fill { height: 100%; width: 0; background: var(--gold); }
+.bench-bar button { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 999px; color: var(--ink); background: rgba(255, 255, 255, .08); font-size: 12px; }
+.bench-bar button:hover, .bench-bar button:focus-visible { background: rgba(255, 255, 255, .16); }
+
+/* Resultado. */
+.bench-score { display: flex; align-items: center; gap: 18px; margin: 4px 0 18px; }
+.bench-score-num { font-family: var(--display); font-size: clamp(54px, 14vw, 76px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.bench-score-num small { font-size: .35em; color: var(--muted); font-weight: 500; }
+.bench-score[data-quality="good"] .bench-score-num { color: var(--heal); }
+.bench-score[data-quality="fair"] .bench-score-num { color: var(--gold); }
+.bench-score[data-quality="poor"] .bench-score-num { color: var(--red); }
+.bench-score-label { font-family: var(--display); font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+.bench-score-tip { color: var(--muted); margin: 0; line-height: 1.45; }
+.bench-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.bench-stat { padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.bench-stat b { display: block; font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.bench-stat span { color: var(--muted); font-size: 13px; }
+.bench-scenes { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
+.bench-scenes th, .bench-scenes td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+.bench-scenes th:first-child, .bench-scenes td:first-child { text-align: left; }
+.bench-scenes th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.bench-scenes td[data-quality="fair"] { color: var(--gold); }
+.bench-scenes td[data-quality="poor"] { color: var(--red); }
+.bench-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.bench-actions .arena-btn { min-height: 44px; }
+.bench-sent { color: var(--muted); font-size: 13px; margin: 0; }
+@media (max-width: 1000px) {
+  .bench-bar { font-size: 12px; gap: 8px; padding: 3px 4px 3px 10px; }
+  .bench-bar-track { width: 48px; }
+}

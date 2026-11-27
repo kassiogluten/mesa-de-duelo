@@ -746,7 +746,9 @@ export function createLabPlays(lab: LabApi) {
     queue.push(window.setTimeout(() => { queue = []; }, at));
     return 'Jogadas em sequência: todas, uma depois da outra (toque de novo para parar).';
   }
-  return { start, startAll };
+  /** Quanto a jogada leva do primeiro ao último passo (ms), para quem encadeia jogadas (o teste de desempenho, benchmark.ts). */
+  const duration = (key: string) => plays[key]?.steps.reduce((sum, [ms]) => sum + ms, 0) ?? 0;
+  return { start, startAll, duration };
 }
 
 /** Os botões das jogadas, por grupo, para o painel. */

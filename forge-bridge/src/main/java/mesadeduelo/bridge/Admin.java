@@ -47,6 +47,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  *   GET    partidas                partidas e salas vivas na ponte (quem joga, conectado ou não, turno) e, com as contas
  *                                  ligadas, {contas: {total, aparelhos}}
  *   GET    funil                   {semanas: [{semana, jogar, deck, partida-ia, partida-sala}]}: quem começa a jogar ({@link Funnel})
+ *   GET    desempenho              {resultados: [...]}: os testes de desempenho da mesa, do mais novo ao mais antigo ({@link Benchmarks})
+ *   DELETE desempenho/{id}         apaga um resultado
  *   GET    historico[/AAAA-MM]     {meses, mes, partidas}: as partidas concluídas do mês (o mais recente sem mês)
  *   GET    historico/AAAA-MM.jsonl o arquivo do mês, para baixar
  *   GET    ranking[/AAAA-MM]       {meses, mes, partidas, jogadores}: o ranking dos jogadores no mês, ou desde o começo sem mês
@@ -85,6 +87,8 @@ final class Admin {
     private volatile java.util.function.IntSupplier connections = () -> 0;
     /** Contadores de quem começa a jogar; null nos testes que não os usam. */
     private volatile Funnel funnel;
+    /** Resultados do teste de desempenho; null nos testes que não os usam. */
+    private volatile Benchmarks benchmarks;
     private final byte[] password;
     private final FeedbackRateLimit failures = new FeedbackRateLimit(MAX_FAILURES, FAILURE_WINDOW);
     /** Sessões abertas: token → fim. Só em memória: reiniciar a ponte pede login de novo. */
@@ -113,6 +117,7 @@ final class Admin {
     boolean enabled() { return password != null; }
     void accounts(Accounts a) { accounts = a; }
     void funnel(Funnel f) { funnel = f; }
+    void benchmarks(Benchmarks b) { benchmarks = b; }
     /** O aviso do servidor e quantas conexões estão abertas. */
     void notice(ServerNotice n, java.util.function.IntSupplier connections) { notice = n; this.connections = connections; }
 
@@ -134,6 +139,7 @@ final class Admin {
                 Funnel f = funnel;
                 return f == null ? Response.error(404, "Contagem de visitantes desligada.") : Response.json(200, f.json());
             }
+            if (path.equals("desempenho") || path.startsWith("desempenho/")) return benchmarks(method, path.substring("desempenho".length()));
             if (path.equals("aviso")) return notice(method, body);
             if ((path.equals("historico") || path.startsWith("historico/")) && "GET".equals(method)) return history(path.substring("historico".length()));
             if ((path.equals("ranking") || path.startsWith("ranking/")) && "GET".equals(method)) return ranking(path.substring("ranking".length()));
@@ -151,6 +157,16 @@ final class Admin {
             e.printStackTrace();
             return Response.error(500, "Falha ao ler ou gravar os relatos: " + e.getMessage());
         }
+    }
+
+    /** {@code rest} é "" (GET da lista) ou "/{id}" (DELETE de um). */
+    private Response benchmarks(String method, String rest) {
+        Benchmarks b = benchmarks;
+        if (b == null) return Response.error(404, "Resultados de desempenho desligados.");
+        if (rest.isEmpty()) return "GET".equals(method) ? Response.json(200, b.json()) : Response.error(405, "Use GET.");
+        String id = rest.substring(1);
+        if (!"DELETE".equals(method)) return Response.error(405, "Use DELETE.");
+        return b.delete(id) ? Response.json(200, new JsonObject()) : Response.error(404, "Resultado " + id + " não encontrado.");
     }
 
     private Response notice(String method, byte[] body) {

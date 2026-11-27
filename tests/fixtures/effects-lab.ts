@@ -1,10 +1,11 @@
 import '../../src/style.css';
 import { createForgeTableView } from '../../src/ui/forgeTable';
-import { gpuClock, gpuProbe, TIER1_CUTS } from '../../src/ui/gpu/gpuSupport';
+import { effectsLevel, effectsTier, gpuClock, gpuProbe, TIER1_CUTS } from '../../src/ui/gpu/gpuSupport';
 import { latestGpuPort } from '../../src/ui/gpu/gpuPort';
 import { center } from '../../src/ui/motionKit';
 import { createLabPlays, playButtons } from './effectsLabPlays';
 import { markNewButtons, NEW_BUTTON_CSS } from './effectsLabNew';
+import { extraOpponents } from './labSeats';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
@@ -80,7 +81,7 @@ function creature(name: string, power: number, toughness: number, manaCost: stri
 
 // ---------------------------------------------------------------- mesa
 function table() {
-  const params = new URLSearchParams(location.search), slow = Number(params.get('lento')) || 1;
+  const params = new URLSearchParams(location.search), slow = Number(params.get('lento')) || 1, fourSeats = params.get('jogadores') === '4';
   const realTimeout = window.setTimeout.bind(window);
   if (slow > 1) {
     // Câmera lenta: os temporizadores e as animações da mesa andam juntos, para o voo e o que vem depois dele combinarem.
@@ -114,9 +115,11 @@ function table() {
     players = [
       { id: ME, seat: 0, name: 'Você', ai: false, life: 20, library: 40, handCount: 0, hand: [], pool: {}, graveyard: [], exile: [], battlefield: [] },
       { id: OPP, seat: 1, name: 'Oponente', ai: true, life: 20, library: 40, handCount: 4, hand: [], pool: {}, graveyard: [], exile: [], battlefield: [] },
+      // ?jogadores=4: mesa de Commander, com dois oponentes a mais de campo cheio (as jogadas acontecem entre você e o primeiro).
+      ...(fourSeats ? extraOpponents(() => nextId++) : []),
     ];
     state = {
-      type: 'state', config: { format: 'free', matchLength: 'bo1' }, you: ME, players, turn: 6, phase: 'MAIN1', activePlayer: ME, gameOver: false,
+      type: 'state', config: fourSeats ? { format: 'commander', matchLength: 'bo1', playerCount: 4 } : { format: 'free', matchLength: 'bo1' }, you: ME, players, turn: 6, phase: 'MAIN1', activePlayer: ME, gameOver: false,
       log: [], decks: [], stack: [], combat: [], castable: [], events: [], eventCursor: seq, matchId: 'effects-lab',
       input: { gen: 1, priority: false, message: 'Laboratório de efeitos: use o painel.', ok: { label: 'OK', enabled: false }, cancel: { label: '', enabled: false }, selectable: [], actionable: [] },
     };
@@ -1068,6 +1071,9 @@ function table() {
     else window.postMessage({ cmd: 'hand', kind: cmd }, '*');
   };
   if (plays.length > 1) plays.forEach((play, i) => realTimeout(() => run(play), 600 + i * 2500));
+  // Para quem encadeia as jogadas de fora, com o seu próprio ritmo (o teste de desempenho, benchmark.ts): `lab.run('jogada:bolt')`
+  // aceita o mesmo que o ?jogar, `lab.duration('bolt')` diz quanto a jogada leva, e `lab.effects()` a opção de Efeitos e o degrau de agora.
+  (window as any).lab = { run, duration: (key: string) => labPlays.duration(key), effects: () => ({ level: effectsLevel(), tier: effectsTier() }) };
 }
 
 // ---------------------------------------------------------------- painel

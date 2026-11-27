@@ -34,6 +34,7 @@ import java.net.InetSocketAddress;
  * Servidor WebSocket em ws://HOST:PORTA/ws. No modo watch, quem conecta recebe na hora o último estado publicado
  * por {@link #broadcast}; no modo play cada conexão recebe só o que é endereçado a ela ({@link #send(Channel, String)}).
  * Na mesma porta: GET /metrics, GET /health e, no modo play, POST /api/relatos ({@link Feedback}), POST /api/funil ({@link Funnel}),
+ * POST /api/desempenho ({@link Benchmarks}),
  * os torneios ({@link Tournaments}), os dados das cartas ({@link CardDataCache}), a tela de detalhes do deck ({@link DeckApi}), a área de admin ({@link Admin}) e GET /api/aviso
  * ({@link ServerNotice}, que também chega pelo WebSocket a quem conecta enquanto o aviso vale).
  */
@@ -53,6 +54,8 @@ final class BridgeServer {
     private volatile Accounts accounts;
     /** Rota POST /api/funil; null no modo watch. */
     private volatile Funnel funnel;
+    /** Rota POST /api/desempenho; null no modo watch. */
+    private volatile Benchmarks benchmarks;
     /** Rotas /api/torneios/; null no modo watch. */
     private volatile Tournaments tournaments;
     /** Rota POST /api/cartas; null no modo watch. */
@@ -79,6 +82,7 @@ final class BridgeServer {
     void admin(Admin a) { admin = a; }
     void accounts(Accounts a) { accounts = a; }
     void funnel(Funnel f) { funnel = f; }
+    void benchmarks(Benchmarks b) { benchmarks = b; }
     void tournaments(Tournaments t) { tournaments = t; }
     void cardData(CardDataCache c) { cardData = c; }
     void deckApi(DeckApi d) { deckApi = d; }
@@ -106,6 +110,8 @@ final class BridgeServer {
                     if (c != null) ch.pipeline().addLast(c.new Handler());
                     Funnel n = funnel;
                     if (n != null) ch.pipeline().addLast(n.new Handler());
+                    Benchmarks bm = benchmarks;
+                    if (bm != null) ch.pipeline().addLast(bm.new Handler());
                     Tournaments t = tournaments;
                     if (t != null) ch.pipeline().addLast(t.new Handler());
                     CardDataCache d = cardData;

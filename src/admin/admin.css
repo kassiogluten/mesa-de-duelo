@@ -195,3 +195,18 @@ body { min-height: 100%; height: auto; }
 
 /* Print da mesa no PC enviado com o relato. */
 .adm-shot { display: block; max-width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .12); }
+/* Desempenho: a tabela dos testes, com a nota colorida, o aparelho que quebra linha e as cenas abertas embaixo. */
+#admDesempenho .adm-notice:empty { display: none; }
+.adm-bench td.adm-bench-device { min-width: 260px; max-width: 420px; text-align: left; white-space: normal; color: #d8deea; font-size: 13px; }
+.adm-bench td.adm-bench-mode { text-align: left; }
+.adm-bench-score { display: inline-block; min-width: 40px; padding: 0 8px; border: 1px solid var(--line); border-radius: 99px; font-weight: 700; text-align: center; }
+.adm-bench-score.good { border-color: #63d68f88; color: var(--heal); }
+.adm-bench-score.mid { border-color: #f2b54c88; color: var(--gold-light); }
+.adm-bench-score.bad { border-color: #ff7a7a88; color: #ffb3b3; }
+#admin .adm-bench-del { min-height: 32px; padding: 4px 10px; font-size: 13px; }
+.adm-bench-open > td { padding: 12px 14px 16px; text-align: left; white-space: normal; background: #f2b54c08; }
+.adm-bench-scenes { border-collapse: collapse; margin-bottom: 8px; font-size: 13px; }
+.adm-bench-scenes th, .adm-bench-scenes td { padding: 4px 12px; border-bottom: 1px solid var(--line); text-align: right; }
+.adm-bench-scenes th[scope="row"], .adm-bench-scenes thead th:first-child { text-align: left; }
+.adm-bench-scenes thead th { color: var(--muted); font-weight: 600; }
+@media (max-width: 860px) { .adm-bench-open > td > * { position: sticky; left: 14px; max-width: calc(100vw - 62px); } }
