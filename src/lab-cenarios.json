@@ -1,5 +1,20 @@
 [
   {
+    "nome": "Dreno: Dessangrar e Aprendiz de Murchaflor",
+    "versao": "0.260.0",
+
+    "item": "Perder vida também aparece na mesa",
+    "conferir": "Conjure Dessangrar com X = 3. Primeiro o gatilho da Aprendiz de Murchaflor faz o oponente perder 1 de vida, depois Dessangrar tira 3: nos dois, um projétil roxo-vinho sai da carta até a vida do oponente, com o número no retrato dele, e o \"+N\" verde sobe no seu.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Exsanguinate"], "library": ["Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [], "battlefield": [{ "name": "Witherbloom Apprentice" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [], "battlefield": [] }
+      ]
+    }
+  },
+  {
     "nome": "Icatian Town: os quatro Cidadãos entram com arte",
     "versao": "0.243.0",
 

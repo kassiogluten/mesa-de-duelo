@@ -1,4 +1,15 @@
 {
+  "0.260.0": {
+    "Canto arredondado da carta aberta nos detalhes": [
+      { "img": "0.260.0/canto.webp", "legenda": "Uma mítica aberta nos detalhes, com o canto arredondado acompanhando a borda preta da carta." }
+    ],
+    "Perder vida também aparece na mesa": [
+      { "img": "0.260.0/dreno-impacto.webp", "legenda": "Dessangrar faz o oponente perder 3 de vida: o projétil roxo-vinho chega ao retrato dele e o \"−3\" aparece ao lado da vida." }
+    ],
+    "Novidades inteiro no celular": [
+      { "img": "0.260.0/novidades-celular.webp", "legenda": "No celular em pé, o painel de Novidades abre abaixo das abas, inteiro na tela e com fundo firme." }
+    ]
+  },
   "0.259.0": {
     "Teste de desempenho": [
       { "img": "0.259.0/menu.webp", "legenda": "O Teste de desempenho no grupo Laboratório do menu ⋯ da tela inicial." },

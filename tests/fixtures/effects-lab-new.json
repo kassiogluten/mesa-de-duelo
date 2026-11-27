@@ -1,14 +1,6 @@
 {
-  "versao": "0.237.0",
+  "versao": "0.260.0",
   "botoes": [
-    "play:creatures",
-    "play:firstBlood",
-    "play:doubleKill",
-    "play:commanderThreat",
-    "play:crowded",
-    "play:longTurn",
-    "play:comeback",
-    "play:byAThread",
-    "x:coinEdge"
+    "d:drain"
   ]
 }

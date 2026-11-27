@@ -265,7 +265,7 @@ final class VisibleEvents {
             }
         } else if (event instanceof GameEventPlayerLivesChanged x) {
             e = type("life-changed"); actor(e, x.player().getId()); e.addProperty("delta", x.newLives() - x.oldLives());
-            damage.lifeChanged(x.player().getId());
+            if (!damage.lifeChanged(x.player().getId()) && x.newLives() < x.oldLives()) lifeLoss(e, x.player().getId(), x.newLives());
         } else if (event instanceof GameEventTurnBegan x) {
             turnBegan(x.turnOwner().getId(), x.turnNumber());
             e = type("turn"); actor(e, x.turnOwner().getId()); e.addProperty("turn", x.turnNumber());
@@ -468,6 +468,21 @@ final class VisibleEvents {
         if (swap == null) return;
         e.addProperty("reason", swap.get("reason").getAsString());
         e.addProperty("swapWith", swap.get("id").getAsInt()); e.addProperty("swapName", swap.get("name").getAsString());
+    }
+
+    /**
+     * Perder vida sem dano (Exsanguinate, Blood Artist, "cada oponente perde 1"): com a carta que resolve como fonte, a mesa
+     * desenha o dreno dela até a vida do jogador. Pagar vida (fetchland, mana phyrexiana) acontece fora da resolução e fica sem.
+     */
+    private void lifeLoss(JsonObject e, int player, int life) {
+        if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return;
+        var resolving = game.getStack().peekAbility();
+        var source = resolving == null ? null : resolving.getHostCard();
+        if (source == null) return;
+        e.addProperty("sourceId", source.getId());
+        e.addProperty("loss", true);
+        if (source.getController() != null && source.getController().getId() == player) e.addProperty("self", true);
+        if (life <= 0) e.addProperty("lethal", true);
     }
 
     private void resolvingSource(JsonObject e) {

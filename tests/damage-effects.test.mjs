@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { damageLook, damageDetail } = await import('../src/ui/damageEffects.ts');
+const { damageLook, damageDetail, lossAsDamage } = await import('../src/ui/damageEffects.ts');
 const hit = extra => ({ seq: 1, type: 'damage', delta: -2, targets: { cards: [5], players: [] }, ...extra });
 const player = extra => hit({ targets: { cards: [], players: [1] }, ...extra });
 
@@ -42,4 +42,16 @@ test('prevented damage is a shield, never lethal or heavy; divided damage is mar
   assert.equal(shield.lethal, false); assert.equal(shield.heavy, false);
   assert.deepEqual(damageLook(hit({ combat: false, divided: 3 })).badges, ['Dividido']);
   assert.deepEqual(damageLook(hit({ combat: false, divided: 1 })).badges, []);
+});
+
+test('losing life to a card (Exsanguinate, Blood Artist) is drawn as a drain on the loser, paying life is not', () => {
+  const loss = lossAsDamage({ seq: 1, type: 'life-changed', actor: 2, delta: -3, loss: true, sourceId: 9 });
+  assert.equal(loss.type, 'damage');
+  assert.deepEqual(loss.targets, { players: [2] });
+  assert.equal(damageLook(loss).motion, 'bolt');
+  assert.equal(damageLook(loss).tone, 'drain');
+  assert.equal(damageLook(loss).amount, '−3');
+  assert.equal(damageLook(lossAsDamage({ seq: 1, type: 'life-changed', actor: 1, delta: -2, loss: true, self: true })).motion, 'self');
+  assert.equal(lossAsDamage({ seq: 1, type: 'life-changed', actor: 2, delta: -2 }), null, 'paying life or damage already shown');
+  assert.equal(lossAsDamage({ seq: 1, type: 'life-changed', actor: 2, delta: 3, loss: true }), null);
 });

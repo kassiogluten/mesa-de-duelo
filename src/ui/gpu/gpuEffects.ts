@@ -26,7 +26,7 @@ import { COMMANDER_EFFECTS, crownTextures, type CommanderParams } from './gpuCom
 export { preload, textureReady };
 
 /** O tom do golpe, o mesmo de `damageLook` (dano, murchar, veneno, lealdade, escudo). */
-type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield' | 'protection';
+type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield' | 'protection' | 'drain';
 interface DamageParams {
   /**
    * Impacto do dano: clarão, anel e faíscas na cor do tom. `size` é o diâmetro do clarão em CSS px. `dir` (radianos) é
@@ -113,6 +113,8 @@ function warmUp(layer: GpuLayer) {
 const toneColors = (tone: GpuTone): { main: number; hot: number } =>
   tone === 'wither' || tone === 'poison' ? { main: 0x9b6bff, hot: 0xc9a6ff }
     : tone === 'loyalty' ? { main: 0xff9a55, hot: 0xffd2a8 }
+      // Dreno (perder vida sem dano): roxo-vinho, distinto do vermelho do dano e do roxo do veneno.
+      : tone === 'drain' ? { main: 0xa3285e, hot: 0xff8fbf }
       : tone === 'shield' ? { main: 0x9fe3ff, hot: 0xe6f8ff }
         : tone === 'protection' ? { main: 0xdfe8ff, hot: 0xffffff }
         : { main: themeColor('--red', '#ec5a3f'), hot: 0xffc46b };

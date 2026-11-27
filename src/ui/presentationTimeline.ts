@@ -47,6 +47,8 @@ export interface PresentationEvent {
   prevented?: boolean;
   /** Com `prevented`: foi a proteção do jogador que segurou o golpe (ver `FEvent`). */
   protection?: boolean;
+  /** `life-changed` sem dano, com a carta que resolve como fonte (ver `FEvent`). */
+  loss?: boolean;
   /** Gatilho de ward: o item da pilha que mirou a permanente e, ao resolver, se anulou quem mirou (ver `FEvent`). */
   ward?: boolean;
   wardAgainst?: number;
@@ -470,7 +472,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
     : event.type === 'resolved' && event.ward && event.held !== undefined ? 760
     // O golpe de combate toma impulso e congela no contato (motionDamage.ts): pede um pouco mais que os 620 de antes.
     : event.type === 'damage' ? 760
-    : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
+    // Perder vida por uma carta (dreno): o projétil até o retrato, como o dano.
+    : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : event.loss ? (event.self ? 520 : 760) : 260)
     : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
       // Turno extra: o relógio volta no meio da mesa.
       : event.type === 'turn' ? (event.extra ? 1300 : 480) : 340;

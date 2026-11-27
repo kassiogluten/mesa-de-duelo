@@ -102,8 +102,35 @@ public class DamageEventsTest {
     private static void cast(Game game, Player caster, String name, Object target) {
         var spell = ExilePermissionsTest.add(game, name, caster, ZoneType.Hand).getFirstSpellAbility();
         spell.setActivatingPlayer(caster);
-        if (target instanceof Card c) spell.getTargets().add(c); else spell.getTargets().add((Player) target);
+        if (target instanceof Card c) spell.getTargets().add(c); else if (target instanceof Player p) spell.getTargets().add(p);
         game.getStack().add(spell); game.getStack().resolveStack();
+    }
+
+    private static List<JsonObject> lifeChanges(VisibleEvents events, Player p) {
+        return events.json(0).asList().stream().map(e -> e.getAsJsonObject())
+            .filter(e -> "life-changed".equals(e.get("type").getAsString()) && e.get("actor").getAsInt() == p.getId()).toList();
+    }
+
+    @Test public void lifeLossFromACardIsMarkedWithItsSourceButDamageAndOwnLossAreNot() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        for (int i = 0; i < 4; i++) ExilePermissionsTest.add(game, "Swamp", a, ZoneType.Library);
+        VisibleEvents events = new VisibleEvents(() -> {}, () -> 1); events.attach(game);
+        var tithe = ExilePermissionsTest.add(game, "Blood Tithe", a, ZoneType.Hand);
+        var spell = tithe.getFirstSpellAbility(); spell.setActivatingPlayer(a); game.getStack().add(spell); game.getStack().resolveStack();
+        JsonObject loss = lifeChanges(events, b).get(0);
+        assertEquals(-3, loss.get("delta").getAsInt());
+        assertTrue(flag(loss, "loss")); assertEquals(tithe.getId(), loss.get("sourceId").getAsInt()); assertFalse(flag(loss, "self"));
+        // O ganho de quem drena continua sendo só o ganho.
+        JsonObject gain = lifeChanges(events, a).get(0);
+        assertEquals(3, gain.get("delta").getAsInt()); assertFalse(flag(gain, "loss"));
+        // Perder vida pela própria carta: `self`.
+        cast(game, a, "Night's Whisper", null);
+        JsonObject own = lifeChanges(events, a).stream().filter(e -> e.get("delta").getAsInt() < 0).findFirst().orElseThrow();
+        assertTrue(flag(own, "loss")); assertTrue(flag(own, "self"));
+        // A vida que cai pelo dano já aparece no dano: sem `loss`.
+        cast(game, a, "Lightning Bolt", b);
+        JsonObject burned = lifeChanges(events, b).get(1);
+        assertEquals(-3, burned.get("delta").getAsInt()); assertFalse(flag(burned, "loss"));
     }
 
     @Test public void spentPreventionShieldBecomesPreventedDamage() {

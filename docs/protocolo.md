@@ -170,6 +170,7 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `commanderTotal?` | `number` |  |
 | `prevented?` | `boolean` | `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). |
 | `protection?` | `boolean` | Com `prevented`: o golpe de combate que a proteção do jogador atingido segurou (The One Ring), e não um escudo. |
+| `loss?` | `boolean` | `life-changed` negativo sem dano, enquanto uma carta (`sourceId`) resolve: o dreno (com `self` e `lethal` como no dano). |
 | `ward?` | `boolean` | Gatilho da proteção contra alvos (ward), em `ability-activated` e no `resolved` dele. `wardAgainst`: o item da pilha que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou. |
 | `wardAgainst?` | `number` |  |
 | `held?` | `boolean` |  |

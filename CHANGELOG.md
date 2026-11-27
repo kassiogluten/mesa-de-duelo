@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.260.0] - 2026-11-26
+
+### Mudou
+
+- **Canto arredondado da carta aberta nos detalhes.** A carta aberta com o foil tem o canto arredondado de uma carta de verdade, mais curvo que antes.
+
+### Corrigido
+
+- **Perder vida também aparece na mesa.** Cartas que fazem o oponente perder vida sem causar dano (Dessangrar, Aprendiz de Murchaflor, Yuriko, Blood Artist, Gray Merchant) agora lançam um projétil roxo-vinho da carta até a vida dele, com o "−N" no retrato, como o dano; quando a perda é letal, a mesa marca o golpe final. Perder vida pela própria carta (Night's Whisper, Phyrexian Arena) mostra só o número no seu retrato, e pagar vida como custo continua sem efeito.
+- **Novidades inteiro no celular.** O painel de Novidades não fica mais cortado do lado esquerdo no celular em pé: ele abre logo abaixo das abas, com a largura da tela, e o fundo não deixa mais o texto da tela de trás aparecer.
+
 ## [0.259.0] - 2026-11-26
 
 ### Novo

@@ -29,6 +29,10 @@
   .shared-shell-header.home-top nav { order: 3; width: 100%; gap: 0; align-self: auto; }
   .shared-shell-header .home-nav { flex: 1 1 0; justify-content: center; padding-inline: 4px; border-radius: 6px 6px 0 0; }
   .shared-shell-header .news-btn { padding: 6px 10px; font-size: 13px; }
+  /* O painel de Novidades se alinha ao cabeçalho, e não ao botão: o ⋯ e a conta vêm depois dele, e alinhado à
+     direita do botão o painel saía da tela pela esquerda. */
+  .shared-shell-header .home-news .news { position: static; }
+  .shared-shell-header .news-panel { left: 0; right: 0; width: auto; max-height: min(70vh, calc(100dvh - 140px)); }
   /* Instalar: só o ícone, do tamanho dos outros; o texto continua lá para o leitor de tela. */
   .shared-shell-header .pwa-install { justify-content: center; gap: 0; width: 40px; min-width: 40px; height: 40px; padding: 0; font-size: 0; }
   .shared-shell-header .pwa-install svg { width: 18px; height: 18px; }

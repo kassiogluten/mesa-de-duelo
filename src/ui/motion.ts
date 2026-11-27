@@ -4,6 +4,7 @@ import type { PresentationEvent } from './presentationTimeline';
 import type { AmbienceScene } from './gpu/tableAmbience';
 import { center, createMotionKit, LANDING, reduced, SETTLE, sideOf, TAP, turnOf } from './motionKit';
 import { createDamageMotion } from './motionDamage';
+import { lossAsDamage } from './damageEffects';
 import { createAbilityMotion } from './motionAbility';
 import { createZoneMotion } from './motionZones';
 import { createLibraryMotion } from './motionLibrary';
@@ -191,9 +192,12 @@ export function createMotion(root: HTMLElement): Motion {
     present(event, options) {
       // Nothing here mutates card state, waits on a network reply, or creates a priority stop.
       if (document.hidden || root.hidden) return;
+      // Perder vida por uma carta (dreno) se desenha como um dano no retrato de quem perde.
+      const loss = lossAsDamage(event);
+      if (loss) { impact.observe(loss, options.duration); damage.damage(loss, options.duration); return; }
       impact.observe(event, options.duration);
       if (event.type === 'damage') { damage.damage(event, options.duration, options.html); return; }
-      // Perder vida já aparece no dano (e pagar vida não é dano); só o ganho tem número próprio.
+      // Perder vida pelo dano já aparece no dano (e pagar vida não é dano); fora o dreno, só o ganho tem número próprio.
       if (event.type === 'life-changed') { damage.heal(event); return; }
       if (event.type === 'attackers') { board.attackers(options.label, options.duration); return; }
       if (event.type === 'blockers') { board.blocks(event); return; }

@@ -3,14 +3,14 @@
    míticas e especiais (.ci-foil-glitter) e o reflexo de luz (::after). */
 .ci-foil {
   --mx: 50%; --my: 50%; --rx: 0deg; --ry: 0deg;
-  position: relative; isolation: isolate; align-self: start; border-radius: 8px;
+  position: relative; isolation: isolate; align-self: start; border-radius: 5% / 3.6%; /* o canto de uma carta de verdade (3 mm em 63 × 88 mm) */
   transform: perspective(900px) rotateX(var(--ry)) rotateY(var(--rx));
   transition: transform .5s cubic-bezier(.2, .8, .3, 1), box-shadow .5s ease;
   touch-action: pan-y;
 }
 .ci-foil.tilting { transition: transform .08s linear, box-shadow .2s ease; }
 .ci-foil.foil-active { box-shadow: calc(var(--rx) * -.8) calc(var(--ry) * .8) 24px #0009; }
-.card-inspector .ci-foil .ci-image { width: 100%; margin: 0; }
+.card-inspector .ci-foil .ci-image { width: 100%; margin: 0; border-radius: inherit; }
 .ci-foil .ci-image { position: relative; z-index: 0; }
 .ci-foil::before, .ci-foil::after, .ci-foil-glitter {
   content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transition: opacity .4s ease;

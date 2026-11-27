@@ -489,6 +489,17 @@ function table() {
           combat(a.src, tgt, { restore: a.restore });
           return 'Proteção do jogador: o aro em volta do retrato acende, a onda corre a partir do golpe e a criatura é empurrada; "−N" prateado e riscado, com "Proteção".';
         }
+        case 'drain': {
+          if (!isPlayer(tgt)) return 'Dreno: escolha como alvo um jogador.';
+          const who = tgt.player, self = who === ME;
+          withSpell(spell => {
+            spell.name = 'Exsanguinate'; spell.manaCost = '{X}{B}{B}'; spell.typeLine = 'Sorcery';
+            player(who).life -= amount;
+            emit('life-changed', { actor: who, delta: -amount, loss: true, sourceId: spell.id, ...(self ? { self: true } : {}), ...(player(who).life <= 0 ? { lethal: true } : {}) });
+            if (!self) lifeChange(ME, amount);
+          });
+          return self ? 'Perder vida pela própria carta: só o número no próprio retrato.' : 'Dreno: projétil roxo-vinho até a vida do oponente, sem ser dano; quem drena ganha a vida.';
+        }
         case 'pain': { const s = src ?? sideOf('me').battlefield.find((x: any) => x.land) ?? bolt(); damage(s, { player: s.controller ?? ME }, amount, { self: true }); settle(); return 'Dor: o dano acontece no próprio retrato, sem trajeto.'; }
         default: {
           const keyword = ({ trample: 'TRAMPLE', double: 'DOUBLE_STRIKE', first: 'FIRST_STRIKE', deathtouch: 'DEATHTOUCH', lifelink: 'LIFELINK', infect: 'INFECT', wither: 'WITHER' } as Record<string, string>)[c.kind];
@@ -1143,7 +1154,7 @@ function panel() {
     <h2>Dano (item 15)</h2>
     <label>Fonte</label><select id="source"></select><label>Alvo</label><select id="target"></select>
     <label>Quantidade</label><input type="number" id="amount" value="3" min="1" max="20">
-    ${[['burn', 'Mágica'], ['combat', 'Combate'], ['trample', 'Atropelar'], ['double', 'Golpe duplo'], ['first', 'Iniciativa'], ['deathtouch', 'Toque mortífero'], ['lifelink', 'Vínculo'], ['infect', 'Infectar'], ['wither', 'Murchar'], ['prevented', 'Prevenido'], ['protected', 'Proteção do jogador'], ['divided', 'Dividido'], ['pain', 'Dor'], ['lethal', 'Letal']]
+    ${[['burn', 'Mágica'], ['combat', 'Combate'], ['trample', 'Atropelar'], ['double', 'Golpe duplo'], ['first', 'Iniciativa'], ['deathtouch', 'Toque mortífero'], ['lifelink', 'Vínculo'], ['infect', 'Infectar'], ['wither', 'Murchar'], ['prevented', 'Prevenido'], ['protected', 'Proteção do jogador'], ['divided', 'Dividido'], ['pain', 'Dor'], ['drain', 'Perder vida'], ['lethal', 'Letal']]
       .map(([k, t]) => `<button data-d="${k}">${t}</button>`).join('')}
     <h2>Movimento (item 16, na selecionada)</h2>
     ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['attack', 'Atacar'],['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo'], ['ninjutsu', 'Ninjutsu'], ['sneak', 'Sneak']]

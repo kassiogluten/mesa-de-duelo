@@ -82,6 +82,8 @@ export interface FEvent {
   prevented?: boolean;
   /** Com `prevented`: o golpe de combate que a proteção do jogador atingido segurou (The One Ring), e não um escudo. */
   protection?: boolean;
+  /** `life-changed` negativo sem dano, enquanto uma carta (`sourceId`) resolve: o dreno (com `self` e `lethal` como no dano). */
+  loss?: boolean;
   /**
    * Gatilho da proteção contra alvos (ward), em `ability-activated` e no `resolved` dele. `wardAgainst`: o item da pilha
    * que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou.

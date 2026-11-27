@@ -8,7 +8,7 @@ export interface DamageLook {
   motion: 'strike' | 'bolt' | 'self';
   /** Texto do número flutuante: "−3", "−2/−2", "+2 veneno". */
   amount: string;
-  tone: 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield' | 'protection';
+  tone: 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield' | 'protection' | 'drain';
   badges: string[];
   deathtouch: boolean;
   lethal: boolean;
@@ -23,7 +23,7 @@ export const heldLook = (look: Pick<DamageLook, 'tone'>) => look.tone === 'shiel
 export function damageLook(event: PresentationEvent): DamageLook {
   const n = Math.abs(event.delta ?? 0);
   const toPlayer = !!event.targets?.players?.length;
-  const tone = event.protection ? 'protection' : event.prevented ? 'shield' : event.infect && toPlayer ? 'poison' : event.wither ? 'wither' : event.loyalty ? 'loyalty' : 'damage';
+  const tone = event.loss ? 'drain' : event.protection ? 'protection' : event.prevented ? 'shield' : event.infect && toPlayer ? 'poison' : event.wither ? 'wither' : event.loyalty ? 'loyalty' : 'damage';
   const amount = tone === 'poison' ? `+${n} veneno` : tone === 'wither' ? `−${n}/−${n}` : `−${n}`;
   const badges: string[] = [];
   if (event.protection) badges.push('Proteção');
@@ -41,6 +41,15 @@ export function damageLook(event: PresentationEvent): DamageLook {
     amount, tone, badges, deathtouch: !!event.deathtouch && !toPlayer, lethal,
     heavy: !event.prevented && (n >= HEAVY_DAMAGE || (lethal && toPlayer)),
   };
+}
+
+/**
+ * Perder vida por uma carta (Exsanguinate, Blood Artist, Yuriko): o mesmo passo de um dano no retrato de quem perde,
+ * com o tom de dreno; perder vida sem fonte (pagar vida) fica de fora.
+ */
+export function lossAsDamage(event: PresentationEvent): PresentationEvent | null {
+  if (event.type !== 'life-changed' || !event.loss || (event.delta ?? 0) >= 0 || event.actor === undefined) return null;
+  return { ...event, type: 'damage', targets: { players: [event.actor] } };
 }
 
 /** Texto para o histórico e o leitor de tela, com o que muda o golpe. */

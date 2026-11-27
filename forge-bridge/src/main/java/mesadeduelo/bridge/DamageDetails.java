@@ -26,7 +26,8 @@ final class DamageDetails {
     private final Map<Integer, Integer> pendingLoss = new HashMap<>();
 
     void reset() { pendingLoss.clear(); }
-    void lifeChanged(int player) { pendingLoss.remove(player); }
+    /** A vida mudou: devolve se a mudança é a do dano já avisado (e não uma perda de vida sem dano). */
+    boolean lifeChanged(int player) { return pendingLoss.remove(player) != null; }
 
     void player(JsonObject e, Game game, CardView source, PlayerView target, int amount, boolean combat, boolean infect) {
         common(e, game, source, combat);
